@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import AppLayout from "./layout/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RouteGuard from "./components/RouteGuard";
 import PublicRoute from "./components/PublicRoute";
 import Login from "./pages/Login";
 import Home from "./pages/Dashboard/Home";
@@ -24,8 +25,9 @@ import Leads from "./pages/LeadToOrder/Leads";
 import FollowUp from "./pages/LeadToOrder/FollowUp";
 import NewFollowUp from "./pages/LeadToOrder/NewFollowUp";
 import CallTracker from "./pages/LeadToOrder/CallTracker";
-  import NewCallTracker from "./pages/LeadToOrder/NewCallTracker";
-  import Quotation from "./pages/LeadToOrder/Quotation/Quotation";
+import NewCallTracker from "./pages/LeadToOrder/NewCallTracker";
+import Quotation from "./pages/LeadToOrder/Quotation/Quotation";
+import Settings from "./pages/LeadToOrder/Settings";
 
   // O2D pages
 import { DashboardView as O2DDashboard } from "./pages/O2D/dashboard-view";
@@ -40,6 +42,7 @@ import { OrdersView as O2DOrders } from "./pages/O2D/order-view";
 import { ComplaintDetailsView as O2DComplaintDetails } from "./pages/O2D/complaint-details-view";
 import { PartyFeedbackView as O2DPartyFeedback } from "./pages/O2D/party-feedback-view";
 import { PermissionsView as O2DPermissions } from "./pages/O2D/permissions-view";
+import { PendingVehicles as O2DProcess } from "./pages/O2D/pendding-vehicle";
 // Removed O2D Register as per user request
 // import { RegisterView as O2DRegister } from "./pages/O2D/register-view";
 
@@ -58,9 +61,6 @@ export default function App() {
             }
           />
           
-          {/* Root route - redirect based on auth status */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          
           {/* Protected routes */}
           <Route
             element={
@@ -69,44 +69,47 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            {/* Main Dashboard - O2D Dashboard by default */}
-            <Route path="/dashboard" element={<Home />} />
-            <Route path="/profile" element={<UserProfiles />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/blank" element={<Blank />} />
+            {/* Main Dashboard - Shows O2D, Lead to Order, or Batchcode based on tab param */}
+            <Route path="/" element={<RouteGuard><Home /></RouteGuard>} />
+            <Route path="/dashboard" element={<RouteGuard><Home /></RouteGuard>} />
+            <Route path="/profile" element={<RouteGuard><UserProfiles /></RouteGuard>} />
+            <Route path="/calendar" element={<RouteGuard><Calendar /></RouteGuard>} />
+            <Route path="/blank" element={<RouteGuard><Blank /></RouteGuard>} />
 
             {/* BatchCode Routes */}
-            <Route path="/batchcode/dashboard" element={<BatchCodeDashboard />} />
-            <Route path="/batchcode/hot-coil" element={<HotCoil />} />
-            <Route path="/batchcode/qc-lab" element={<QCLab />} />
-            <Route path="/batchcode/sms-register" element={<SMSRegister />} />
-            <Route path="/batchcode/recoiler" element={<Recoiler />} />
-            <Route path="/batchcode/pipe-mill" element={<PipeMill />} />
-            <Route path="/batchcode/laddel" element={<Laddel />} />
-            <Route path="/batchcode/tundis" element={<Tundis />} />
+            <Route path="/batchcode/dashboard" element={<RouteGuard><BatchCodeDashboard /></RouteGuard>} />
+            <Route path="/batchcode/hot-coil" element={<RouteGuard><HotCoil /></RouteGuard>} />
+            <Route path="/batchcode/qc-lab" element={<RouteGuard><QCLab /></RouteGuard>} />
+            <Route path="/batchcode/sms-register" element={<RouteGuard><SMSRegister /></RouteGuard>} />
+            <Route path="/batchcode/recoiler" element={<RouteGuard><Recoiler /></RouteGuard>} />
+            <Route path="/batchcode/pipe-mill" element={<RouteGuard><PipeMill /></RouteGuard>} />
+            <Route path="/batchcode/laddel" element={<RouteGuard><Laddel /></RouteGuard>} />
+            <Route path="/batchcode/tundis" element={<RouteGuard><Tundis /></RouteGuard>} />
 
             {/* Lead-to-Order Routes */}
-            <Route path="/lead-to-order/dashboard" element={<LeadToOrderDashboard />} />
-            <Route path="/lead-to-order/leads" element={<Leads />} />
-            <Route path="/lead-to-order/follow-up" element={<FollowUp />} />
-            <Route path="/lead-to-order/follow-up/new" element={<NewFollowUp />} />
-            <Route path="/lead-to-order/call-tracker" element={<CallTracker />} />
-            <Route path="/lead-to-order/call-tracker/new" element={<NewCallTracker />} />
-            <Route path="/lead-to-order/quotation" element={<Quotation />} />
+            <Route path="/lead-to-order/dashboard" element={<RouteGuard><LeadToOrderDashboard /></RouteGuard>} />
+            <Route path="/lead-to-order/leads" element={<RouteGuard><Leads /></RouteGuard>} />
+            <Route path="/lead-to-order/follow-up" element={<RouteGuard><FollowUp /></RouteGuard>} />
+            <Route path="/lead-to-order/follow-up/new" element={<RouteGuard><NewFollowUp /></RouteGuard>} />
+            <Route path="/lead-to-order/call-tracker" element={<RouteGuard><CallTracker /></RouteGuard>} />
+            <Route path="/lead-to-order/call-tracker/new" element={<RouteGuard><NewCallTracker /></RouteGuard>} />
+            <Route path="/lead-to-order/quotation" element={<RouteGuard><Quotation /></RouteGuard>} />
+            <Route path="/lead-to-order/settings" element={<RouteGuard><Settings /></RouteGuard>} />
 
             {/* O2D Routes */}
-            <Route path="/o2d/dashboard" element={<O2DDashboard />} />
-            <Route path="/o2d/gate-entry" element={<O2DGateEntry />} />
-            <Route path="/o2d/first-weight" element={<O2DFirstWeight />} />
-            <Route path="/o2d/load-vehicle" element={<O2DLoadVehicle />} />
-            <Route path="/o2d/second-weight" element={<O2DSecondWeight />} />
-            <Route path="/o2d/generate-invoice" element={<O2DGenerateInvoice />} />
-            <Route path="/o2d/gate-out" element={<O2DGateOut />} />
-            <Route path="/o2d/payment" element={<O2DPayment />} />
-            <Route path="/o2d/orders" element={<O2DOrders />} />
-            <Route path="/o2d/complaint-details" element={<O2DComplaintDetails />} />
-            <Route path="/o2d/party-feedback" element={<O2DPartyFeedback />} />
-            <Route path="/o2d/permissions" element={<O2DPermissions />} />
+            <Route path="/o2d/dashboard" element={<RouteGuard><O2DDashboard /></RouteGuard>} />
+            <Route path="/o2d/gate-entry" element={<RouteGuard><O2DGateEntry /></RouteGuard>} />
+            <Route path="/o2d/first-weight" element={<RouteGuard><O2DFirstWeight /></RouteGuard>} />
+            <Route path="/o2d/load-vehicle" element={<RouteGuard><O2DLoadVehicle /></RouteGuard>} />
+            <Route path="/o2d/second-weight" element={<RouteGuard><O2DSecondWeight /></RouteGuard>} />
+            <Route path="/o2d/generate-invoice" element={<RouteGuard><O2DGenerateInvoice /></RouteGuard>} />
+            <Route path="/o2d/gate-out" element={<RouteGuard><O2DGateOut /></RouteGuard>} />
+            <Route path="/o2d/payment" element={<RouteGuard><O2DPayment /></RouteGuard>} />
+            <Route path="/o2d/orders" element={<RouteGuard><O2DOrders /></RouteGuard>} />
+            <Route path="/o2d/process" element={<RouteGuard><O2DProcess /></RouteGuard>} />
+            <Route path="/o2d/complaint-details" element={<RouteGuard><O2DComplaintDetails /></RouteGuard>} />
+            <Route path="/o2d/party-feedback" element={<RouteGuard><O2DPartyFeedback /></RouteGuard>} />
+            <Route path="/o2d/permissions" element={<RouteGuard><O2DPermissions /></RouteGuard>} />
             {/* Removed O2D Register route as per user request */}
             {/* <Route path="/o2d/register" element={<O2DRegister />} /> */}
           </Route>
@@ -118,7 +121,3 @@ export default function App() {
     </>
   );
 }
-
-
-
-

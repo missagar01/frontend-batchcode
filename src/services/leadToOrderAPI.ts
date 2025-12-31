@@ -20,6 +20,13 @@ export const leadToOrderAPI = {
   submitFollowUp: (data: any) => api.post(API_ENDPOINTS.LEAD_TO_ORDER.FOLLOW_UP.SUBMIT, data),
   getFollowUpDropdowns: () => api.get(API_ENDPOINTS.LEAD_TO_ORDER.FOLLOW_UP.DROPDOWNS),
 
+  // User management
+  listUsers: () => api.get(API_ENDPOINTS.LEAD_TO_ORDER.USERS),
+  getDepartments: () => api.get(`${API_ENDPOINTS.LEAD_TO_ORDER.USERS}/departments`),
+  createUserRecord: (data: any) => api.post(API_ENDPOINTS.LEAD_TO_ORDER.USERS, data),
+  updateUserRecord: (id: string | number, data: any) => api.put(`${API_ENDPOINTS.LEAD_TO_ORDER.USERS}/${id}`, data),
+  deleteUserRecord: (id: string | number) => api.delete(`${API_ENDPOINTS.LEAD_TO_ORDER.USERS}/${id}`),
+
   // Enquiry Tracker (Call Tracker)
   getPendingFMS: () => api.get(API_ENDPOINTS.LEAD_TO_ORDER.ENQUIRY_TRACKER.PENDING),
   getEnquiryHistory: () => api.get(API_ENDPOINTS.LEAD_TO_ORDER.ENQUIRY_TRACKER.HISTORY),
@@ -44,4 +51,3 @@ export const leadToOrderAPI = {
   // Products
   getProducts: () => api.get(API_ENDPOINTS.LEAD_TO_ORDER.PRODUCTS),
 };
-

@@ -166,7 +166,7 @@ function QCLabDataPage() {
             setLoading(true)
             // console.log('🔄 Fetching QC Lab history data...')
 
-            const response = await qcLabAPI.getQCLabHistory()
+            const response = await batchcodeAPI.getQCLabHistory()
             // console.log('📦 Raw QC Lab API response:', response)
             // console.log('📊 Response data:', response.data)
 
@@ -318,17 +318,37 @@ function QCLabDataPage() {
             const formData = new FormData()
 
             // Use EXACT field names from your working Postman request
-            formData.append('sms_batch_code', processFormData.sms_batch_code)
-            formData.append('furnace_number', processFormData.sampled_furnace_number)
-            formData.append('sequence_code', processFormData.sampled_sequence)
-            formData.append('laddle_number', processFormData.sampled_laddle_number)
-            formData.append('shift_type', processFormData.shift)
-            formData.append('final_c', processFormData.final_c)
-            formData.append('final_mn', processFormData.final_mn)
-            formData.append('final_s', processFormData.final_s)
-            formData.append('final_p', processFormData.final_p)
-            formData.append('tested_by', processFormData.sample_tested_by)
-            formData.append('remarks', processFormData.remarks || '')
+            // Required fields - always append (validation will catch empty)
+            formData.append('sms_batch_code', processFormData.sms_batch_code || '');
+            formData.append('furnace_number', processFormData.sampled_furnace_number || '');
+            formData.append('sequence_code', processFormData.sampled_sequence || '');
+            formData.append('laddle_number', processFormData.sampled_laddle_number || '');
+            formData.append('shift_type', processFormData.shift || '');
+            formData.append('tested_by', processFormData.sample_tested_by || '');
+            
+            // Optional decimal fields - send empty string if not provided, backend will convert to null
+            // Ensure numeric values are properly formatted for NUMERIC(10,4) database columns
+            const formatDecimal = (value) => {
+                if (!value || value === '' || value === null || value === undefined) return '';
+                const num = parseFloat(value);
+                if (isNaN(num)) return '';
+                // Ensure value fits NUMERIC(10,4): max 999999.9999
+                if (Math.abs(num) > 999999.9999) {
+                    return (num > 0 ? 999999.9999 : -999999.9999).toString();
+                }
+                // Round to 4 decimal places
+                return (Math.round(num * 10000) / 10000).toString();
+            };
+            
+            formData.append('final_c', formatDecimal(processFormData.final_c));
+            formData.append('final_mn', formatDecimal(processFormData.final_mn));
+            formData.append('final_s', formatDecimal(processFormData.final_s));
+            formData.append('final_p', formatDecimal(processFormData.final_p));
+            
+            // Optional fields
+            if (processFormData.remarks) {
+                formData.append('remarks', processFormData.remarks);
+            }
             // Add sample_timestamp (optional, but helps with validation)
             if (processFormData.sample_timestamp) {
               formData.append('sample_timestamp', processFormData.sample_timestamp)

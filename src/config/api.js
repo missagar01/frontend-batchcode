@@ -136,6 +136,7 @@ export const API_ENDPOINTS = {
       METRICS: '/api/lead-to-order/dashboard/metrics',
       CHARTS: '/api/lead-to-order/dashboard/charts',
     },
+    USERS: '/api/lead-to-order/users',
     PRODUCTS: '/api/lead-to-order/products',
   },
 
@@ -184,6 +185,9 @@ export const API_ENDPOINTS = {
     COMPLAINT: '/api/o2d/complaint',
     PARTY_FEEDBACK: '/api/o2d/party-feedback',
     REGISTER: '/api/o2d/register',
+    PROCESS: {
+      TIMELINE: '/api/o2d/process/timeline',
+    },
   },
 };
 

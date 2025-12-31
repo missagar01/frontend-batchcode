@@ -14,6 +14,9 @@ interface User {
   department?: string;
   userType?: string;
   access?: string[];
+  user_access?: string | null;
+  page_access?: string | null;
+  system_access?: string | null;
   [key: string]: unknown;
 }
 
@@ -69,18 +72,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const userAccess = decoded?.user_access || null;
             const accessArray = userAccess ? userAccess.split(',').map((a: string) => a.trim()) : null;
             
+            // Helper to normalize "NULL" strings to actual null
+            const normalizeValue = (value: unknown): string | null => {
+              if (value === null || value === undefined) return null;
+              if (typeof value === 'string' && (value.toUpperCase() === 'NULL' || value.trim() === '')) return null;
+              return typeof value === 'string' ? value : String(value);
+            };
+
             const parsedUser: User = {
               id: decoded?.id || decoded?.sub || null,
-              employee_id: decoded?.employee_id || null,
+              employee_id: normalizeValue(decoded?.employee_id),
               username: decoded?.username || decoded?.user_name || '',
               user_name: decoded?.user_name || decoded?.username || '',
               role: decoded?.role || 'user',
               userType: decoded?.userType || decoded?.role || 'user',
-              email_id: decoded?.email_id || null,
-              number: decoded?.number || null,
-              department: decoded?.department || null,
+              email_id: normalizeValue(decoded?.email_id),
+              number: normalizeValue(decoded?.number),
+              department: normalizeValue(decoded?.department),
               access: accessArray || decoded?.access || null,
-              user_access: userAccess || decoded?.user_access || null,
+              user_access: normalizeValue(userAccess || decoded?.user_access),
+              page_access: normalizeValue(decoded?.page_access),
+              system_access: normalizeValue(decoded?.system_access),
             };
             setToken(storedToken);
             setUser(parsedUser);
@@ -137,22 +149,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Decode token to get user info
       const decoded = decodeToken(authToken);
       
+      // Helper to normalize "NULL" strings to actual null
+      const normalizeValue = (value: unknown): string | null => {
+        if (value === null || value === undefined) return null;
+        if (typeof value === 'string' && (value.toUpperCase() === 'NULL' || value.trim() === '')) return null;
+        return typeof value === 'string' ? value : String(value);
+      };
+
       // Parse user_access from user object if available
-      const userAccess = apiUser.user_access || decoded?.user_access || null;
+      const userAccess = normalizeValue(apiUser.user_access || decoded?.user_access);
+      const pageAccess = normalizeValue(apiUser.page_access || decoded?.page_access);
+      const systemAccess = normalizeValue(apiUser.system_access || decoded?.system_access);
       const accessArray = userAccess ? userAccess.split(',').map((a: string) => a.trim()) : null;
 
       const userData: User = {
         id: apiUser.id || decoded?.id || decoded?.sub || String(apiUser.id) || null,
-        employee_id: apiUser.employee_id || decoded?.employee_id || null,
+        employee_id: normalizeValue(apiUser.employee_id || decoded?.employee_id),
         username: apiUser.username || apiUser.user_name || decoded?.username || username,
         user_name: apiUser.user_name || apiUser.username || decoded?.user_name || username,
         role: apiUser.role || decoded?.role || 'user',
         userType: apiUser.userType || apiUser.role || decoded?.role || 'user',
-        email_id: apiUser.email_id || decoded?.email_id || null,
-        number: apiUser.number || decoded?.number || null,
-        department: apiUser.department || decoded?.department || null,
+        email_id: normalizeValue(apiUser.email_id || decoded?.email_id),
+        number: normalizeValue(apiUser.number || decoded?.number),
+        department: normalizeValue(apiUser.department || decoded?.department),
         access: accessArray || apiUser.access || decoded?.access || null,
-        user_access: userAccess || decoded?.user_access || null,
+        user_access: userAccess,
+        page_access: pageAccess,
+        system_access: systemAccess,
       };
 
       setToken(authToken);

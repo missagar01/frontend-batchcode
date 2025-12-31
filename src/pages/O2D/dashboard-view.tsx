@@ -1,8 +1,12 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { AlertCircle, CalendarIcon, Filter, Loader2, RefreshCw, X } from "lucide-react"
 import { format } from "date-fns"
+import { useSearchParams } from "react-router"
+import { useAuth } from "../../context/AuthContext"
+import LeadToOrderDashboard from "../LeadToOrder/Dashboard"
+import BatchCodeDashboard from "../BatchCode/Dashboard"
 import { Badge } from "./ui/badge"
 import { Button } from "./ui/button"
 import { Calendar } from "./ui/calendar"
@@ -11,6 +15,7 @@ import { ChartContainer, ChartTooltip } from "./ui/chart"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
+import { Tabs, TabsList, TabsTrigger } from "./ui/tabs"
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts"
 import { cn } from "../../lib/utils"
 import api, { API_ENDPOINTS } from "../../config/api";
@@ -84,10 +89,57 @@ const isDateInRange = (value?: string | null, start?: Date | null, end?: Date | 
 }
 
 export function DashboardView() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { user, loading: authLoading } = useAuth()
   const [data, setData] = useState<DashboardResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  
+  // Helper function to get default tab based on user's system_access
+  const getDefaultTab = useCallback((): "o2d" | "lead-to-order" | "batchcode" => {
+    const tabParam = searchParams.get("tab")
+    if (tabParam === "lead-to-order" || tabParam === "batchcode") {
+      return tabParam
+    }
+    
+    // If user is loaded, check system_access
+    if (user && !authLoading) {
+      const isAdmin = (user?.role || user?.userType || "").toString().toLowerCase().includes("admin")
+      
+      // Admin sees O2D by default
+      if (isAdmin) {
+        return "o2d"
+      }
+      
+      // For regular users, check system_access
+      const systemAccess = user?.system_access 
+        ? user.system_access.split(",").map(s => s.trim().toLowerCase().replace(/\s+/g, "")).filter(Boolean)
+        : []
+      
+      // Priority: o2d > lead-to-order > batchcode
+      if (systemAccess.includes("o2d")) {
+        return "o2d"
+      } else if (systemAccess.includes("lead-to-order")) {
+        return "lead-to-order"
+      } else if (systemAccess.includes("batchcode")) {
+        return "batchcode"
+      }
+    }
+    
+    // Default fallback
+    return "o2d"
+  }, [searchParams, user, authLoading])
+  
+  // Initialize activeTab with proper default
+  const [activeTab, setActiveTab] = useState<"o2d" | "lead-to-order" | "batchcode">(() => {
+    const tabParam = searchParams.get("tab")
+    if (tabParam === "lead-to-order" || tabParam === "batchcode") {
+      return tabParam
+    }
+    // Will be updated by useEffect when user loads
+    return "o2d"
+  })
 
   const [selectedParty, setSelectedParty] = useState("All Parties")
   const [selectedItem, setSelectedItem] = useState("All Items")
@@ -98,11 +150,25 @@ export function DashboardView() {
 
   const dashboardRef = useRef<HTMLDivElement | null>(null)
 
-  const fetchDashboard = async () => {
+  const fetchDashboard = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await api.get(API_ENDPOINTS.O2D.DASHBOARD.SUMMARY)
+      // Build query params for proper Redis caching
+      const params = new URLSearchParams()
+      if (selectedParty !== "All Parties") params.append("partyName", selectedParty)
+      if (selectedItem !== "All Items") params.append("itemName", selectedItem)
+      if (selectedSales !== "All Salespersons") params.append("salesPerson", selectedSales)
+      if (selectedState !== "All States") params.append("stateName", selectedState)
+      if (fromDate) params.append("fromDate", format(fromDate, "yyyy-MM-dd"))
+      if (toDate) params.append("toDate", format(toDate, "yyyy-MM-dd"))
+      
+      const queryString = params.toString()
+      const url = queryString 
+        ? `${API_ENDPOINTS.O2D.DASHBOARD.SUMMARY}?${queryString}`
+        : API_ENDPOINTS.O2D.DASHBOARD.SUMMARY
+      
+      const response = await api.get(url)
       const payload = response.data
       if (!payload?.success || !payload?.data) {
         throw new Error("Invalid dashboard response")
@@ -116,13 +182,48 @@ export function DashboardView() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [selectedParty, selectedItem, selectedSales, selectedState, fromDate, toDate])
+
+  // Update tab when URL params change or user loads
+  useEffect(() => {
+    // Wait for auth to load
+    if (authLoading) {
+      return
+    }
+    
+    const tabParam = searchParams.get("tab")
+    if (tabParam === "lead-to-order" || tabParam === "batchcode") {
+      setActiveTab(tabParam)
+    } else if (!tabParam) {
+      // If no tab param, use default based on user's system_access
+      const defaultTab = getDefaultTab()
+      if (activeTab !== defaultTab) {
+        setActiveTab(defaultTab)
+      }
+    }
+  }, [searchParams, user, authLoading, getDefaultTab, activeTab])
 
   useEffect(() => {
-    fetchDashboard()
-    const interval = setInterval(fetchDashboard, 5 * 60 * 1000)
-    return () => clearInterval(interval)
-  }, [])
+    // Wait for auth to load before fetching data
+    if (authLoading) {
+      return
+    }
+    
+    if (activeTab === "o2d") {
+      // Only fetch if we don't have data yet
+      if (!data) {
+        fetchDashboard()
+      }
+      // Set up auto-refresh interval
+      const interval = setInterval(fetchDashboard, 5 * 60 * 1000)
+      return () => clearInterval(interval)
+    } else {
+      // For other tabs (lead-to-order, batchcode), reset loading state
+      // Their components will handle their own data fetching
+      setLoading(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, authLoading]) // Only run when tab changes or auth loads, not when data/fetchDashboard changes
 
   const filteredData = useMemo(() => {
     const rows = data?.rows || []
@@ -209,11 +310,11 @@ export function DashboardView() {
       value: formatMetricValue(displayMetrics.totalGateIn),
       description: "Live count",
       badgeText: "Today",
-      gradient: "linear-gradient(135deg, rgba(37,99,235,0.15), rgba(248,250,252,0.93))",
+      backgroundColor: "#EFF6FF", // Light blue background
       borderColor: "rgba(37,99,235,0.85)",
-      titleColor: "#475569",
-      valueColor: "#0f172a",
-      descriptionColor: "#475569",
+      titleColor: "#1e40af",
+      valueColor: "#1e3a8a",
+      descriptionColor: "#3b82f6",
       badgeStyle: {
         backgroundColor: "rgba(37,99,235,0.15)",
         color: "#1d4ed8",
@@ -226,11 +327,11 @@ export function DashboardView() {
       value: formatMetricValue(displayMetrics.totalGateOut),
       description: "Live count",
       badgeText: "Today",
-      gradient: "linear-gradient(135deg, rgba(129,140,248,0.18), rgba(255,255,255,0.92))",
+      backgroundColor: "#F5F3FF", // Light purple background
       borderColor: "rgba(79,70,229,0.85)",
-      titleColor: "#4338ca",
-      valueColor: "#312e81",
-      descriptionColor: "#4f46e5",
+      titleColor: "#5b21b6",
+      valueColor: "#4c1d95",
+      descriptionColor: "#7c3aed",
       badgeStyle: {
         backgroundColor: "rgba(79,70,229,0.14)",
         color: "#4338ca",
@@ -243,10 +344,10 @@ export function DashboardView() {
       value: formatMetricValue(displayMetrics.totalPendingGateOut),
       description: "Awaiting gate out",
       badgeText: "Pending",
-      gradient: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(255,255,255,0.92))",
+      backgroundColor: "#FFF7ED", // Light orange/yellow background
       borderColor: "rgba(249,115,22,0.85)",
       titleColor: "#c2410c",
-      valueColor: "#c2410c",
+      valueColor: "#9a3412",
       descriptionColor: "#ea580c",
       badgeStyle: {
         backgroundColor: "rgba(249,115,22,0.16)",
@@ -260,11 +361,11 @@ export function DashboardView() {
       value: formatMetricValue(displayMetrics.totalDispatchToday),
       description: "Total rows",
       badgeText: formatTodayDate(),
-      gradient: "linear-gradient(135deg, rgba(192,132,252,0.2), rgba(249,250,255,0.92))",
+      backgroundColor: "#FAF5FF", // Light purple background
       borderColor: "rgba(124,58,237,0.9)",
       titleColor: "#6d28d9",
-      valueColor: "#5b21b6",
-      descriptionColor: "#6d28d9",
+      valueColor: "#581c87",
+      descriptionColor: "#9333ea",
       badgeStyle: {
         backgroundColor: "rgba(124,58,237,0.14)",
         color: "#6d28d9",
@@ -547,22 +648,67 @@ export function DashboardView() {
     )
   }
 
+  // Handle tab change - update URL params instead of navigating
+  const handleTabChange = (value: string) => {
+    const tabValue = value as "o2d" | "lead-to-order" | "batchcode"
+    setActiveTab(tabValue)
+    
+    // Update URL params without navigation
+    const newSearchParams = new URLSearchParams(searchParams)
+    if (tabValue === "o2d") {
+      newSearchParams.delete("tab")
+    } else {
+      newSearchParams.set("tab", tabValue)
+    }
+    setSearchParams(newSearchParams, { replace: true })
+  }
+
   return (
     <div className="relative space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6" ref={dashboardRef}>
-      {loading && data && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-sm">
+      {loading && data && activeTab === "o2d" && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80">
           <div className="flex items-center gap-2 text-gray-700">
             <Loader2 className="h-5 w-5 animate-spin" />
             <span className="text-sm">Refreshing dashboard...</span>
           </div>
         </div>
       )}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-gray-600 text-sm sm:text-base">Filtered view of your O2D operations</p>
-          {lastUpdated && <p className="text-xs text-gray-500">Last updated: {lastUpdated.toLocaleTimeString()}</p>}
-        </div>
+      
+      {/* Tabs for Dashboard Navigation - Segmented Control Style - Full Width */}
+      <div className="mb-4 sm:mb-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="inline-flex h-10 sm:h-12 items-center justify-center rounded-lg bg-gray-100 p-1 text-gray-600 w-full shadow-sm border border-gray-200">
+            <TabsTrigger 
+              value="o2d" 
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 sm:px-6 py-2 text-sm sm:text-base font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm flex-1"
+            >
+              O2D
+            </TabsTrigger>
+            <TabsTrigger 
+              value="lead-to-order" 
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 sm:px-6 py-2 text-sm sm:text-base font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm flex-1"
+            >
+              Lead to Order
+            </TabsTrigger>
+            <TabsTrigger 
+              value="batchcode" 
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 sm:px-6 py-2 text-sm sm:text-base font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm flex-1"
+            >
+              Batchcode
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+      
+      {/* O2D Dashboard Content */}
+      {activeTab === "o2d" && (
+        <div className="space-y-4 sm:space-y-6 animate-in fade-in-50 duration-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Dashboard</h2>
+              <p className="text-gray-600 text-sm sm:text-base">Filtered view of your O2D operations</p>
+              {lastUpdated && <p className="text-xs text-gray-500">Last updated: {lastUpdated.toLocaleTimeString()}</p>}
+            </div>
         <div className="flex items-center gap-2">
           <Button onClick={fetchDashboard} variant="outline" size="sm" className="flex items-center gap-1">
             <RefreshCw className="h-4 w-4" />
@@ -778,10 +924,7 @@ export function DashboardView() {
               borderLeftColor: card.borderColor,
               borderLeftWidth: 4,
               borderLeftStyle: "solid",
-              backgroundImage: card.gradient,
-              backgroundSize: "180% 180%",
-              backgroundRepeat: "no-repeat",
-              backgroundColor: "rgba(255,255,255,0.92)",
+              backgroundColor: card.backgroundColor,
             }}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 sm:p-3 pb-2">
@@ -969,6 +1112,22 @@ export function DashboardView() {
           )}
         </CardContent>
       </Card>
+        </div>
+      )}
+
+      {/* Lead to Order Dashboard Content */}
+      {activeTab === "lead-to-order" && (
+        <div className="animate-in fade-in-50 duration-200">
+          <LeadToOrderDashboard />
+        </div>
+      )}
+
+      {/* Batchcode Dashboard Content */}
+      {activeTab === "batchcode" && (
+        <div className="animate-in fade-in-50 duration-200">
+          <BatchCodeDashboard />
+        </div>
+      )}
     </div>
   )
 }

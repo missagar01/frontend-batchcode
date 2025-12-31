@@ -171,7 +171,7 @@ function PipeMillPage() {
             setLoading(true)
             //console.log('🔄 Fetching Pipe Mill history data...')
 
-            const response = await pipeMillAPI.getPipeMillData()
+            const response = await batchcodeAPI.getPipeMillHistory()
             //console.log('📦 Raw Pipe Mill API response:', response)
             //console.log('📊 Response data:', response.data)
 

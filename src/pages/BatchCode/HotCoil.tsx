@@ -591,32 +591,32 @@ function HotCoilPage() {
                 </button>
               </div>
 
-              <div className="p-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 md:p-6 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   {/* SMS Short Code (Auto-filled from SMS Register) */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       SMS Short Code / एसएमएस शॉर्ट कोड <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={processFormData.sms_short_code}
                       readOnly
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-md bg-gray-100 text-gray-600 text-sm"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Auto-filled from SMS Register</p>
+                    <p className="text-xs text-gray-500 mt-1.5">Auto-filled from SMS Register</p>
                   </div>
 
                   {/* Size */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Size / आकार <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={processFormData.size}
                       onChange={(e) => handleProcessFormChange("size", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
                       placeholder="e.g., 146x148x2.90"
                       required
                     />
@@ -624,13 +624,13 @@ function HotCoilPage() {
 
                   {/* Mill Incharge */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Mill Incharge / मिल इंचार्ज <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={processFormData.mill_incharge}
                       onChange={(e) => handleProcessFormChange("mill_incharge", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
                       required
                     >
                       {millInchargeOptions.map((option) => (
@@ -643,13 +643,13 @@ function HotCoilPage() {
 
                   {/* Quality Supervisor */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Quality Supervisor / गुणवत्ता पर्यवेक्षक <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={processFormData.quality_supervisor}
                       onChange={(e) => handleProcessFormChange("quality_supervisor", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
                       required
                     >
                       {qualitySupervisorOptions.map((option) => (
@@ -663,14 +663,14 @@ function HotCoilPage() {
                   {/* Quality Supervisor Other */}
                   {processFormData.quality_supervisor === "Other" && (
                     <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         Specify Quality Supervisor / गुणवत्ता पर्यवेक्षक निर्दिष्ट करें <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
                         value={processFormData.quality_supervisor_other}
                         onChange={(e) => handleProcessFormChange("quality_supervisor_other", e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
                         placeholder="Enter quality supervisor name"
                         required
                       />
@@ -679,13 +679,13 @@ function HotCoilPage() {
 
                   {/* Electrical DC Operator */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Electrical DC Operator / इलेक्ट्रिकल डीसी ऑपरेटर <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={processFormData.electrical_dc_operator}
                       onChange={(e) => handleProcessFormChange("electrical_dc_operator", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
                       required
                     >
                       {electricalDCOperatorOptions.map((option) => (
@@ -698,14 +698,14 @@ function HotCoilPage() {
 
                   {/* Strand1 Temperature */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Strand1 Temperature / स्ट्रैंड1 तापमान <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={processFormData.strand1_temperature}
                       onChange={(e) => handleProcessFormChange("strand1_temperature", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
                       placeholder="e.g., 960"
                       required
                     />
@@ -713,14 +713,14 @@ function HotCoilPage() {
 
                   {/* Strand2 Temperature */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Strand2 Temperature / स्ट्रैंड2 तापमान <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={processFormData.strand2_temperature}
                       onChange={(e) => handleProcessFormChange("strand2_temperature", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
                       placeholder="e.g., Colge"
                       required
                     />
@@ -728,14 +728,14 @@ function HotCoilPage() {
 
                   {/* Shift Supervisor */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Shift Supervisor / शिफ्ट पर्यवेक्षक <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={processFormData.shift_supervisor}
                       onChange={(e) => handleProcessFormChange("shift_supervisor", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
                       placeholder="Enter shift supervisor name"
                       required
                     />
@@ -743,14 +743,14 @@ function HotCoilPage() {
 
                   {/* Remarks */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Remarks / टिप्पणियाँ
                     </label>
                     <textarea
                       value={processFormData.remarks}
                       onChange={(e) => handleProcessFormChange("remarks", e.target.value)}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
                       placeholder="Enter any remarks / कोई टिप्पणी दर्ज करें"
                     />
                   </div>

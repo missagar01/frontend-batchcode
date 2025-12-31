@@ -1,0 +1,1 @@
+path=pathlib.Path(sys.argv[1]

@@ -681,7 +681,7 @@ function SMSRegister() {
                         </div>
 
                         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                 {/* Sequence Number */}
                                 <div>
                                     <label htmlFor="sequence_number" className="block text-sm font-medium text-gray-700 mb-2">
@@ -692,7 +692,7 @@ function SMSRegister() {
                                         name="sequence_number"
                                         value={formData.sequence_number}
                                         onChange={handleInputChange}
-                                        className={`w-full px-3 py-3 sm:py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-base sm:text-sm ${errors.sequence_number ? 'border-red-500' : 'border-gray-300'
+                                        className={`w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors.sequence_number ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
                                             }`}
                                     >
                                         {sequenceOptions.map((option) => (
@@ -702,7 +702,7 @@ function SMSRegister() {
                                         ))}
                                     </select>
                                     {errors.sequence_number && (
-                                        <p className="text-red-500 text-sm mt-1">{errors.sequence_number}</p>
+                                        <p className="text-red-500 text-xs mt-1.5">{errors.sequence_number}</p>
                                     )}
                                 </div>
 
@@ -716,7 +716,7 @@ function SMSRegister() {
                                         name="laddle_number"
                                         value={formData.laddle_number}
                                         onChange={handleInputChange}
-                                        className={`w-full px-3 py-3 sm:py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-base sm:text-sm ${errors.laddle_number ? 'border-red-500' : 'border-gray-300'
+                                        className={`w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors.laddle_number ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
                                             }`}
                                     >
                                         {laddleNumberOptions.map((option) => (
@@ -726,7 +726,7 @@ function SMSRegister() {
                                         ))}
                                     </select>
                                     {errors.laddle_number && (
-                                        <p className="text-red-500 text-sm mt-1">{errors.laddle_number}</p>
+                                        <p className="text-red-500 text-xs mt-1.5">{errors.laddle_number}</p>
                                     )}
                                 </div>
 
@@ -740,7 +740,7 @@ function SMSRegister() {
                                         name="furnace_number"
                                         value={formData.furnace_number}
                                         onChange={handleInputChange}
-                                        className={`w-full px-3 py-3 sm:py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-base sm:text-sm ${errors.furnace_number ? 'border-red-500' : 'border-gray-300'
+                                        className={`w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors.furnace_number ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
                                             }`}
                                     >
                                         {furnaceOptions.map((option) => (
@@ -750,7 +750,7 @@ function SMSRegister() {
                                         ))}
                                     </select>
                                     {errors.furnace_number && (
-                                        <p className="text-red-500 text-sm mt-1">{errors.furnace_number}</p>
+                                        <p className="text-red-500 text-xs mt-1.5">{errors.furnace_number}</p>
                                     )}
                                 </div>
 
@@ -765,12 +765,12 @@ function SMSRegister() {
                                         name="temperature"
                                         value={formData.temperature}
                                         onChange={handleInputChange}
-                                        className={`w-full px-3 py-3 sm:py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-base sm:text-sm ${errors.temperature ? 'border-red-500' : 'border-gray-300'
+                                        className={`w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors.temperature ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
                                             }`}
                                         placeholder="Enter temperature"
                                     />
                                     {errors.temperature && (
-                                        <p className="text-red-500 text-sm mt-1">{errors.temperature}</p>
+                                        <p className="text-red-500 text-xs mt-1.5">{errors.temperature}</p>
                                     )}
                                 </div>
 
@@ -784,7 +784,7 @@ function SMSRegister() {
                                         name="shift_incharge"
                                         value={formData.shift_incharge}
                                         onChange={handleInputChange}
-                                        className={`w-full px-3 py-3 sm:py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-base sm:text-sm ${errors.shift_incharge ? 'border-red-500' : 'border-gray-300'
+                                        className={`w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors.shift_incharge ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
                                             }`}
                                     >
                                         {shiftInchargeOptions.map((option) => (
@@ -794,7 +794,7 @@ function SMSRegister() {
                                         ))}
                                     </select>
                                     {errors.shift_incharge && (
-                                        <p className="text-red-500 text-sm mt-1">{errors.shift_incharge}</p>
+                                        <p className="text-red-500 text-xs mt-1.5">{errors.shift_incharge}</p>
                                     )}
                                 </div>
 
@@ -808,7 +808,7 @@ function SMSRegister() {
                                         name="sms_head"
                                         value={formData.sms_head}
                                         onChange={handleInputChange}
-                                        className={`w-full px-3 py-3 sm:py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-base sm:text-sm ${errors.sms_head ? 'border-red-500' : 'border-gray-300'
+                                        className={`w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors.sms_head ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
                                             }`}
                                     >
                                         {smsHeadOptions.map((option) => (
@@ -818,7 +818,7 @@ function SMSRegister() {
                                         ))}
                                     </select>
                                     {errors.sms_head && (
-                                        <p className="text-red-500 text-sm mt-1">{errors.sms_head}</p>
+                                        <p className="text-red-500 text-xs mt-1.5">{errors.sms_head}</p>
                                     )}
                                 </div>
 

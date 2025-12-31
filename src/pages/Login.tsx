@@ -18,18 +18,37 @@ const Login: React.FC = () => {
   const [error, setError] = useState("");
   const [toast, setToast] = useState({ show: false, message: "", type: "" });
 
-  const getDefaultRoute = (roleValue?: string) => {
-    const normalized = (roleValue || "").toLowerCase();
+  const getDefaultRoute = (userData?: { role?: string; userType?: string; system_access?: string | null }) => {
+    const roleValue = userData?.role || userData?.userType || "";
+    const normalized = roleValue.toLowerCase();
+    
+    // Admin sees default O2D dashboard
     if (normalized === "admin" || normalized === "superadmin") {
-      return "/dashboard";
+      return "/";
     }
-    return "/lead-to-order/dashboard";
+    
+    // For regular users, check system_access to determine default route
+    const systemAccess = userData?.system_access 
+      ? userData.system_access.split(",").map(s => s.trim().toLowerCase().replace(/\s+/g, "")).filter(Boolean)
+      : [];
+    
+    // Priority: o2d > lead-to-order > batchcode
+    if (systemAccess.includes("o2d")) {
+      return "/?tab=o2d";
+    } else if (systemAccess.includes("lead-to-order")) {
+      return "/?tab=lead-to-order";
+    } else if (systemAccess.includes("batchcode")) {
+      return "/?tab=batchcode";
+    }
+    
+    // Default fallback
+    return "/";
   };
 
   useEffect(() => {
     // Only redirect if authenticated and not already on login page
-    if (isAuthenticated && !loading) {
-      navigate(getDefaultRoute(user?.role || user?.userType), { replace: true });
+    if (isAuthenticated && !loading && user) {
+      navigate(getDefaultRoute(user), { replace: true });
     }
   }, [isAuthenticated, loading, navigate, user]);
 
@@ -67,7 +86,7 @@ const Login: React.FC = () => {
       showToast(`Login successful! Welcome, ${result.user?.username || username}`, "success");
       // Navigate after a short delay to show toast
       setTimeout(() => {
-        navigate(getDefaultRoute(result.user?.role || result.user?.userType), { replace: true });
+        navigate(getDefaultRoute(result.user), { replace: true });
       }, 1000);
     } else {
       const errorMsg = result.error || "Invalid username or password";
