@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { useCallback, useMemo, type FC, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
 
 // Assume these icons are imported from an icon library
 import {
   BoxCubeIcon,
-  ChevronDownIcon,
   HorizontaLDots,
   ListIcon,
   PieChartIcon,
+  PlugInIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import { useAuth } from "../context/AuthContext";
@@ -16,7 +16,7 @@ import { LogOut } from "lucide-react";
 
 type NavItem = {
   name: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   path?: string;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
@@ -64,8 +64,8 @@ const batchCodeItem: NavItem = {
   ],
 };
 
-const leadToOrderBaseItem = {
-  icon: <ListIcon />,
+const leadToOrderBaseItem: NavItem = {
+  icon: <PlugInIcon />,
   name: "Lead to Order",
   path: "/?tab=lead-to-order",
 };
@@ -153,7 +153,7 @@ const isPathAllowed = (
   return systemMatch;
 };
 
-const AppSidebar: React.FC = () => {
+const AppSidebar: FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
   const { logout, user } = useAuth();
@@ -276,15 +276,6 @@ const AppSidebar: React.FC = () => {
     return items;
   }, [showDashboard, filteredO2dItem, filteredBatchCodeItem, leadToOrderNavItem, isAdmin, user]);
 
-  const [openSubmenu, setOpenSubmenu] = useState<{
-    type: "main";
-    index: number;
-  } | null>(null);
-  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
-    {}
-  );
-  const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
   // Check if path is active - handle query params for dashboard tabs
   const isActive = useCallback(
     (path: string) => {
@@ -305,59 +296,6 @@ const AppSidebar: React.FC = () => {
     },
     [location.pathname, location.search]
   );
-
-  useEffect(() => {
-    let submenuMatched = false;
-    navItems.forEach((nav, index) => {
-      if (nav.subItems) {
-        // Check if any subItem path is active
-        nav.subItems.forEach((subItem) => {
-          if (isActive(subItem.path)) {
-            setOpenSubmenu({
-              type: "main",
-              index,
-            });
-            submenuMatched = true;
-          }
-        });
-      }
-    });
-
-    if (!submenuMatched) {
-      setOpenSubmenu(null);
-    }
-  }, [location, isActive, navItems]);
-
-  useEffect(() => {
-    if (openSubmenu !== null) {
-      const key = `${openSubmenu.type}-${openSubmenu.index}`;
-      if (subMenuRefs.current[key]) {
-        setSubMenuHeight((prevHeights) => ({
-          ...prevHeights,
-          [key]: subMenuRefs.current[key]?.scrollHeight || 0,
-        }));
-      }
-    }
-  }, [openSubmenu]);
-
-  const handleSubmenuToggle = (index: number) => {
-    setOpenSubmenu((prevOpenSubmenu) => {
-      if (
-        prevOpenSubmenu &&
-        prevOpenSubmenu.type === "main" &&
-        prevOpenSubmenu.index === index
-      ) {
-        return null;
-      }
-      return { type: "main", index };
-    });
-  };
-
-  const handleMainItemClick = (e: React.MouseEvent, index: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    handleSubmenuToggle(index);
-  };
 
   // Determine menu item color based on name
 const getMenuColor = (name: string) => {
@@ -404,7 +342,7 @@ const getMenuColor = (name: string) => {
 
   const renderMenuItems = (items: NavItem[]) => (
     <ul className="flex flex-col gap-1.5">
-      {items.map((nav, index) => {
+      {items.map((nav) => {
         const menuColor = getMenuColor(nav.name);
         const isMainActive =
           (nav.path && isActive(nav.path)) ||
@@ -413,94 +351,38 @@ const getMenuColor = (name: string) => {
         const baseClasses = `rounded-lg transition-all duration-200 text-sm flex items-center gap-3 font-medium`;
         const activeClass = `${menuColor.activeBg} ${menuColor.activeText} shadow-md`;
         const inactiveClass = `${menuColor.text} ${menuColor.defaultBg} ${menuColor.hoverBg}`;
+        const linkTarget = nav.path ?? "#";
 
         return (
           <li key={nav.name}>
-            {nav.subItems ? (
-              <div className="flex items-center w-full">
-                {nav.path ? (
-                  <div className="flex items-center w-full">
-                    <Link
-                      to={nav.path}
-                      className={`${baseClasses} px-3 py-2 flex-1 ${
-                        isMainActive ? activeClass : inactiveClass
-                      }`}
-                    >
-                      <span
-                        className={`menu-item-icon-size ${
-                          isMainActive ? menuColor.activeText : menuColor.text
-                        }`}
-                      >
-                        {nav.icon}
-                      </span>
-                      {(isExpanded || isHovered || isMobileOpen) && (
-                        <span className="flex-1">{nav.name}</span>
-                      )}
-                    </Link>
-                    {(isExpanded || isHovered || isMobileOpen) && (
-                      <button
-                        onClick={(e) => handleMainItemClick(e, index)}
-                        className={`ml-2 p-2 rounded-lg transition-colors ${
-                          openSubmenu?.type === "main" && openSubmenu?.index === index
-                            ? "bg-gray-200"
-                            : "hover:bg-gray-100"
-                        }`}
-                        aria-label="Toggle submenu"
-                      >
-                        <ChevronDownIcon
-                          className={`w-4 h-4 transition-transform duration-200 ${
-                            openSubmenu?.type === "main" &&
-                            openSubmenu?.index === index
-                              ? "rotate-180 text-gray-700"
-                              : menuColor.text
-                          }`}
-                        />
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <button
-                    onClick={(e) => handleMainItemClick(e, index)}
-                    className={`${baseClasses} px-3 py-2 justify-between w-full ${
-                      isMainActive ? activeClass : inactiveClass
-                    }`}
-                  >
-                    <span className="flex items-center gap-3">
-                      <span
-                        className={`menu-item-icon-size ${
-                          isMainActive ? menuColor.activeText : menuColor.text
-                        }`}
-                      >
-                        {nav.icon}
-                      </span>
-                      {(isExpanded || isHovered || isMobileOpen) && (
-                        <span>{nav.name}</span>
-                      )}
-                    </span>
-                    {(isExpanded || isHovered || isMobileOpen) && (
-                      <ChevronDownIcon
-                        className={`w-4 h-4 transition-transform duration-200 ${
-                          openSubmenu?.type === "main" &&
-                          openSubmenu?.index === index
-                            ? "rotate-180 text-gray-700"
-                            : menuColor.text
-                        }`}
-                      />
-                    )}
-                  </button>
-                )}
-              </div>
-            ) : (
-              nav.path && (
-                <Link
-                  to={nav.path}
-                  className={`${baseClasses} px-3 py-2.5 ${
-                    isActive(nav.path) ? activeClass : inactiveClass
+            {nav.path ? (
+              <Link
+                to={linkTarget}
+                className={`${baseClasses} px-3 py-2 flex-1 ${
+                  isMainActive ? activeClass : inactiveClass
+                }`}
+              >
+                <span
+                  className={`menu-item-icon-size ${
+                    isMainActive ? menuColor.activeText : menuColor.text
                   }`}
                 >
+                  {nav.icon}
+                </span>
+                {(isExpanded || isHovered || isMobileOpen) && (
+                  <span className="flex-1">{nav.name}</span>
+                )}
+              </Link>
+            ) : (
+              <div
+                className={`${baseClasses} px-3 py-2 flex-1 justify-between ${
+                  isMainActive ? activeClass : inactiveClass
+                }`}
+              >
+                <span className="flex items-center gap-3">
                   <span
                     className={`menu-item-icon-size ${
-                      isActive(nav.path) ? menuColor.activeText : menuColor.text
+                      isMainActive ? menuColor.activeText : menuColor.text
                     }`}
                   >
                     {nav.icon}
@@ -508,57 +390,44 @@ const getMenuColor = (name: string) => {
                   {(isExpanded || isHovered || isMobileOpen) && (
                     <span>{nav.name}</span>
                   )}
-                </Link>
-              )
+                </span>
+              </div>
             )}
             {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
-              <div
-                ref={(el) => {
-                  subMenuRefs.current[`main-${index}`] = el;
-                }}
-                className="overflow-hidden transition-all duration-300"
-                style={{
-                  height:
-                    openSubmenu?.type === "main" && openSubmenu?.index === index
-                      ? `${subMenuHeight[`main-${index}`]}px`
-                      : "0px",
-                }}
-              >
-                 <ul className="mt-2 space-y-1 ml-4 pl-4 border-l-2 border-gray-300">
-                   {nav.subItems.map((subItem) => {
-                     const isSubActive = isActive(subItem.path);
-                     return (
-                       <li key={subItem.name}>
-                         <Link
-                           to={subItem.path}
-                           className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors duration-200 ${
-                             isSubActive
-                               ? `${menuColor.activeBg} ${menuColor.activeText} shadow-sm`
-                               : `${menuColor.text} hover:bg-gray-100 hover:text-gray-900`
-                           }`}
-                         >
-                           <span className="flex items-center gap-2">
-                             <span className="w-1.5 h-1.5 rounded-full bg-current opacity-50"></span>
-                             <span>{subItem.name}</span>
-                           </span>
-                           <span className="flex items-center gap-1 ml-2 text-xs font-semibold uppercase">
-                             {subItem.new && (
-                               <span className={`${menuColor.badgeBg} px-2 py-0.5 rounded-full text-xs`}>
-                                 new
-                               </span>
-                             )}
-                             {subItem.pro && (
-                               <span className={`${menuColor.badgeBg} px-2 py-0.5 rounded-full text-xs`}>
-                                 pro
-                               </span>
-                             )}
-                           </span>
-                         </Link>
-                       </li>
-                     );
-                   })}
-                 </ul>
-              </div>
+              <ul className="mt-2 space-y-1 ml-4 pl-4 border-l-2 border-gray-300">
+                {nav.subItems.map((subItem) => {
+                  const isSubActive = isActive(subItem.path);
+                  return (
+                    <li key={subItem.name}>
+                      <Link
+                        to={subItem.path}
+                        className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors duration-200 ${
+                          isSubActive
+                            ? `${menuColor.activeBg} ${menuColor.activeText} shadow-sm`
+                            : `${menuColor.text} hover:bg-gray-100 hover:text-gray-900`
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-current opacity-50"></span>
+                          <span>{subItem.name}</span>
+                        </span>
+                        <span className="flex items-center gap-1 ml-2 text-xs font-semibold uppercase">
+                          {subItem.new && (
+                            <span className={`${menuColor.badgeBg} px-2 py-0.5 rounded-full text-xs`}>
+                              new
+                            </span>
+                          )}
+                          {subItem.pro && (
+                            <span className={`${menuColor.badgeBg} px-2 py-0.5 rounded-full text-xs`}>
+                              pro
+                            </span>
+                          )}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </li>
         );
