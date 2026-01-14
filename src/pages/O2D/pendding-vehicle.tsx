@@ -12,13 +12,17 @@ const COLUMN_DEFINITIONS = [
   { label: "Weighbridge Slip", key: "WSLIP_NO" },
   { label: "Planned First Weight", key: "FIRST_WEIGHT_PLANNED" },
   { label: "Actual First Weight", key: "FIRST_WEIGHT_ACTUAL" },
+  { label: "First Weight Status", key: "FIRST_WEIGHT_STATUS" },
   { label: "Planned Second Weight", key: "PLANNED_SECOND_WEIGHT" },
   { label: "Actual Second Weight", key: "ACTUAL_SECOND_WEIGHT" },
+  { label: "Second Weight Status", key: "SECOND_WEIGHT_STATUS" },
   { label: "Planned Invoice Time", key: "PLANNED_INVOICE_TIMESTAMP" },
   { label: "Actual Invoice Time", key: "ACTUAL_INVOICE_TIMESTAMP" },
+  { label: "Invoice Status", key: "INVOICE_STATUS" },
   { label: "Invoice Number", key: "INVOICE_NUMBER" },
   { label: "Planned Gate Out", key: "GATE_OUT_PLANNED" },
   { label: "Actual Gate Out", key: "GATE_OUT_ACTUAL" },
+  { label: "Gate Out Status", key: "GATE_OUT_STATUS" },
 ];
 
 const formatValue = (value: unknown) => {
@@ -60,13 +64,13 @@ export function PendingVehicles() {
   const memoizedRows = useMemo(() => timeline, [timeline]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 h-full">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Pending Vehicles</h2>
     
       </div>
 
-      <div className="bg-white rounded-2xl shadow border border-gray-100">
+      <div className="bg-white rounded-2xl shadow border border-gray-100 flex flex-col min-h-0">
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <div>
             <p className="text-sm font-semibold text-gray-900">
@@ -101,8 +105,8 @@ export function PendingVehicles() {
           </div>
         )}
 
-        <div className="overflow-auto" style={{ maxHeight: "680px" }}>
-          <table className="min-w-full text-xs leading-tight">
+        <div className="overflow-x-auto overflow-y-auto min-h-0" style={{ maxHeight: "calc(100vh - 320px)" }}>
+          <table className="min-w-max text-xs leading-tight">
             <thead
               className="bg-white/80 text-left shadow-sm"
               style={{ position: "sticky", top: 0, zIndex: 1 }}
