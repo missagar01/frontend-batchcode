@@ -29,7 +29,7 @@ import NewCallTracker from "./pages/LeadToOrder/NewCallTracker";
 import Quotation from "./pages/LeadToOrder/Quotation/Quotation";
 import Settings from "./pages/LeadToOrder/Settings";
 
-  // O2D pages
+// O2D pages
 import { DashboardView as O2DDashboard } from "./pages/O2D/dashboard-view";
 import { GateEntryView as O2DGateEntry } from "./pages/O2D/gate-entry-view";
 import { FirstWeightView as O2DFirstWeight } from "./pages/O2D/first-weight-view";
@@ -60,7 +60,7 @@ export default function App() {
               </PublicRoute>
             }
           />
-          
+
           {/* Protected routes */}
           <Route
             element={
