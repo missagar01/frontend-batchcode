@@ -75,7 +75,10 @@ export const o2dAPI = {
   register: (data: any) => api.post(API_ENDPOINTS.O2D.REGISTER, data),
   getProcessTimeline: (params?: any) =>
     api.get(API_ENDPOINTS.O2D.PROCESS.TIMELINE, { params }),
+
+  // Size Master
+  getSizeMaster: () => api.get(API_ENDPOINTS.O2D.SIZE_MASTER),
+
+  // Enquiry (sub-route of size-master)
+  createEnquiry: (data: any) => api.post(`${API_ENDPOINTS.O2D.SIZE_MASTER}/enquiry`, data),
 };
-
-
-

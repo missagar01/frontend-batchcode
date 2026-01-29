@@ -199,6 +199,7 @@ export const API_ENDPOINTS = {
     PROCESS: {
       TIMELINE: '/api/o2d/process/timeline',
     },
+    SIZE_MASTER: '/api/o2d/size-master',
   },
 };
 
