@@ -13,39 +13,31 @@ const SYSTEM_OPTIONS = [
 ];
 
 // Page routes organized by system
+// Structure: { value: "PageName", label: "Display Label", route: "/actual/route" }
 const PAGE_ROUTES = {
   "o2d": [
-    { value: "/o2d/dashboard", label: "O2D Dashboard" },
-    { value: "/o2d/orders", label: "Orders" },
-    { value: "/o2d/gate-entry", label: "Gate Entry" },
-    { value: "/o2d/first-weight", label: "First Weight" },
-    { value: "/o2d/load-vehicle", label: "Load Vehicle" },
-    { value: "/o2d/second-weight", label: "Second Weight" },
-    { value: "/o2d/generate-invoice", label: "Generate Invoice" },
-    { value: "/o2d/payment", label: "Payment" },
-    { value: "/o2d/process", label: "Pending Vehicles" },
-    { value: "/o2d/complaint-details", label: "Complaint Details" },
-    { value: "/o2d/permissions", label: "Permissions" },
+    { value: "Dashboard", label: "Dashboard", route: "/" },
+    { value: "Orders", label: "Orders", route: "/o2d/orders" },
+    { value: "First Weight", label: "First Weight", route: "/o2d/first-weight" },
+    { value: "Load Vehicle", label: "Load Vehicle", route: "/o2d/load-vehicle" },
+    { value: "Second Weight", label: "Second Weight", route: "/o2d/second-weight" },
+    { value: "Generate Invoice", label: "Generate Invoice", route: "/o2d/generate-invoice" },
+    { value: "Pending Vehicles", label: "Pending Vehicles", route: "/o2d/process" },
   ],
   "batchcode": [
-    { value: "/batchcode/dashboard", label: "Batchcode Dashboard" },
-    { value: "/batchcode/hot-coil", label: "Hot Coil" },
-    { value: "/batchcode/qc-lab", label: "QC Lab" },
-    { value: "/batchcode/sms-register", label: "SMS Register" },
-    { value: "/batchcode/recoiler", label: "Recoiler" },
-    { value: "/batchcode/pipe-mill", label: "Pipe Mill" },
-    { value: "/batchcode/laddel", label: "Laddel" },
-    { value: "/batchcode/tundis", label: "Tundis" },
+    { value: "Hot Coil", label: "Hot Coil", route: "/batchcode/hot-coil" },
+    { value: "QC Lab", label: "QC Lab", route: "/batchcode/qc-lab" },
+    { value: "SMS Register", label: "SMS Register", route: "/batchcode/sms-register" },
+    { value: "Recoiler", label: "Recoiler", route: "/batchcode/recoiler" },
+    { value: "Pipe Mill", label: "Pipe Mill", route: "/batchcode/pipe-mill" },
+    { value: "Laddel", label: "Laddel", route: "/batchcode/laddel" },
+    { value: "Tundis", label: "Tundis", route: "/batchcode/tundis" },
   ],
   "lead-to-order": [
-    { value: "/lead-to-order/dashboard", label: "Lead to Order Dashboard" },
-    { value: "/lead-to-order/leads", label: "Leads" },
-    { value: "/lead-to-order/follow-up", label: "Follow Up" },
-    // { value: "/lead-to-order/follow-up/new", label: "New Follow Up" },
-    { value: "/lead-to-order/call-tracker", label: "Call Tracker" },
-    // { value: "/lead-to-order/call-tracker/new", label: "New Call Tracker" },
-    { value: "/lead-to-order/quotation", label: "Quotation" },
-    { value: "/lead-to-order/settings", label: "Settings" },
+    { value: "Leads", label: "Leads", route: "/lead-to-order/leads" },
+    { value: "Follow Up", label: "Follow Up", route: "/lead-to-order/follow-up" },
+    { value: "Call Tracker", label: "Call Tracker", route: "/lead-to-order/call-tracker" },
+    { value: "Quotation", label: "Quotation", route: "/lead-to-order/quotation" },
   ],
 };
 
@@ -81,6 +73,7 @@ const Settings = () => {
   const [showModal, setShowModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [departments, setDepartments] = useState([]);
+  const [visiblePasswords, setVisiblePasswords] = useState({});
 
   const loadUsers = async () => {
     try {
@@ -130,9 +123,49 @@ const Settings = () => {
     setFormMode("edit");
     setSelectedUserId(userRecord.id);
 
+    // Route to Page Name mapping (reverse of PAGE_ROUTES)
+    const ROUTE_TO_PAGE_NAME_MAP = {
+      "/": "Dashboard",
+      "/o2d/orders": "Orders",
+      "/o2d/first-weight": "First Weight",
+      "/o2d/load-vehicle": "Load Vehicle",
+      "/o2d/second-weight": "Second Weight",
+      "/o2d/generate-invoice": "Generate Invoice",
+      "/o2d/payment": "Payment",
+      "/o2d/process": "Pending Vehicles",
+      "/o2d/complaint-details": "Complaint Details",
+      "/o2d/permissions": "Permissions",
+      "/batchcode/hot-coil": "Hot Coil",
+      "/batchcode/qc-lab": "QC Lab",
+      "/batchcode/sms-register": "SMS Register",
+      "/batchcode/recoiler": "Recoiler",
+      "/batchcode/pipe-mill": "Pipe Mill",
+      "/batchcode/laddel": "Laddel",
+      "/batchcode/tundis": "Tundis",
+      "/lead-to-order/leads": "Leads",
+      "/lead-to-order/follow-up": "Follow Up",
+      "/lead-to-order/call-tracker": "Call Tracker",
+      "/lead-to-order/quotation": "Quotation",
+    };
+
     // Parse system_access and page_access if they're comma-separated strings
     const systemAccess = userRecord.system_access || "";
     const pageAccess = userRecord.page_access || "";
+
+    // Convert old route-based page_access to new page name format
+    const convertedPageAccess = pageAccess
+      .split(",")
+      .map(page => {
+        const trimmedPage = page.trim();
+        // If it starts with /, it's a route - convert to page name
+        if (trimmedPage.startsWith("/")) {
+          return ROUTE_TO_PAGE_NAME_MAP[trimmedPage] || trimmedPage;
+        }
+        // Otherwise, it's already a page name
+        return trimmedPage;
+      })
+      .filter(Boolean)
+      .join(",");
 
     setFormData({
       user_name: userRecord.user_name || "",
@@ -143,7 +176,7 @@ const Settings = () => {
       role: userRecord.role || "user",
       status: userRecord.status || "active",
       user_access: userRecord.user_access || "",
-      page_access: pageAccess,
+      page_access: convertedPageAccess,
       system_access: systemAccess,
       remark: userRecord.remark || "",
       employee_id: userRecord.employee_id || "",
@@ -294,6 +327,14 @@ const Settings = () => {
   }, []);
 
 
+  // Toggle password visibility for a specific user
+  const togglePasswordVisibility = useCallback((userId) => {
+    setVisiblePasswords((prev) => ({
+      ...prev,
+      [userId]: !prev[userId],
+    }));
+  }, []);
+
   // Get available pages based on selected system access
   const getAvailablePages = useMemo(() => {
     if (!formData.system_access) {
@@ -420,6 +461,7 @@ const Settings = () => {
                     <tr className="text-[10px] sm:text-xs uppercase tracking-wide text-slate-600">
                       <th className="px-2 sm:px-3 py-3 font-bold bg-white whitespace-nowrap min-w-[120px]">Username</th>
                       <th className="px-2 sm:px-3 py-3 font-bold bg-white hidden sm:table-cell whitespace-nowrap min-w-[80px]">Role</th>
+                      <th className="px-2 sm:px-3 py-3 font-bold bg-white hidden md:table-cell whitespace-nowrap min-w-[120px]">Password</th>
                       <th className="px-2 sm:px-3 py-3 font-bold bg-white whitespace-nowrap min-w-[100px]">Status</th>
                       <th className="px-2 sm:px-3 py-3 font-bold bg-white hidden md:table-cell whitespace-nowrap min-w-[150px]">Access</th>
                       <th className="px-2 sm:px-3 py-3 font-bold bg-white hidden lg:table-cell whitespace-nowrap min-w-[200px]">Page / System</th>
@@ -430,13 +472,13 @@ const Settings = () => {
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan="7" className="px-2 sm:px-3 py-6 text-center text-xs uppercase text-slate-400">
+                        <td colSpan="8" className="px-2 sm:px-3 py-6 text-center text-xs uppercase text-slate-400">
                           Loading users...
                         </td>
                       </tr>
                     ) : filteredUsers.length === 0 ? (
                       <tr>
-                        <td colSpan="7" className="px-2 sm:px-3 py-6 text-center text-xs text-slate-400">
+                        <td colSpan="8" className="px-2 sm:px-3 py-6 text-center text-xs text-slate-400">
                           {searchQuery ? `No users found matching "${searchQuery}"` : "No users found."}
                         </td>
                       </tr>
@@ -451,6 +493,36 @@ const Settings = () => {
                           </td>
                           <td className="px-2 sm:px-3 py-3 uppercase text-xs tracking-wide text-slate-500 hidden sm:table-cell whitespace-nowrap">
                             {userEntry.role || "user"}
+                          </td>
+                          <td className="px-2 sm:px-3 py-3 hidden md:table-cell whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-mono text-slate-700 min-w-[80px]">
+                                {visiblePasswords[userEntry.id]
+                                  ? (userEntry.password || "No password set")
+                                  : "••••••••"}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  togglePasswordVisibility(userEntry.id);
+                                }}
+                                className="text-slate-400 hover:text-slate-600 transition flex-shrink-0"
+                                aria-label={visiblePasswords[userEntry.id] ? "Hide password" : "Show password"}
+                                title={visiblePasswords[userEntry.id] ? "Hide password" : "Show password"}
+                              >
+                                {visiblePasswords[userEntry.id] ? (
+                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                  </svg>
+                                ) : (
+                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                  </svg>
+                                )}
+                              </button>
+                            </div>
                           </td>
                           <td className="px-2 sm:px-3 py-3 whitespace-nowrap">
                             <span

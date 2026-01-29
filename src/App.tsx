@@ -31,7 +31,6 @@ import Settings from "./pages/LeadToOrder/Settings";
 
 // O2D pages
 import { DashboardView as O2DDashboard } from "./pages/O2D/dashboard-view";
-import { GateEntryView as O2DGateEntry } from "./pages/O2D/gate-entry-view";
 import { FirstWeightView as O2DFirstWeight } from "./pages/O2D/first-weight-view";
 import { LoadVehicleView as O2DLoadVehicle } from "./pages/O2D/load-vehicle-view";
 import { SecondWeightView as O2DSecondWeight } from "./pages/O2D/second-weight-view";
@@ -94,7 +93,6 @@ export default function App() {
 
             {/* O2D Routes */}
             <Route path="/o2d/dashboard" element={<RouteGuard><O2DDashboard /></RouteGuard>} />
-            <Route path="/o2d/gate-entry" element={<RouteGuard><O2DGateEntry /></RouteGuard>} />
             <Route path="/o2d/first-weight" element={<RouteGuard><O2DFirstWeight /></RouteGuard>} />
             <Route path="/o2d/load-vehicle" element={<RouteGuard><O2DLoadVehicle /></RouteGuard>} />
             <Route path="/o2d/second-weight" element={<RouteGuard><O2DSecondWeight /></RouteGuard>} />

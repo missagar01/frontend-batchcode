@@ -4,6 +4,7 @@ import { Loader2, RefreshCw } from "lucide-react";
 import { o2dAPI } from "../../services/o2dAPI";
 
 const COLUMN_DEFINITIONS = [
+  { label: "S.No", key: "S_NO" },
   { label: "Gate Entry Time", key: "GATE_ENTRY_TIMESTAMP" },
   { label: "Gate Entry Number", key: "GATE_ENTRY_NUMBER" },
   { label: "Loading Order Number", key: "LOADING_ORDER_NUMBER" },
@@ -67,7 +68,7 @@ export function PendingVehicles() {
     <div className="space-y-6 h-full">
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Pending Vehicles</h2>
-    
+
       </div>
 
       <div className="bg-white rounded-2xl shadow border border-gray-100 flex flex-col min-h-0">
@@ -76,7 +77,7 @@ export function PendingVehicles() {
             <p className="text-sm font-semibold text-gray-900">
               {memoizedRows.length ? `${memoizedRows.length} records` : "No records yet"}
             </p>
-           
+
           </div>
           <button
             onClick={fetchTimeline}
@@ -131,7 +132,7 @@ export function PendingVehicles() {
                   <tr key={`${row.GATE_ENTRY_NUMBER || index}-${index}`} className="hover:bg-blue-50/40">
                     {COLUMN_DEFINITIONS.map((column) => (
                       <td key={column.key} className="px-3 py-3 text-[11px] sm:text-xs text-gray-800 align-top whitespace-nowrap">
-                        {formatValue(row[column.key])}
+                        {column.key === "S_NO" ? index + 1 : formatValue(row[column.key])}
                       </td>
                     ))}
                   </tr>

@@ -35,7 +35,6 @@ const o2dItem: NavItem = {
   path: "/?tab=o2d",
   subItems: [
     { name: "Orders", path: "/o2d/orders", pro: false },
-    { name: "Gate Entry", path: "/o2d/gate-entry", pro: false },
     { name: "First Weight", path: "/o2d/first-weight", pro: false },
     { name: "Load Vehicle", path: "/o2d/load-vehicle", pro: false },
     { name: "Second Weight", path: "/o2d/second-weight", pro: false },
@@ -101,6 +100,31 @@ const isPathAllowed = (
     return false;
   }
 
+  // Map of page names to routes for new page_access format
+  const PAGE_NAME_TO_ROUTE_MAP: Record<string, string> = {
+    "Dashboard": "/",
+    "Orders": "/o2d/orders",
+    "First Weight": "/o2d/first-weight",
+    "Load Vehicle": "/o2d/load-vehicle",
+    "Second Weight": "/o2d/second-weight",
+    "Generate Invoice": "/o2d/generate-invoice",
+    "Payment": "/o2d/payment",
+    "Pending Vehicles": "/o2d/process",
+    "Complaint Details": "/o2d/complaint-details",
+    "Permissions": "/o2d/permissions",
+    "Hot Coil": "/batchcode/hot-coil",
+    "QC Lab": "/batchcode/qc-lab",
+    "SMS Register": "/batchcode/sms-register",
+    "Recoiler": "/batchcode/recoiler",
+    "Pipe Mill": "/batchcode/pipe-mill",
+    "Laddel": "/batchcode/laddel",
+    "Tundis": "/batchcode/tundis",
+    "Leads": "/lead-to-order/leads",
+    "Follow Up": "/lead-to-order/follow-up",
+    "Call Tracker": "/lead-to-order/call-tracker",
+    "Quotation": "/lead-to-order/quotation",
+  };
+
   // Parse system_access and page_access (comma-separated strings, handle spaces)
   const systemAccess = user.system_access
     ? user.system_access.split(",").map(s => s.trim().toLowerCase().replace(/\s+/g, "")).filter(Boolean)
@@ -108,6 +132,16 @@ const isPathAllowed = (
   const pageAccess = user.page_access
     ? user.page_access.split(",").map(p => p.trim()).filter(Boolean)
     : [];
+
+  // Convert page names to routes if needed
+  const pageRoutes = pageAccess.map(page => {
+    // If it's already a route (starts with /), keep it
+    if (page.startsWith("/")) {
+      return page;
+    }
+    // Otherwise, convert page name to route
+    return PAGE_NAME_TO_ROUTE_MAP[page] || page;
+  });
 
   // Normalize path for comparison (remove query params and trailing slashes)
   const normalizedPath = path.split("?")[0].replace(/\/$/, "");
@@ -129,8 +163,8 @@ const isPathAllowed = (
   }
 
   // If no system_access but has page_access, check page_access directly
-  if (systemAccess.length === 0 && pageAccess.length > 0) {
-    return pageAccess.some(allowedPath => {
+  if (systemAccess.length === 0 && pageRoutes.length > 0) {
+    return pageRoutes.some(allowedPath => {
       const normalizedAllowed = allowedPath.trim().replace(/\/$/, "");
       // Exact match or path starts with allowed path
       return normalizedPath === normalizedAllowed || normalizedPath.startsWith(normalizedAllowed + "/");
@@ -138,8 +172,8 @@ const isPathAllowed = (
   }
 
   // Check if specific page is allowed
-  if (pageAccess.length > 0) {
-    return pageAccess.some(allowedPath => {
+  if (pageRoutes.length > 0) {
+    return pageRoutes.some(allowedPath => {
       const normalizedAllowed = allowedPath.trim().replace(/\/$/, "");
       // Exact match or path starts with allowed path
       return normalizedPath === normalizedAllowed || normalizedPath.startsWith(normalizedAllowed + "/");
@@ -242,9 +276,24 @@ const AppSidebar: FC = () => {
     };
   }, [user, isAdmin]);
 
-  // Check if dashboard should be shown (O2D access)
+  // Check if dashboard should be shown - requires explicit page_access
   const showDashboard = useMemo(() => {
-    return isPathAllowed("/", user, isAdmin);
+    // Admin can always see dashboard
+    if (isAdmin) {
+      return true;
+    }
+
+    // Check if user has explicit page_access for dashboard
+    const pageAccess = user?.page_access
+      ? user.page_access.split(",").map(p => p.trim()).filter(Boolean)
+      : [];
+
+    // Dashboard is accessible if user has "/" or "/dashboard" in page_access
+    return pageAccess.some(path =>
+      path === "/" ||
+      path === "/dashboard" ||
+      path === "/o2d/dashboard"
+    );
   }, [user, isAdmin]);
 
   // Combine items in order: Dashboard (shows O2D), O2D items, BatchCode, Lead to Order
@@ -271,8 +320,8 @@ const AppSidebar: FC = () => {
       items.push(leadToOrderNavItem);
     }
 
-    // Add Settings separately if admin or allowed
-    if (isAdmin || isPathAllowed("/lead-to-order/settings", user, isAdmin)) {
+    // Add Settings only for admins (Settings page is admin-only)
+    if (isAdmin) {
       items.push(leadToOrderSettingsItem);
     }
 

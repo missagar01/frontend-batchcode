@@ -21,17 +21,17 @@ const Login: React.FC = () => {
   const getDefaultRoute = (userData?: { role?: string; userType?: string; system_access?: string | null }) => {
     const roleValue = userData?.role || userData?.userType || "";
     const normalized = roleValue.toLowerCase();
-    
+
     // Admin sees default O2D dashboard
     if (normalized === "admin" || normalized === "superadmin") {
       return "/";
     }
-    
+
     // For regular users, check system_access to determine default route
-    const systemAccess = userData?.system_access 
+    const systemAccess = userData?.system_access
       ? userData.system_access.split(",").map(s => s.trim().toLowerCase().replace(/\s+/g, "")).filter(Boolean)
       : [];
-    
+
     // Priority: o2d > lead-to-order > batchcode
     if (systemAccess.includes("o2d")) {
       return "/?tab=o2d";
@@ -40,7 +40,7 @@ const Login: React.FC = () => {
     } else if (systemAccess.includes("batchcode")) {
       return "/?tab=batchcode";
     }
-    
+
     // Default fallback
     return "/";
   };
@@ -100,11 +100,10 @@ const Login: React.FC = () => {
       {/* Toast Notification */}
       {toast.show && (
         <div
-          className={`fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-xl transition-all duration-300 z-50 min-w-[320px] max-w-md text-center backdrop-blur-sm ${
-            toast.type === "success"
+          className={`fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-xl transition-all duration-300 z-50 min-w-[320px] max-w-md text-center backdrop-blur-sm ${toast.type === "success"
               ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
               : "bg-red-50 text-red-800 border border-red-200"
-          }`}
+            }`}
         >
           <div className="flex items-center justify-center gap-2">
             {toast.type === "success" ? (

@@ -277,6 +277,7 @@ export function OrdersView() {
         <table className="w-full text-left border-collapse">
           <thead className="bg-gray-50/50 sticky top-0 z-10 backdrop-blur-sm shadow-sm ring-1 ring-black/5">
             <tr>
+              <th className="px-5 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">S.No</th>
               <th className="px-5 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Salesperson</th>
               <th className="px-5 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">Customer</th>
               <th className="px-5 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">VR No</th>
@@ -291,8 +292,9 @@ export function OrdersView() {
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white">
             {filterOrders(data).length > 0 ? (
-              filterOrders(data).map((order) => (
+              filterOrders(data).map((order, index) => (
                 <tr key={order.id} className="hover:bg-blue-50/30 transition-colors group">
+                  <td className="px-5 py-4 text-sm text-gray-700 whitespace-nowrap font-medium">{index + 1}</td>
                   <td className="px-5 py-4 text-sm text-gray-700 whitespace-nowrap font-medium">{order.salesperson}</td>
                   <td className="px-5 py-4 text-sm text-gray-700 whitespace-nowrap font-medium text-gray-900">{order.customerName}</td>
                   <td className="px-5 py-4 text-sm font-mono text-gray-600 whitespace-nowrap bg-gray-50/50 rounded-sm">{order.vrno}</td>
@@ -324,7 +326,7 @@ export function OrdersView() {
               ))
             ) : (
               <tr>
-                <td colSpan={10} className="px-6 py-12 text-center">
+                <td colSpan={11} className="px-6 py-12 text-center">
                   <div className="flex flex-col items-center justify-center space-y-3">
                     <h3 className="text-gray-900 font-medium">No orders found</h3>
                     <p className="text-gray-500 text-sm mt-1">Try adjusting your filters</p>

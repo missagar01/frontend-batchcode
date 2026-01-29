@@ -155,12 +155,12 @@ export function PaymentView() {
         page: currentPage,
         limit: PAGE_SIZE
       };
-      
+
       if (customerFilter) paramsObj.customer = customerFilter;
       if (searchTerm) paramsObj.search = searchTerm;
       if (itemFilter) paramsObj.item = itemFilter;
 
-      const response = isPendingTab 
+      const response = isPendingTab
         ? await o2dAPI.getPendingPayments(paramsObj)
         : await o2dAPI.getPaymentHistory(paramsObj);
 
@@ -260,14 +260,14 @@ export function PaymentView() {
     const sortedData = [...pendingData].sort((a, b) => {
       const nameA = a.customerName.toLowerCase();
       const nameB = b.customerName.toLowerCase();
-      
+
       if (sortOrder === 'asc') {
         return nameA.localeCompare(nameB);
       } else {
         return nameB.localeCompare(nameA);
       }
     });
-    
+
     setPendingData(sortedData);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sortOrder]);
@@ -280,7 +280,7 @@ export function PaymentView() {
 
     try {
       setIsSubmitting(true)
-      
+
       // TODO: Implement payment submission API call
       // const paymentData = {
       //   orderNumber: selectedEntry.orderNumber,
@@ -303,10 +303,10 @@ export function PaymentView() {
       setNextDateOfCall("")
       setRemarks("")
       setShowDialog(false)
-      
+
       // Refresh data
       await fetchTabData(activeTab, { reset: true })
-      
+
       alert("Payment processed successfully! (This would be saved to database in production)")
     } catch (error) {
       alert("Error processing payment: " + error.message)
@@ -369,7 +369,7 @@ export function PaymentView() {
           <h2 className="text-3xl font-bold tracking-tight">Payment</h2>
           <p className="text-gray-600">Payment processing and management</p>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow border">
           <div className="px-6 py-4 border-b">
             <h3 className="text-lg font-semibold">Error Loading Data</h3>
@@ -378,7 +378,7 @@ export function PaymentView() {
           <div className="px-6 py-8">
             <div className="text-center">
               <p className="text-red-500 mb-4">Error: {error}</p>
-              <button 
+              <button
                 onClick={() => fetchTabData(activeTab, { reset: true })}
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               >
@@ -420,7 +420,7 @@ export function PaymentView() {
                   placeholder="Search customer..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10"
                 />
-                
+
                 {customerSearch && (
                   <button
                     type="button"
@@ -431,7 +431,7 @@ export function PaymentView() {
                   </button>
                 )}
               </div>
-              
+
               {/* Dropdown Menu */}
               {showCustomerDropdown && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
@@ -440,9 +440,8 @@ export function PaymentView() {
                       <div
                         key={index}
                         onClick={() => handleCustomerSelect(customer)}
-                        className={`px-3 py-2 cursor-pointer hover:bg-blue-50 ${
-                          customerFilter === customer ? 'bg-blue-100 text-blue-800' : ''
-                        }`}
+                        className={`px-3 py-2 cursor-pointer hover:bg-blue-50 ${customerFilter === customer ? 'bg-blue-100 text-blue-800' : ''
+                          }`}
                       >
                         {customer}
                       </div>
@@ -473,7 +472,7 @@ export function PaymentView() {
                 ))}
               </select>
             </div>
-            
+
             <div className="flex-1">
               <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
                 Search
@@ -487,7 +486,7 @@ export function PaymentView() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            
+
             <div className="flex items-end">
               <button
                 onClick={clearFilters}
@@ -504,21 +503,19 @@ export function PaymentView() {
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab('pending')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'pending'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'pending'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
             >
               Pending ({displayedPendingCount})
             </button>
             <button
               onClick={() => setActiveTab('history')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'history'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'history'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
             >
               History ({displayedHistoryCount})
             </button>
@@ -579,13 +576,12 @@ export function PaymentView() {
                         <td className="px-4 py-3 whitespace-nowrap text-gray-900 text-xs sm:text-sm">{entry.itemName}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-gray-900 text-xs sm:text-sm">{entry.quantity}</td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            parseInt(entry.delay) > 7 
-                              ? 'bg-red-100 text-red-800' 
-                              : parseInt(entry.delay) > 3 
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${parseInt(entry.delay) > 7
+                            ? 'bg-red-100 text-red-800'
+                            : parseInt(entry.delay) > 3
                               ? 'bg-yellow-100 text-yellow-800'
                               : 'bg-green-100 text-green-800'
-                          }`}>
+                            }`}>
                             {entry.delay} days
                           </span>
                         </td>
@@ -621,14 +617,14 @@ export function PaymentView() {
                 <div className="flex items-center justify-center gap-2 px-6 py-3 text-xs text-gray-500">
                   <span className="w-3.5 h-3.5 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
                   Loading more pending records...
-              </div>
-            )}
-            {!isLoadingMore && !pendingHasMore && pendingData.length > 0 && (
-              <div className="px-6 py-3 text-center text-xs text-gray-500">All pending records loaded</div>
-            )}
+                </div>
+              )}
+              {!isLoadingMore && !pendingHasMore && pendingData.length > 0 && (
+                <div className="px-6 py-3 text-center text-xs text-gray-500">All pending records loaded</div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
         {/* History Tab Content */}
         {activeTab === 'history' && (
@@ -674,11 +670,10 @@ export function PaymentView() {
                         <td className="px-4 py-3 whitespace-nowrap font-medium text-gray-900 text-xs sm:text-sm">{entry.totalAmount}</td>
                         <td className="px-4 py-3 whitespace-nowrap font-medium text-green-600 text-xs sm:text-sm">{entry.receivedAmount}</td>
                         <td className="px-4 py-3 whitespace-nowrap font-medium text-green-600 text-xs sm:text-sm">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            parseFloat(entry.balanceAmount) === 0 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${parseFloat(entry.balanceAmount) === 0
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                            }`}>
                             {entry.balanceAmount}
                           </span>
                         </td>
@@ -703,14 +698,14 @@ export function PaymentView() {
                 <div className="flex items-center justify-center gap-2 px-6 py-3 text-xs text-gray-500">
                   <span className="w-3.5 h-3.5 border-2 border-gray-500 border-t-transparent rounded-full animate-spin" />
                   Loading more history records...
-              </div>
-            )}
-            {!isLoadingMore && !historyHasMore && historyData.length > 0 && (
-              <div className="px-6 py-3 text-center text-xs text-gray-500">All history records loaded</div>
-            )}
+                </div>
+              )}
+              {!isLoadingMore && !historyHasMore && historyData.length > 0 && (
+                <div className="px-6 py-3 text-center text-xs text-gray-500">All history records loaded</div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
 
       {/* Dialog Modal */}
@@ -721,7 +716,7 @@ export function PaymentView() {
               <h3 className="text-lg font-semibold">Process Payment</h3>
               <p className="text-gray-600 text-sm">Process payment for invoice {selectedEntry.invoiceNumber}</p>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Payment Status</label>
@@ -809,7 +804,7 @@ export function PaymentView() {
                 </>
               )}
             </div>
-            
+
             <div className="flex justify-end space-x-3 mt-6">
               <button
                 onClick={closeDialog}

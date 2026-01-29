@@ -66,7 +66,7 @@ export function GateOutView() {
       setHistoryData([]);
       setHasMorePending(true);
       setHasMoreHistory(true);
-      
+
       await fetchData(1, 1, true);
       setInitialLoadDone(true);
       setLoading(false);
@@ -140,7 +140,7 @@ export function GateOutView() {
           page: pagePending.toString(),
           limit: '50'
         });
-        
+
         if (customerFilter) {
           params.append('customer', customerFilter);
         }
@@ -154,7 +154,7 @@ export function GateOutView() {
             'Authorization': `Bearer ${sessionStorage.getItem('token') || localStorage.getItem('token') || ''}`,
           },
         });
-        
+
         const contentType = res.headers.get('content-type');
         if (!contentType?.includes('application/json')) {
           const text = await res.text();
@@ -211,7 +211,7 @@ export function GateOutView() {
           page: pageHistory.toString(),
           limit: '50'
         });
-        
+
         if (customerFilter) {
           params.append('customer', customerFilter);
         }
@@ -225,7 +225,7 @@ export function GateOutView() {
             'Authorization': `Bearer ${sessionStorage.getItem('token') || localStorage.getItem('token') || ''}`,
           },
         });
-        
+
         const contentType = res.headers.get('content-type');
         if (!contentType?.includes('application/json')) {
           const text = await res.text();
@@ -356,7 +356,7 @@ export function GateOutView() {
                 ))}
               </select>
             </div>
-            
+
             <div className="w-full sm:flex-1">
               <label htmlFor="search-filter" className="block text-sm font-medium text-gray-700 mb-1">
                 Search
@@ -370,7 +370,7 @@ export function GateOutView() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            
+
             <div className="flex items-end">
               <button
                 onClick={clearFilters}
@@ -388,21 +388,19 @@ export function GateOutView() {
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab('pending')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'pending'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'pending'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
             >
               Pending ({pendingTotalCount !== null ? pendingTotalCount : pendingData.length})
             </button>
             <button
               onClick={() => setActiveTab('history')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'history'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'history'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
             >
               History ({historyTotalCount !== null ? historyTotalCount : historyData.length})
             </button>
@@ -427,6 +425,7 @@ export function GateOutView() {
               <table className="w-full table-auto text-sm">
                 <thead className="bg-gray-50 border-b sticky top-0 z-10 shadow-sm text-xs">
                   <tr>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">S.No</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Planned Time</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Order Number</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Gate Entry</th>
@@ -439,7 +438,7 @@ export function GateOutView() {
                 <tbody className="divide-y divide-gray-200">
                   {loading && hasMorePending && (
                     <tr>
-                      <td colSpan={7} className="px-6 py-4 text-center">
+                      <td colSpan={8} className="px-6 py-4 text-center">
                         <div className="flex justify-center items-center">
                           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
                           <span className="ml-2 text-gray-600">Loading more data...</span>
@@ -450,6 +449,7 @@ export function GateOutView() {
                   {pendingData.length > 0 ? (
                     pendingData.map((entry, index) => (
                       <tr key={`${entry.gateEntryNumber}-${index}`} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 whitespace-nowrap text-gray-900 text-xs sm:text-sm">{index + 1}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-gray-900 text-xs sm:text-sm">{entry.plannedFormatted}</td>
                         <td className="px-4 py-3 whitespace-nowrap font-medium text-gray-900 text-xs sm:text-sm">{entry.orderNumber}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-gray-900 text-xs sm:text-sm">{entry.gateEntryNumber}</td>
@@ -465,7 +465,7 @@ export function GateOutView() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                      <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                         {customerFilter || searchTerm ? 'No records found for current filters' : 'No pending records found'}
                       </td>
                     </tr>
@@ -494,6 +494,7 @@ export function GateOutView() {
               <table className="w-full table-auto text-sm">
                 <thead className="bg-gray-50 border-b sticky top-0 z-10 shadow-sm text-xs">
                   <tr>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">S.No</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Order Number</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Gate Entry</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Customer</th>
@@ -507,7 +508,7 @@ export function GateOutView() {
                 <tbody className="divide-y divide-gray-200">
                   {loading && hasMoreHistory && (
                     <tr>
-                      <td colSpan={8} className="px-6 py-4 text-center">
+                      <td colSpan={9} className="px-6 py-4 text-center">
                         <div className="flex justify-center items-center">
                           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
                           <span className="ml-2 text-gray-600">Loading more data...</span>
@@ -518,6 +519,7 @@ export function GateOutView() {
                   {historyData.length > 0 ? (
                     historyData.map((entry, index) => (
                       <tr key={`${entry.gateEntryNumber}-${index}`} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 whitespace-nowrap text-gray-900 text-xs sm:text-sm">{index + 1}</td>
                         <td className="px-4 py-3 whitespace-nowrap font-medium text-gray-900 text-xs sm:text-sm">{entry.orderNumber}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-gray-900 text-xs sm:text-sm">{entry.gateEntryNumber}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-gray-900 text-xs sm:text-sm">{entry.customerName}</td>
@@ -542,7 +544,7 @@ export function GateOutView() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                      <td colSpan={9} className="px-6 py-8 text-center text-gray-500">
                         {customerFilter || searchTerm ? 'No records found for current filters' : 'No history records found'}
                       </td>
                     </tr>

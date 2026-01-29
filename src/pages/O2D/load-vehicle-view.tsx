@@ -42,7 +42,7 @@ export function LoadVehicleView() {
   const [itemOptions, setItemOptions] = useState([])
   const [qualityControllerOptions, setQualityControllerOptions] = useState([])
   const [itemCount, setItemCount] = useState(1);
-const [selectedItems, setSelectedItems] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
   const [newItems, setNewItems] = useState([])
   const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGzl1EP1Vc6C5hB4DyOpmxraeUc0Ar4mAw567VOKlaBk0qwdFxyB37cgiGNiKYXww7/exec"
   const SHEET_NAME = "FMS"
@@ -185,88 +185,88 @@ const [selectedItems, setSelectedItems] = useState([]);
       setLoading(false)
     }
   }
-const addItemDuplicate = () => {
-  if (itemName && itemCount < 10) {
-    setSelectedItems([...selectedItems, itemName]);
-    setItemCount(itemCount + 1);
-  }
-};
+  const addItemDuplicate = () => {
+    if (itemName && itemCount < 10) {
+      setSelectedItems([...selectedItems, itemName]);
+      setItemCount(itemCount + 1);
+    }
+  };
 
-const removeItem = (index) => {
-  const updatedItems = selectedItems.filter((_, i) => i !== index);
-  setSelectedItems(updatedItems);
-  setItemCount(itemCount - 1);
-};
-
-
+  const removeItem = (index) => {
+    const updatedItems = selectedItems.filter((_, i) => i !== index);
+    setSelectedItems(updatedItems);
+    setItemCount(itemCount - 1);
+  };
 
 
-const handleLoadVehicle = async () => {
-  if (!selectedEntry || !supervisorName || !itemName || !qualityController) {
-    alert("Please fill all required fields")
-    return
-  }
 
-  try {
-    setIsSubmitting(true)
-    
-    const currentDate = new Date().toISOString().split('T')[0]
-    
-    const formData = new FormData()
-    formData.append('sheetName', SHEET_NAME)
-    formData.append('action', 'update')
-    formData.append('rowIndex', selectedEntry.rowIndex.toString())
-    
-    const rowData = new Array(50).fill('')
-    rowData[10] = currentDate
-    rowData[12] = supervisorName
-    rowData[13] = remarks || ''
 
-    // Column AQ (index 42) - All Items as comma-separated string
-    const allItems = []
-    if (itemName) allItems.push(itemName)
-    if (selectedItems.length > 0) {
-      const validNewItems = selectedItems.filter(item => item.trim() !== "")
-      allItems.push(...validNewItems)
-      // Update dropdown options with new items
-      setItemOptions(prev => [...new Set([...prev, ...validNewItems])]) // Using Set to avoid duplicates
+  const handleLoadVehicle = async () => {
+    if (!selectedEntry || !supervisorName || !itemName || !qualityController) {
+      alert("Please fill all required fields")
+      return
     }
 
-    rowData[42] = allItems.join(', ') // Simple comma-separated string instead of JSON
+    try {
+      setIsSubmitting(true)
 
-    rowData[43] = qualityController // Column AR - Normal text
-    
-    formData.append('rowData', JSON.stringify(rowData))
+      const currentDate = new Date().toISOString().split('T')[0]
 
-    const response = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      body: formData
-    })
+      const formData = new FormData()
+      formData.append('sheetName', SHEET_NAME)
+      formData.append('action', 'update')
+      formData.append('rowIndex', selectedEntry.rowIndex.toString())
 
-    const result = await response.json()
-    
-    if (result.success) {
-      setSelectedEntry(null)
-      setSupervisorName("")
-      setRemarks("")
-      setItemName("")
-      setQualityController("")
-      setSelectedItems([]) // Clear selectedItems instead of newItems
-      setItemCount(1) // Reset item count
-      setShowDialog(false)
-      
-      await fetchSheetData()
-      
-      alert("Loading completed successfully!")
-    } else {
-      alert("Error: " + (result.error || "Failed to update"))
+      const rowData = new Array(50).fill('')
+      rowData[10] = currentDate
+      rowData[12] = supervisorName
+      rowData[13] = remarks || ''
+
+      // Column AQ (index 42) - All Items as comma-separated string
+      const allItems = []
+      if (itemName) allItems.push(itemName)
+      if (selectedItems.length > 0) {
+        const validNewItems = selectedItems.filter(item => item.trim() !== "")
+        allItems.push(...validNewItems)
+        // Update dropdown options with new items
+        setItemOptions(prev => [...new Set([...prev, ...validNewItems])]) // Using Set to avoid duplicates
+      }
+
+      rowData[42] = allItems.join(', ') // Simple comma-separated string instead of JSON
+
+      rowData[43] = qualityController // Column AR - Normal text
+
+      formData.append('rowData', JSON.stringify(rowData))
+
+      const response = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        body: formData
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setSelectedEntry(null)
+        setSupervisorName("")
+        setRemarks("")
+        setItemName("")
+        setQualityController("")
+        setSelectedItems([]) // Clear selectedItems instead of newItems
+        setItemCount(1) // Reset item count
+        setShowDialog(false)
+
+        await fetchSheetData()
+
+        alert("Loading completed successfully!")
+      } else {
+        alert("Error: " + (result.error || "Failed to update"))
+      }
+    } catch (error) {
+      alert("Error submitting data: " + error.message)
+    } finally {
+      setIsSubmitting(false)
     }
-  } catch (error) {
-    alert("Error submitting data: " + error.message)
-  } finally {
-    setIsSubmitting(false)
   }
-}
 
   const openDialog = (entry) => {
     setSelectedEntry(entry)
@@ -375,6 +375,7 @@ const handleLoadVehicle = async () => {
               <table className="w-full table-auto text-sm">
                 <thead className="bg-gray-50 border-b sticky top-0 z-10 shadow-sm text-xs">
                   <tr>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">S.No</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Order Number</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Gate Entry Number</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Customer Name</th>
@@ -391,6 +392,7 @@ const handleLoadVehicle = async () => {
                         key={`${entry.gateEntryNumber || 'gate'}-${entry.orderNumber || 'order'}-${entry.rowIndex || index}`}
                         className="hover:bg-gray-50"
                       >
+                        <td className="px-4 py-3 whitespace-nowrap text-gray-900 text-xs sm:text-sm">{index + 1}</td>
                         <td className="px-4 py-3 whitespace-nowrap font-medium text-gray-900 text-xs sm:text-sm">{entry.orderNumber}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-gray-900 text-xs sm:text-sm">{entry.gateEntryNumber}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-gray-900 text-xs sm:text-sm">{entry.customerName}</td>
@@ -413,7 +415,7 @@ const handleLoadVehicle = async () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                      <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                         No pending records found
                       </td>
                     </tr>
@@ -438,6 +440,7 @@ const handleLoadVehicle = async () => {
               <table className="w-full table-auto text-sm">
                 <thead className="bg-gray-50 border-b sticky top-0 z-10 shadow-sm text-xs">
                   <tr>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">S.No</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Order Number</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Gate Entry Number</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Customer Name</th>
@@ -454,6 +457,7 @@ const handleLoadVehicle = async () => {
                         key={`${entry.gateEntryNumber || 'gate'}-${entry.orderNumber || 'order'}-${entry.rowIndex || index}`}
                         className="hover:bg-gray-50"
                       >
+                        <td className="px-4 py-3 whitespace-nowrap text-gray-900 text-xs sm:text-sm">{index + 1}</td>
                         <td className="px-4 py-3 whitespace-nowrap font-medium text-gray-900 text-xs sm:text-sm">{entry.orderNumber}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-gray-900 text-xs sm:text-sm">{entry.gateEntryNumber}</td>
                         <td className="px-4 py-3 whitespace-nowrap text-gray-900 text-xs sm:text-sm">{entry.customerName}</td>
@@ -469,7 +473,7 @@ const handleLoadVehicle = async () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                      <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
                         No history records found
                       </td>
                     </tr>
@@ -480,141 +484,141 @@ const handleLoadVehicle = async () => {
           </div>
         )}
       </div>
-{showDialog && selectedEntry && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-96 overflow-y-auto">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold">Load Vehicle</h3>
-        <p className="text-gray-600 text-sm">Complete loading details for {selectedEntry.truckNumber}</p>
-      </div>
+      {showDialog && selectedEntry && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-96 overflow-y-auto">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold">Load Vehicle</h3>
+              <p className="text-gray-600 text-sm">Complete loading details for {selectedEntry.truckNumber}</p>
+            </div>
 
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Item Name</label>
-          <div className="flex space-x-2">
-            <select
-              value={itemName}
-              onChange={(e) => setItemName(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select item</option>
-              {itemOptions.map((name, index) => (
-                <option key={index} value={name}>{name}</option>
-              ))}
-            </select>
-            <button
-              onClick={addItemDuplicate}
-              className="px-3 py-2 bg-green-500 text-white text-sm rounded hover:bg-green-600"
-              disabled={!itemName || itemCount >= 10}
-            >
-              Add Item ({itemCount}/10)
-            </button>
-          </div>
-        </div>
-
-        {/* Additional Item Dropdowns */}
-        {selectedItems.length > 0 && (
-          <div className="border-t pt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Additional Items ({selectedItems.length}/10):
-            </label>
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {selectedItems.map((item, index) => (
-                <div key={index} className="flex items-center space-x-2">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Item Name</label>
+                <div className="flex space-x-2">
                   <select
-                    value={item}
-                    onChange={(e) => {
-                      const updatedItems = [...selectedItems];
-                      updatedItems[index] = e.target.value;
-                      setSelectedItems(updatedItems);
-                    }}
+                    value={itemName}
+                    onChange={(e) => setItemName(e.target.value)}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select item</option>
-                    {itemOptions.map((name, optionIndex) => (
-                      <option key={optionIndex} value={name}>{name}</option>
+                    {itemOptions.map((name, index) => (
+                      <option key={index} value={name}>{name}</option>
                     ))}
                   </select>
                   <button
-                    onClick={() => removeItem(index)}
-                    className="px-2 py-2 bg-red-500 text-white text-sm rounded hover:bg-red-600"
+                    onClick={addItemDuplicate}
+                    className="px-3 py-2 bg-green-500 text-white text-sm rounded hover:bg-green-600"
+                    disabled={!itemName || itemCount >= 10}
                   >
-                    ✕
+                    Add Item ({itemCount}/10)
                   </button>
                 </div>
-              ))}
+              </div>
+
+              {/* Additional Item Dropdowns */}
+              {selectedItems.length > 0 && (
+                <div className="border-t pt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Additional Items ({selectedItems.length}/10):
+                  </label>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {selectedItems.map((item, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <select
+                          value={item}
+                          onChange={(e) => {
+                            const updatedItems = [...selectedItems];
+                            updatedItems[index] = e.target.value;
+                            setSelectedItems(updatedItems);
+                          }}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Select item</option>
+                          {itemOptions.map((name, optionIndex) => (
+                            <option key={optionIndex} value={name}>{name}</option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => removeItem(index)}
+                          className="px-2 py-2 bg-red-500 text-white text-sm rounded hover:bg-red-600"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedItems([]);
+                      setItemCount(1);
+                    }}
+                    className="mt-2 px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Quality Controller</label>
+                <select
+                  value={qualityController}
+                  onChange={(e) => setQualityController(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select quality controller</option>
+                  {qualityControllerOptions.map((name, index) => (
+                    <option key={index} value={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Supervisor Name</label>
+                <select
+                  value={supervisorName}
+                  onChange={(e) => setSupervisorName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select supervisor</option>
+                  {supervisorOptions.map((name, index) => (
+                    <option key={index} value={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
+                <textarea
+                  placeholder="Enter any remarks..."
+                  value={remarks}
+                  onChange={(e) => setRemarks(e.target.value)}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
-            <button
-              onClick={() => {
-                setSelectedItems([]);
-                setItemCount(1);
-              }}
-              className="mt-2 px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
-            >
-              Clear All
-            </button>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={closeDialog}
+                disabled={isSubmitting}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLoadVehicle}
+                disabled={isSubmitting || !supervisorName || !itemName || !qualityController}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+              >
+                {isSubmitting ? "Submitting..." : "Complete Loading"}
+              </button>
+            </div>
           </div>
-        )}
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Quality Controller</label>
-          <select
-            value={qualityController}
-            onChange={(e) => setQualityController(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select quality controller</option>
-            {qualityControllerOptions.map((name, index) => (
-              <option key={index} value={name}>{name}</option>
-            ))}
-          </select>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Supervisor Name</label>
-          <select
-            value={supervisorName}
-            onChange={(e) => setSupervisorName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select supervisor</option>
-            {supervisorOptions.map((name, index) => (
-              <option key={index} value={name}>{name}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
-          <textarea
-            placeholder="Enter any remarks..."
-            value={remarks}
-            onChange={(e) => setRemarks(e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-end space-x-3 mt-6">
-        <button
-          onClick={closeDialog}
-          disabled={isSubmitting}
-          className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleLoadVehicle}
-          disabled={isSubmitting || !supervisorName || !itemName || !qualityController}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-        >
-          {isSubmitting ? "Submitting..." : "Complete Loading"}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
     </div>
   )
