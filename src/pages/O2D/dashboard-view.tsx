@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react"
-import { AlertCircle, Filter, Loader2, RefreshCw, X } from "lucide-react"
+import { AlertCircle, Filter, Loader2, RefreshCw, X, Trophy, Database } from "lucide-react"
 import { format } from "date-fns"
 import { useAuth } from "../../context/AuthContext"
 import { Badge } from "./ui/badge"
@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { ChartContainer, ChartTooltip } from "./ui/chart"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
-import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts"
+import { Cell, Pie, PieChart, ResponsiveContainer, Legend, Tooltip } from "recharts"
 import { cn } from "../../lib/utils"
 import api, { API_ENDPOINTS } from "../../config/api";
 type DashboardRow = {
@@ -328,7 +328,19 @@ export function DashboardView() {
     return Array.from(set).sort()
   }, [data?.filters?.states, data?.rows])
 
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82CA9D", "#FFC658", "#FF7C7C"]
+  const COLORS = [
+    "#2563eb", // Blue
+    "#7c3aed", // Violet
+    "#db2777", // Pink
+    "#ea580c", // Orange
+    "#059669", // Emerald
+    "#0891b2", // Cyan
+    "#4f46e5", // Indigo
+    "#eab308", // Yellow
+    "#dc2626", // Red
+    "#16a34a", // Green
+    "#94a3b8"  // Slate (for Others)
+  ]
 
   const chartData = useMemo(() => {
     if (!filteredData || filteredData.length === 0) return []
@@ -619,7 +631,7 @@ export function DashboardView() {
           <div>
             {lastUpdated && <p className="text-xs text-gray-500">Last updated: {lastUpdated.toLocaleTimeString()}</p>}
           </div>
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <Button onClick={fetchDashboard} variant="outline" size="sm" className="flex items-center gap-1">
               <RefreshCw className="h-4 w-4" />
               Refresh
@@ -635,7 +647,7 @@ export function DashboardView() {
               </svg>
               Download PDF
             </Button>
-          </div>
+          </div> */}
         </div>
 
         {error && (
@@ -706,7 +718,7 @@ export function DashboardView() {
               </div>
             </CardHeader>
             <CardContent className="p-4 sm:p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {itemAverages.map((itemData, index) => {
                   const gradients = [
                     'from-indigo-500 via-indigo-600 to-blue-600',
@@ -760,7 +772,7 @@ export function DashboardView() {
               </div>
             </CardHeader>
             <CardContent className="p-4 sm:p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {itemAverages.map((itemData, index) => {
                   const colors = [
                     '#099438ff', // Pipe - Light Green
@@ -820,7 +832,7 @@ export function DashboardView() {
                     </Badge>
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
-                    <div className="text-3xl font-bold tracking-tight text-white">
+                    <div className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                       ₹{formatMetricValue(displayMetrics.saudaRate2026)}
                     </div>
                     <p className="text-xs mt-1 font-medium text-purple-100">
@@ -853,7 +865,7 @@ export function DashboardView() {
                       </Badge>
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                      <div className="text-3xl font-bold tracking-tight text-white">
+                      <div className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                         ₹{formatMetricValue(displayMetrics.monthlyGd)}
                       </div>
                       <p className="text-xs mt-1 font-medium text-green-100">
@@ -873,7 +885,7 @@ export function DashboardView() {
                       </Badge>
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                      <div className="text-3xl font-bold tracking-tight text-white">
+                      <div className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                         ₹{formatMetricValue(displayMetrics.dailyGd)}
                       </div>
                       <p className="text-xs mt-1 font-medium text-orange-100">
@@ -910,7 +922,7 @@ export function DashboardView() {
                       </Badge>
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                      <div className="text-3xl font-bold tracking-tight text-white">
+                      <div className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                         {formatMetricValue(displayMetrics.monthlyWorkingParty)}
                       </div>
                       <p className="text-xs mt-1 font-medium text-cyan-100">
@@ -930,7 +942,7 @@ export function DashboardView() {
                       </Badge>
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                      <div className="text-3xl font-bold tracking-tight text-white">
+                      <div className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                         {displayMetrics.monthlyPartyAverage}
                       </div>
                       <p className="text-xs mt-1 font-medium text-emerald-100">
@@ -964,7 +976,7 @@ export function DashboardView() {
                       </Badge>
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                      <div className="text-3xl font-bold tracking-tight text-white">
+                      <div className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                         {formatMetricValue(displayMetrics.pendingOrdersTotal)}
                       </div>
                       <p className="text-xs mt-1 font-medium text-teal-100">
@@ -984,7 +996,7 @@ export function DashboardView() {
                       </Badge>
                     </CardHeader>
                     <CardContent className="p-4 pt-0">
-                      <div className="text-3xl font-bold tracking-tight text-white">
+                      <div className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
                         {displayMetrics.conversionRatio}
                       </div>
                       <p className="text-xs mt-1 font-medium text-pink-100">
@@ -1140,96 +1152,199 @@ export function DashboardView() {
 
 
 
-        <Card className="w-full overflow-hidden border-l-4 border-l-blue-500 bg-gradient-to-br from-blue-50/30 to-white">
-          <CardHeader className="p-3 sm:p-4 lg:p-6 bg-gradient-to-r from-blue-50 to-transparent">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div>
-                <CardTitle className="text-sm sm:text-base lg:text-lg text-blue-700">Party Wise Dispatch Analytics</CardTitle>
-                <CardDescription className="text-xs sm:text-sm text-blue-600/80">
-                  Distribution by customer ({filteredData?.length || 0} total records)
+        <Card className="w-full overflow-hidden border-none bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative group">
+          {/* Decorative accent line */}
+          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-80 group-hover:opacity-100 transition-opacity"></div>
+
+          <CardHeader className="p-4 sm:p-8 bg-white/5 backdrop-blur-sm border-b border-white/10">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              <div className="space-y-1">
+                <CardTitle className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                  <span className="w-3 h-8 bg-blue-500 rounded-full inline-block"></span>
+                  Dispatch Distribution Analysis
+                </CardTitle>
+                <CardDescription className="text-sm font-medium text-blue-200/60 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse text-xs"></div>
+                  Top Performing Customers by Volume • {filteredData?.length || 0} Total Records
                 </CardDescription>
               </div>
+              <Badge variant="outline" className="w-fit bg-blue-500/10 text-blue-300 border-blue-400/30 px-4 py-1.5 text-xs font-black uppercase tracking-[0.2em] rounded-full shadow-inner backdrop-blur-md">
+                Live Data Stream
+              </Badge>
             </div>
           </CardHeader>
-          <CardContent className="p-3 sm:p-4 lg:p-6 pt-0">
-            <ChartContainer
-              config={{
-                value: { label: "Dispatched", color: "#0088FE" },
-                dispatched: { label: "Dispatched", color: "#0088FE" },
-              }}
-              className="w-full"
-            >
-              <div className="w-full" style={{ minHeight: 300, minWidth: 0 }}>
-                <ResponsiveContainer width="100%" height={300} minHeight={300}>
+          <CardContent className="p-4 sm:p-10 relative overflow-hidden">
+            {/* Background decorative elements */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl -ml-32 -mb-32"></div>
+
+            <div className="min-h-[450px] lg:h-[480px] w-full flex flex-col lg:flex-row items-center justify-center gap-12 relative z-10">
+              {/* Chart Side */}
+              <div className="w-full aspect-square max-w-[380px] lg:flex-1 lg:max-w-none lg:h-full relative flex items-center justify-center">
+                <div className="absolute inset-0 bg-blue-500/5 rounded-full blur-2xl animate-pulse"></div>
+                <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={chartData}
                       cx="50%"
                       cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius="60%"
-                      fill="#8884d8"
+                      innerRadius="60%"
+                      outerRadius="90%"
+                      paddingAngle={5}
                       dataKey="value"
+                      stroke="rgba(255,255,255,0.05)"
+                      strokeWidth={2}
+                      animationBegin={100}
+                      animationDuration={1800}
+                      animationEasing="ease-out"
                     >
                       {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={entry.name === "Others" ? "#475569" : COLORS[index % COLORS.length]}
+                          className="hover:saturate-150 transition-all cursor-pointer outline-none filter drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]"
+                        />
                       ))}
                     </Pie>
-                    <ChartTooltip
+                    <Tooltip
                       content={({ active, payload }) => {
                         if (active && payload && payload.length) {
-                          const datum = payload[0].payload
+                          const datum = payload[0].payload;
+                          const total = chartData.reduce((acc, curr) => acc + curr.value, 0);
+                          const percentage = ((datum.value / total) * 100).toFixed(1);
                           return (
-                            <div className="bg-white border rounded-lg p-2 shadow-md">
-                              <p className="font-medium">{datum.name}</p>
-                              <p className="text-sm text-gray-600">{datum.value} dispatches</p>
+                            <div className="bg-[#1e293b]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl ring-1 ring-white/10 min-w-[220px] animate-in zoom-in-95 duration-200">
+                              <p className="font-black text-white border-b border-white/10 pb-3 mb-3 flex items-center gap-3">
+                                <span className="w-3 h-3 rounded-full shadow-[0_0_10px_currentColor]" style={{ backgroundColor: datum.fill, color: datum.fill }}></span>
+                                {datum.name}
+                              </p>
+                              <div className="space-y-2.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-bold text-slate-400">Total Dispatches</span>
+                                  <span className="font-black text-white text-lg font-mono">{datum.value.toLocaleString()}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-bold text-slate-400">Market Share</span>
+                                  <span className="font-black text-blue-400 text-lg font-mono">{percentage}%</span>
+                                </div>
+                              </div>
                             </div>
-                          )
+                          );
                         }
-                        return null
+                        return null;
                       }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
+                {/* Central Labels */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none -mt-2">
+                  <span className="text-xs font-black text-slate-500 uppercase tracking-[0.4em] mb-1">Portfolio</span>
+                  <span className="text-4xl font-black text-white leading-none tracking-tight">
+                    {chartData.reduce((acc, curr) => acc + curr.value, 0).toLocaleString()}
+                  </span>
+                  <span className="text-[10px] font-bold text-blue-400/60 uppercase tracking-widest mt-2">Dispatches</span>
+                </div>
               </div>
-            </ChartContainer>
+
+              {/* Legend Side */}
+              <div className="w-full lg:w-[350px] max-h-full overflow-y-auto no-scrollbar bg-white/5 backdrop-blur-md rounded-3xl p-8 border border-white/10 flex flex-col gap-6 shadow-inner">
+                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Ranking</h4>
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Volume</h4>
+                </div>
+                <div className="space-y-4">
+                  {chartData.map((item, index) => (
+                    <div key={item.name} className="flex items-center justify-between group cursor-help transition-all duration-300 hover:translate-x-1">
+                      <div className="flex items-center gap-4">
+                        <div
+                          className="w-3 h-3 rounded-full shadow-[0_0_15px_rgba(0,0,0,0.5)] group-hover:scale-125 transition-transform"
+                          style={{ backgroundColor: item.name === "Others" ? "#475569" : COLORS[index % COLORS.length] }}
+                        />
+                        <span className="text-xs font-black text-slate-200 truncate max-w-[170px] group-hover:text-white transition-colors">
+                          {item.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-[10px] font-black text-slate-500 font-mono tracking-tighter w-8 text-right">
+                          {((item.value / chartData.reduce((acc, curr) => acc + curr.value, 0)) * 100).toFixed(0)}%
+                        </span>
+                        <div className="bg-white/10 px-3 py-1 rounded-full border border-white/5 group-hover:bg-white/20 group-hover:border-white/30 transition-all">
+                          <span className="text-[11px] font-black text-white font-mono leading-none">
+                            {item.value}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50/30 to-white">
-          <CardHeader className="bg-gradient-to-r from-purple-50 to-transparent">
-            <CardTitle className="text-purple-700">Top 10 Customers</CardTitle>
-            <CardDescription className="text-purple-600/80">
-              Top performing customers by dispatch volume
-              {hasActiveFilters ? " (filtered results)" : ""}
-            </CardDescription>
+        <Card className="w-full overflow-hidden border-none bg-gradient-to-br from-[rgba(20, 7, 204, 1)] via-[rgba(21, 18, 116, 1)] to-[rgb(30,27,75)] shadow-2xl relative">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[rgba(50, 65, 197, 1)] to-[rgba(32, 20, 70, 1)] opacity-60"></div>
+          <CardHeader className="p-6 bg-white/5 backdrop-blur-md border-b border-white/10">
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 bg-indigo-400/20 rounded-xl border border-indigo-400/30">
+                <Trophy className="w-5 h-5 text-indigo-300" />
+              </div>
+              <div>
+                <CardTitle className="text-xl font-black text-balck tracking-tight">Top 10 Customers</CardTitle>
+                <CardDescription className="text-xs font-bold text-balck/60 uppercase tracking-widest mt-1">
+                  Performance Leaders by Volume {hasActiveFilters ? "• Filtered" : ""}
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto max-h-[420px]">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto max-h-[420px] custom-scrollbar">
               <Table>
-                <TableHeader className="sticky top-0 z-10 bg-white">
-                  <TableRow>
-                    <TableHead className="text-xs sm:text-sm">Rank</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Customer Name</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Item Name</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Dispatches</TableHead>
+                <TableHeader className="sticky top-0 z-20 bg-[rgb(49,46,129)] backdrop-blur-xl border-b border-white/10">
+                  <TableRow className="hover:bg-transparent border-none">
+                    <TableHead className="text-[11px] font-black text-white uppercase tracking-tighter py-4">Rank</TableHead>
+                    <TableHead className="text-[11px] font-black text-white uppercase tracking-tighter py-4">Customer Name</TableHead>
+                    <TableHead className="text-[11px] font-black text-white uppercase tracking-tighter py-4">Item Name</TableHead>
+                    <TableHead className="text-[11px] font-black text-white uppercase tracking-tighter py-4 text-right">Dispatches</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {top10Customers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8 text-gray-500">
-                        No customer data available
+                      <TableCell colSpan={4} className="text-center py-20 text-white/40 font-bold italic">
+                        No performance data found
                       </TableCell>
                     </TableRow>
                   ) : (
                     top10Customers.map((customer) => (
-                      <TableRow key={customer.rank}>
-                        <TableCell className="text-xs sm:text-sm">{customer.rank}</TableCell>
-                        <TableCell className="text-xs sm:text-sm">{customer.name}</TableCell>
-                        <TableCell className="text-xs sm:text-sm">{customer.itemNames}</TableCell>
-                        <TableCell className="text-xs sm:text-sm">{customer.dispatches}</TableCell>
+                      <TableRow
+                        key={customer.rank}
+                        className="group/row border-b border-white/5 transition-all duration-300"
+                      >
+                        <TableCell className="py-4">
+                          <span className={cn(
+                            "w-7 h-7 flex items-center justify-center rounded-lg text-[11px] font-black shadow-inner border",
+                            customer.rank === 1 ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" :
+                              customer.rank === 2 ? "bg-slate-300/20 text-slate-100 border-slate-300/30" :
+                                customer.rank === 3 ? "bg-orange-500/20 text-orange-400 border-orange-500/30" :
+                                  "bg-white/5 text-white border-white/10"
+                          )}>
+                            {customer.rank}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-xs font-black text-white py-4">
+                          {customer.name}
+                        </TableCell>
+                        <TableCell className="text-xs font-bold text-white/80 py-4">
+                          <Badge variant="outline" className="bg-white/5 border-white/10 text-[9px] text-white font-black">
+                            {customer.itemNames}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right py-4">
+                          <span className="text-sm font-black text-white font-mono bg-white/5 px-3 py-1 rounded-lg border border-white/5">
+                            {customer.dispatches}
+                          </span>
+                        </TableCell>
                       </TableRow>
                     ))
                   )}
@@ -1239,55 +1354,96 @@ export function DashboardView() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-br from-emerald-50/30 to-white">
-          <CardHeader className="bg-gradient-to-r from-emerald-50 to-transparent">
-            <CardTitle className="text-emerald-700">Filtered Results</CardTitle>
-            <CardDescription className="text-emerald-600/80">
-              Showing {filteredData?.length || 0} records
-              {hasActiveFilters ? " matching your filters" : " (all data)"}
-            </CardDescription>
+        <Card className="w-full overflow-hidden border-none bg-gradient-to-br from-[rgb(6,78,59)] via-[rgb(6,95,70)] to-[rgb(6,78,59)] shadow-2xl relative">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[rgb(52,211,153)] to-[rgb(45,212,191)] opacity-60"></div>
+          <CardHeader className="p-6 bg-white/5 backdrop-blur-md border-b border-white/10">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 bg-emerald-400/20 rounded-xl border border-emerald-400/30">
+                  <Database className="w-5 h-5 text-emerald-300" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-black text-white tracking-tight">Dispatch Audit Log</CardTitle>
+                  <CardDescription className="text-xs font-bold text-white/60 uppercase tracking-widest mt-1">
+                    Showing {filteredData?.length || 0} Records {hasActiveFilters ? "• Criteria Filtered" : "• Master View"}
+                  </CardDescription>
+                </div>
+              </div>
+              <Button variant="outline" className="bg-white/5 border-white/10 text-white text-[10px] font-black hover:bg-emerald-400/20 h-8 px-4 rounded-full transition-all border-emerald-500/20">
+                Export Detailed Audit
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto max-h-[480px]">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto max-h-[550px] custom-scrollbar">
               <Table>
-                <TableHeader className="sticky top-0 z-10 bg-white">
-                  <TableRow>
-                    <TableHead className="text-xs sm:text-sm">Sr. No.</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Party Name</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Item Name</TableHead>
-                    <TableHead className="text-xs sm:text-sm">In Date</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Out Date</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Gate Out Time</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Order No.</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Gate Pass</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Invoice No.</TableHead>
+                <TableHeader className="sticky top-0 z-20 bg-[rgb(6,95,70)] backdrop-blur-xl border-b border-white/10">
+                  <TableRow className="hover:bg-transparent border-none">
+                    <TableHead className="text-[11px] font-black text-white uppercase py-4">No.</TableHead>
+                    <TableHead className="text-[11px] font-black text-white uppercase py-4 min-w-[200px]">Party Details</TableHead>
+                    <TableHead className="text-[11px] font-black text-white uppercase py-4">Item Analytics</TableHead>
+                    <TableHead className="text-[11px] font-black text-white uppercase py-4">In Transit</TableHead>
+                    <TableHead className="text-[11px] font-black text-white uppercase py-4">Out Stream</TableHead>
+                    <TableHead className="text-[11px] font-black text-white uppercase py-4 min-w-[150px]">Reference IDs</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {!filteredData || filteredData.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8 text-gray-500">
-                        No records found matching your filters
+                      <TableCell colSpan={6} className="text-center py-24 text-white/40 font-black italic">
+                        No records match the current filter criteria
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredData.map((row, index) => (
-                      <TableRow key={`${row.wslipno || row.orderVrno || index}-${index}`}>
-                        <TableCell className="text-xs sm:text-sm">{index + 1}</TableCell>
-                        <TableCell className="text-xs sm:text-sm">{row.partyName || "-"}</TableCell>
-                        <TableCell className="text-xs sm:text-sm">{row.itemName || "-"}</TableCell>
-                        <TableCell className="text-xs sm:text-sm">
-                          {row.indate ? new Date(row.indate).toLocaleDateString() : "-"}
+                      <TableRow
+                        key={`${row.wslipno || row.orderVrno || index}-${index}`}
+                        className="group/row border-b border-white/5 transition-all duration-300"
+                      >
+                        <TableCell className="py-4">
+                          <span className="text-[10px] font-black text-white/70">
+                            {(index + 1).toString().padStart(3, '0')}
+                          </span>
                         </TableCell>
-                        <TableCell className="text-xs sm:text-sm">
-                          {row.outdate ? new Date(row.outdate).toLocaleDateString() : "-"}
+                        <TableCell className="py-4">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-xs font-black text-white">
+                              {row.partyName || "Anonymous Customer"}
+                            </span>
+                            <span className="text-[10px] font-bold text-white/40 flex items-center gap-1">
+                              Partner Account
+                            </span>
+                          </div>
                         </TableCell>
-                        <TableCell className="text-xs sm:text-sm">
-                          {row.gateOutTime ? new Date(row.gateOutTime).toLocaleString() : "-"}
+                        <TableCell className="py-4">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="bg-white/5 border-white/10 text-[9px] text-emerald-200 font-black px-2 py-0">
+                              {row.itemName || "General Cargo"}
+                            </Badge>
+                          </div>
                         </TableCell>
-                        <TableCell className="text-xs sm:text-sm">{row.orderVrno || "-"}</TableCell>
-                        <TableCell className="text-xs sm:text-sm">{row.gateVrno || "-"}</TableCell>
-                        <TableCell className="text-xs sm:text-sm">{row.invoiceNo || "-"}</TableCell>
+                        <TableCell className="py-4">
+                          <span className="text-[11px] font-bold text-white/70 font-mono">
+                            {row.indate ? new Date(row.indate).toLocaleDateString() : "-"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[11px] font-bold text-white font-mono">
+                              {row.outdate ? new Date(row.outdate).toLocaleDateString() : "-"}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-4">
+                          <div className="flex flex-wrap gap-1.5">
+                            <span className="text-[10px] font-black text-white/50 bg-white/5 border border-white/10 px-2 py-0.5 rounded leading-none">
+                              #O: {row.orderVrno || "N/A"}
+                            </span>
+                            <span className="text-[10px] font-black text-white/60 bg-white/5 border border-white/10 px-2 py-0.5 rounded leading-none">
+                              #INV: {row.invoiceNo || "N/A"}
+                            </span>
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))
                   )}
@@ -1295,8 +1451,10 @@ export function DashboardView() {
               </Table>
             </div>
             {filteredData && filteredData.length > 100 && (
-              <div className="mt-4 text-sm text-gray-500 text-center">
-                Showing first 100 records of {filteredData.length} total results
+              <div className="p-4 bg-white/5 border-t border-white/10 text-center">
+                <span className="text-[11px] font-black text-white/50 uppercase tracking-widest">
+                  Performance Restriction: Showing first 100 of {filteredData.length} total nodes
+                </span>
               </div>
             )}
           </CardContent>

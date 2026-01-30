@@ -188,15 +188,15 @@ export function OrdersView() {
   const renderTable = (data, type) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-md">
       {/* Header Section */}
-      <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white">
+      <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-gradient-to-r from-gray-50 to-white">
         <div className="flex items-center space-x-2">
           <div className={`h-2 w-2 rounded-full ${type === 'pending' ? 'bg-amber-500' : 'bg-emerald-500'}`}></div>
           <div>
-            <h3 className="text-lg font-bold text-gray-800 capitalize">{type} Orders</h3>
-            <p className="text-gray-500 text-xs mt-0.5">Manage and track your {type} status orders</p>
+            <h3 className="text-base sm:text-lg font-bold text-gray-800 capitalize">{type} Orders</h3>
+            <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5">Manage and track your {type} status orders</p>
           </div>
         </div>
-        <div className="px-4 py-2 bg-blue-50 rounded-lg border border-blue-100">
+        <div className="px-4 py-2 bg-blue-50 rounded-lg border border-blue-100 w-full sm:w-auto">
           <span className="text-blue-600 text-xs font-semibold uppercase tracking-wider">Total Balance</span>
           <div className="text-xl font-bold text-blue-800 tabular-nums leading-none mt-1">
             {typeof balanceTotals[type] === 'number' ? balanceTotals[type].toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
@@ -205,8 +205,8 @@ export function OrdersView() {
       </div>
 
       {/* Filters Section */}
-      <div className="p-5 bg-white border-b border-gray-100">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="p-4 sm:p-5 bg-white border-b border-gray-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="relative group">
             <label className="block text-xs font-semibold text-gray-500 mb-1.5 ml-1">Salesperson</label>
             <select
@@ -341,11 +341,11 @@ export function OrdersView() {
   )
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Orders</h2>
-          <p className="text-gray-600">Manage all orders</p>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Orders</h2>
+          <p className="text-sm sm:text-base text-gray-600">Manage all orders</p>
         </div>
         <div className="flex space-x-2">
           <button

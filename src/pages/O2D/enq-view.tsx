@@ -176,8 +176,8 @@ const EnquiryView = () => {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-3xl font-bold tracking-tight">O2D Enquiry Form</h2>
-                <p className="text-gray-600">Create a new enquiry for O2D items</p>
+                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">O2D Enquiry Form</h2>
+                <p className="text-sm sm:text-base text-gray-600">Create a new enquiry for O2D items</p>
             </div>
 
             {/* Message Notification */}
@@ -232,7 +232,7 @@ const EnquiryView = () => {
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {/* Item Selection Section */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {/* Item Type */}
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -295,7 +295,7 @@ const EnquiryView = () => {
                             {/* Additional Details Section */}
                             <div className="border-t pt-6">
                                 <h4 className="text-base font-semibold text-gray-800 mb-4">Additional Information</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {/* Date */}
                                     <div>
                                         <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -356,7 +356,7 @@ const EnquiryView = () => {
                                         </svg>
                                         Enquiry Summary
                                     </h3>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                         <div className="bg-white rounded-lg p-4 shadow-sm">
                                             <span className="text-xs font-semibold text-gray-500 uppercase block mb-1">Item Type</span>
                                             <p className="text-base font-bold text-gray-900 capitalize">{itemType}</p>

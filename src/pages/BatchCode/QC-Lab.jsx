@@ -333,7 +333,7 @@ function QCLabDataPage() {
             formData.append('laddle_number', processFormData.sampled_laddle_number || '');
             formData.append('shift_type', processFormData.shift || '');
             formData.append('tested_by', processFormData.sample_tested_by || '');
-            
+
             // Optional decimal fields - send empty string if not provided, backend will convert to null
             // Ensure numeric values are properly formatted for NUMERIC(10,4) database columns
             const formatDecimal = (value) => {
@@ -347,19 +347,19 @@ function QCLabDataPage() {
                 // Round to 4 decimal places
                 return (Math.round(num * 10000) / 10000).toString();
             };
-            
+
             formData.append('final_c', formatDecimal(processFormData.final_c));
             formData.append('final_mn', formatDecimal(processFormData.final_mn));
             formData.append('final_s', formatDecimal(processFormData.final_s));
             formData.append('final_p', formatDecimal(processFormData.final_p));
-            
+
             // Optional fields
             if (processFormData.remarks) {
                 formData.append('remarks', processFormData.remarks);
             }
             // Add sample_timestamp (optional, but helps with validation)
             if (processFormData.sample_timestamp) {
-              formData.append('sample_timestamp', processFormData.sample_timestamp)
+                formData.append('sample_timestamp', processFormData.sample_timestamp)
             }
 
             // Only append picture if it exists
@@ -376,10 +376,10 @@ function QCLabDataPage() {
 
             if (response.data.success) {
                 // Extract unique_code from response - try multiple possible locations
-                const uniqueCode = response.data.data?.unique_code 
-                    || response.data?.data?.unique_code 
+                const uniqueCode = response.data.data?.unique_code
+                    || response.data?.data?.unique_code
                     || response.data?.unique_code
-                    || processFormData.sms_batch_code 
+                    || processFormData.sms_batch_code
                     || ""
                 setSuccessUniqueCode(uniqueCode)
                 showPopupMessage("QC Lab test submitted successfully!", "success")
@@ -395,8 +395,8 @@ function QCLabDataPage() {
             }
         } catch (error) {
             console.error("Submission error details:", error.response?.data)
-            const errorMessage = error.response?.data?.details?.formatted 
-                || error.response?.data?.message 
+            const errorMessage = error.response?.data?.details?.formatted
+                || error.response?.data?.message
                 || error.response?.data?.details?.errors?.[0]?.message
                 || "Submission failed. Please check all required fields are filled correctly.";
             showPopupMessage(errorMessage, "warning")
@@ -539,7 +539,7 @@ function QCLabDataPage() {
                 {/* Popup Modal */}
                 {showPopup && (
                     <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-                        <div 
+                        <div
                             className={`relative mx-4 p-6 rounded-lg shadow-2xl max-w-sm w-full transform transition-all duration-300 pointer-events-auto ${popupType === "success"
                                 ? 'bg-green-50 border-2 border-green-400'
                                 : 'bg-yellow-50 border-2 border-yellow-400'
@@ -647,13 +647,13 @@ function QCLabDataPage() {
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                     <div className="flex items-center gap-3 w-full">
                         <div className="flex-1 min-w-0">
-                            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-red-500 truncate">
+                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-red-500 truncate">
                                 {showHistory ? "Lab Test History" : "QC Lab Test"}
                             </h1>
                         </div>
                     </div>
 
-                    <div className="flex flex-col-2 sm:flex-row gap-2 w-full md:w-auto">
+                    <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                         <div className="relative w-full sm:flex-1">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                             <input
@@ -704,7 +704,7 @@ function QCLabDataPage() {
                             </div>
 
                             <div className="p-6 space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {/* SMS Batch Code (Auto-filled from SMS Register) */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -189,6 +189,8 @@ const AppSidebar: FC = () => {
   const { logout, user } = useAuth();
   const isAdmin = useMemo(() => isAdminUser(user), [user]);
 
+  let globalItemCounter = 0; // Emerald = #06c082ff (first), Blue = #3b82f6 (second)
+
   const handleLinkClick = useCallback(() => {
     if (isMobileOpen) {
       toggleMobileSidebar();
@@ -349,56 +351,24 @@ const AppSidebar: FC = () => {
   );
 
   // Helper to get color based on specific button name for unique look
-  const getButtonColor = (name: string) => {
-    const n = name.toLowerCase();
-
-    // Main Section Parents & Dashboard
-    if (n === "dashboard") return "#2563eb";
-    if (n === "o2d") return "#06c082ff";
-    if (n === "batchcode") return "#ef4444";
-    if (n === "lead to order") return "#3b82f6";
-    if (n === "settings") return "#475569";
-
-    // O2D Sub-items
-    if (n === "orders") return "#059669";
-    if (n === "enquiry") return "#84cc16";
-    if (n === "first weight") return "#0d9488";
-    if (n === "load vehicle") return "#0891b2";
-    if (n === "second weight") return "#0284c7";
-    if (n === "generate invoice") return "#4f46e5";
-    if (n === "pending vehicles") return "#7c3aed";
-
-    // BatchCode Sub-items
-    if (n === "laddel") return "#f43f5e";
-    if (n === "tundis") return "#ec4899";
-    if (n === "sms register") return "#f97316";
-    if (n === "hot coil") return "#fbbf24";
-    if (n === "recoiler") return "#eab308";
-    if (n === "pipe mill") return "#d97706";
-    if (n === "qc lab") return "#78350f";
-
-    // Lead to Order Sub-items
-    if (n === "leads") return "#1d4ed8";
-    if (n === "follow up") return "#9333ea";
-    if (n === "call tracker") return "#c026d3";
-    if (n === "quotation") return "#dc2626";
-
-    return "#3b82f6"; // Default Blue
+  const getButtonColor = (index: number) => {
+    const colors = ["#06c082ff", "#3b82f6"];
+    return colors[index % colors.length];
   };
 
   const renderSection = (title: string, items: NavItem[]) => {
     if (items.length === 0) return null;
 
     return (
-      <div className="mb-3">
-        <div className="px-6 py-1 mb-0.5">
-          <span className="lg:text-[9px] md:text-[8px] text-[7px] font-black uppercase tracking-[0.2em] text-gray-400 opacity-60 font-black">{title}</span>
+      <div className="mb-4">
+        <div className="px-6 py-1 mb-1">
+          <span className="lg:text-[12px] md:text-[10px] text-[8px] font-black uppercase tracking-[0.25em] text-gray-500 opacity-80">{title}</span>
         </div>
         <ul className="space-y-1 px-3">
           {items.map((nav) => {
             const isMainActive = nav.path && isActive(nav.path);
             const hasSubItems = nav.subItems && nav.subItems.length > 0;
-            const btnColor = getButtonColor(nav.name);
+            const btnColor = getButtonColor(globalItemCounter++);
 
             const content = (
               <>
@@ -406,12 +376,12 @@ const AppSidebar: FC = () => {
                   {nav.icon}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="flex-1 truncate tracking-tight uppercase lg:text-[11px] md:text-[10px] text-[8px]">{nav.name}</span>
+                  <span className="flex-1 truncate tracking-tight uppercase lg:text-[16px] md:text-[14px] text-[10px] font-black">{nav.name}</span>
                 )}
               </>
             );
 
-            const commonClasses = `flex items-center gap-3 px-4 py-2 rounded-xl lg:text-sm md:text-xs text-[10px] font-black transition-all duration-200 text-white
+            const commonClasses = `flex items-center gap-3 px-4 py-3 rounded-xl lg:text-[16px] md:text-[14px] text-[12px] font-black transition-all duration-200 text-white
               ${isMainActive
                 ? 'shadow-lg ring-2 ring-white/60 scale-[1.02] translate-x-0.5'
                 : nav.path ? 'hover:brightness-105 hover:shadow-md' : 'cursor-default'}`;
@@ -442,13 +412,13 @@ const AppSidebar: FC = () => {
                   <ul className="mt-1 space-y-1 ml-1.5">
                     {nav.subItems?.map((subItem) => {
                       const isSubActive = isActive(subItem.path);
-                      const subBtnColor = getButtonColor(subItem.name);
+                      const subBtnColor = getButtonColor(globalItemCounter++);
                       return (
                         <li key={subItem.name}>
                           <Link
                             to={subItem.path}
                             onClick={handleLinkClick}
-                            className={`flex items-center justify-between px-4 py-1.5 rounded-xl lg:text-[12px] md:text-[11px] text-[9px] font-bold transition-all duration-200 text-white
+                            className={`flex items-center justify-between px-4 py-2 rounded-xl lg:text-[16px] md:text-[14px] text-[12px] font-black transition-all duration-200 text-white
                               ${isSubActive
                                 ? 'ring-2 ring-white/50 shadow-md scale-[1.01]'
                                 : 'opacity-90 hover:opacity-100 hover:brightness-105'}`}
@@ -488,41 +458,36 @@ const AppSidebar: FC = () => {
       {/* Mobile Backdrop */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[990] lg:hidden"
           onClick={toggleMobileSidebar}
         />
       )}
 
       <aside
-        className={`fixed top-16 lg:top-0 left-0 flex flex-col bg-white text-gray-800 transition-all duration-300 ease-in-out z-50 border-r border-gray-100 shadow-2xl
-          h-[calc(100vh-4rem)] lg:h-screen
-          ${isExpanded || isMobileOpen
-            ? "w-[290px]"
-            : isHovered
-              ? "w-[290px]"
-              : "w-[90px]"
-          }
-          ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
-          lg:translate-x-0`}
+        className={`fixed inset-y-0 left-0 flex flex-col bg-white text-gray-800 transition-all duration-300 ease-in-out z-[1000] border-r border-gray-100 shadow-2xl
+          h-screen
+          ${isExpanded || isMobileOpen || isHovered ? "w-[290px]" : "w-[90px]"}
+          ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+        `}
         onMouseEnter={() => !isExpanded && setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Brand Header */}
         <div
-          className={`shrink-0 h-[70px] flex items-center border-b border-gray-100 shadow-sm relative z-10 ${(!isExpanded && !isHovered) ? "justify-center px-0" : "justify-start px-6"
-            }`}
+          className={`shrink-0 h-[70px] flex items-center border-b border-gray-100 shadow-sm relative z-10 
+            ${(!isExpanded && !isHovered && !isMobileOpen) ? "justify-center px-0" : "justify-start px-6"}`}
         >
           <Link to="/" onClick={handleLinkClick} className="flex items-center gap-3 w-full overflow-hidden group">
             <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black text-2xl shadow-[0_6px_16px_rgba(37,99,235,0.3)] group-hover:scale-105 transition-transform">
               S
             </div>
             {(isExpanded || isHovered || isMobileOpen) && (
-              <div className="flex flex-col leading-tight">
-                <span className="font-extrabold text-[#111827] text-xl tracking-tight">
-                  SAGAR TMT
+              <div className="flex flex-col leading-none">
+                <span className="font-black text-[#111827] text-3xl tracking-tighter">
+                  SMRPL
                 </span>
-                <span className="text-[10px] font-black text-blue-600 tracking-[0.2em] uppercase mt-0.5">
-                  & PIPES LTD.
+                <span className="text-[10px] font-black text-blue-600 tracking-[0.3em] uppercase mt-1">
+                  ENTERPRISES
                 </span>
               </div>
             )}
@@ -530,7 +495,7 @@ const AppSidebar: FC = () => {
         </div>
 
         {/* User Profile */}
-        {(isExpanded || isHovered || isMobileOpen) && (
+        {/* {(isExpanded || isHovered || isMobileOpen) && (
           <div className="mx-4 mt-6 mb-4 p-4 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center gap-4 group cursor-default shadow-sm hover:shadow-md transition-all">
             <div className="w-11 h-11 rounded-xl bg-white border-2 border-gray-100 flex items-center justify-center text-sm font-black text-blue-600 shadow-sm">
               <span className="uppercase">{user?.role?.slice(0, 2) || "AD"}</span>
@@ -545,7 +510,7 @@ const AppSidebar: FC = () => {
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Navigation */}
         <div className="flex flex-col flex-1 overflow-y-auto duration-300 no-scrollbar py-2">
@@ -564,8 +529,8 @@ const AppSidebar: FC = () => {
             onClick={logout}
             className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-bold transition-all duration-300 rounded-xl
               ${isExpanded || isHovered || isMobileOpen
-                ? "bg-red-50 text-red-600 hover:bg-red-600 hover:text-white shadow-sm hover:shadow-red-500/20"
-                : "text-gray-400 hover:text-red-600 justify-center"
+                ? "bg-red-600 text-white shadow-lg shadow-red-600/20 border border-red-500/20 hover:bg-red-700"
+                : "text-gray-400 hover:bg-red-50 hover:text-red-600 justify-center"
               }`}
             title="Logout"
           >

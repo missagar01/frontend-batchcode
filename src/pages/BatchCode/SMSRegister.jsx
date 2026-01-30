@@ -110,11 +110,11 @@ function SMSRegister() {
     useEffect(() => {
         const role = sessionStorage.getItem("role")
         const user = sessionStorage.getItem("username")
-            setUserRole(role || "")
-            setUsername(user || "")
+        setUserRole(role || "")
+        setUsername(user || "")
 
-            // Set shift_incharge with username when component loads
-            if (user) {
+        // Set shift_incharge with username when component loads
+        if (user) {
             setFormData(prev => ({
                 ...prev,
                 shift_incharge: user
@@ -300,10 +300,10 @@ function SMSRegister() {
                 })
 
                 // Extract unique_code from response - try multiple possible locations
-                const uniqueCode = apiRecord.unique_code 
-                    || response.data?.data?.unique_code 
+                const uniqueCode = apiRecord.unique_code
+                    || response.data?.data?.unique_code
                     || response.data?.unique_code
-                    || generateUniqueCode(whatsAppPayload) 
+                    || generateUniqueCode(whatsAppPayload)
                     || ""
                 setSuccessUniqueCode(uniqueCode)
                 showPopupMessage("SMS Report submitted successfully! / एसएमएस रिपोर्ट सफलतापूर्वक सबमिट हो गई!", "success")
@@ -463,7 +463,7 @@ function SMSRegister() {
                 {/* Popup Modal */}
                 {showPopup && (
                     <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-                        <div 
+                        <div
                             className={`relative mx-4 p-6 rounded-lg shadow-2xl max-w-sm w-full transform transition-all duration-300 pointer-events-auto ${popupType === "success"
                                 ? 'bg-green-50 border-2 border-green-400'
                                 : 'bg-yellow-50 border-2 border-yellow-400'
@@ -521,13 +521,13 @@ function SMSRegister() {
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                     <div className="flex items-center gap-3 w-full md:w-auto">
                         <div className="flex-1 min-w-0">
-                            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-red-500 truncate">
+                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-red-500 truncate">
                                 {showHistory ? "SMS Report History" : "Create SMS Report"}
                             </h1>
                         </div>
                     </div>
 
-                    <div className="flex flex-col-2 sm:flex-row gap-2 w-full md:w-auto">
+                    <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                         {showHistory && (
                             <div className="relative w-full sm:w-64">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -716,7 +716,7 @@ function SMSRegister() {
                         </div>
 
                         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                                 {/* Sequence Number */}
                                 <div>
                                     <label htmlFor="sequence_number" className="block text-sm font-medium text-gray-700 mb-2">

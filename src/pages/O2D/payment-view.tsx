@@ -366,8 +366,8 @@ export function PaymentView() {
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Payment</h2>
-          <p className="text-gray-600">Payment processing and management</p>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Payment</h2>
+          <p className="text-sm sm:text-base text-gray-600">Payment processing and management</p>
         </div>
 
         <div className="bg-white rounded-lg shadow border">
@@ -393,9 +393,11 @@ export function PaymentView() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Payment</h2>
-        <p className="text-gray-600">Payment processing and management</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Payment</h2>
+          <p className="text-sm sm:text-base text-gray-600">Payment processing and management</p>
+        </div>
       </div>
 
       <div className="space-y-4">

@@ -120,8 +120,8 @@ function HotCoilPage() {
       try {
         const smsResponse = await batchcodeAPI.getSMSRegisterHistory().catch((err: unknown) => {
           // Silently handle 500 errors - don't log to console
-          const status = err && typeof err === 'object' && 'response' in err 
-            ? (err as { response?: { status?: number } }).response?.status 
+          const status = err && typeof err === 'object' && 'response' in err
+            ? (err as { response?: { status?: number } }).response?.status
             : null;
           // Only log non-500 errors
           if (status && status !== 500) {
@@ -146,8 +146,8 @@ function HotCoilPage() {
       // Try to fetch Hot Coil history - handle errors gracefully
       try {
         const hotCoilResponse = await batchcodeAPI.getHotCoilHistory().catch((err: unknown) => {
-          const status = err && typeof err === 'object' && 'response' in err 
-            ? (err as { response?: { status?: number } }).response?.status 
+          const status = err && typeof err === 'object' && 'response' in err
+            ? (err as { response?: { status?: number } }).response?.status
             : null;
           // Only log non-500 errors
           if (status && status !== 500) {
@@ -191,8 +191,8 @@ function HotCoilPage() {
       setLoading(false)
     } catch (error: unknown) {
       // Final catch - only log non-500 errors
-      const status = error && typeof error === 'object' && 'response' in error 
-        ? (error as { response?: { status?: number } }).response?.status 
+      const status = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { status?: number } }).response?.status
         : null;
       if (status && status !== 500) {
         console.error("Error in fetchPendingSMSData:", error);
@@ -209,8 +209,8 @@ function HotCoilPage() {
 
       const response = await batchcodeAPI.getHotCoilHistory().catch((err: unknown) => {
         // Silently handle 500 errors - don't log to console
-        const status = err && typeof err === 'object' && 'response' in err 
-          ? (err as { response?: { status?: number } }).response?.status 
+        const status = err && typeof err === 'object' && 'response' in err
+          ? (err as { response?: { status?: number } }).response?.status
           : null;
         // Only log non-500 errors
         if (status && status !== 500) {
@@ -239,8 +239,8 @@ function HotCoilPage() {
       setLoading(false)
     } catch (error: unknown) {
       // Final catch - only log non-500 errors
-      const status = error && typeof error === 'object' && 'response' in error 
-        ? (error as { response?: { status?: number } }).response?.status 
+      const status = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { status?: number } }).response?.status
         : null;
       if (status && status !== 500) {
         console.error("Error in fetchHistoryData:", error);
@@ -314,7 +314,7 @@ function HotCoilPage() {
     try {
       // Prepare FormData according to API requirements
       const formData = new FormData()
-      
+
       // Add all form fields to FormData
       formData.append('submission_type', "Hot Coil")
       formData.append('sms_short_code', processFormData.sms_short_code)
@@ -335,10 +335,10 @@ function HotCoilPage() {
 
       if (response.data.success) {
         // Extract unique_code from response - try multiple possible locations
-        const uniqueCode = response.data.data?.unique_code 
-          || response.data?.data?.unique_code 
+        const uniqueCode = response.data.data?.unique_code
+          || response.data?.data?.unique_code
           || response.data?.unique_code
-          || processFormData.sms_short_code 
+          || processFormData.sms_short_code
           || ""
         setSuccessUniqueCode(uniqueCode)
         showPopupMessage("Hot Coil data submitted successfully! / हॉट कॉइल डेटा सफलतापूर्वक जमा किया गया!", "success")
@@ -509,546 +509,546 @@ function HotCoilPage() {
 
   return (
     <div className="space-y-6">
-        {/* Popup Modal */}
-        {showPopup && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-            <div 
-              className={`relative mx-4 p-6 rounded-lg shadow-2xl max-w-sm w-full transform transition-all duration-300 pointer-events-auto ${popupType === "success"
-                ? 'bg-green-50 border-2 border-green-400'
-                : 'bg-yellow-50 border-2 border-yellow-400'
-                }`}
-            >
-              <div className="flex items-center justify-center mb-4">
-                {popupType === "success" ? (
-                  <CheckCircle2 className="h-12 w-12 text-green-500" />
-                ) : (
-                  <AlertCircle className="h-12 w-12 text-yellow-500" />
-                )}
-              </div>
-              <div className="text-center">
-                <h3 className={`text-lg font-semibold mb-2 ${popupType === "success" ? 'text-green-800' : 'text-yellow-800'
-                  }`}>
-                  {popupType === "success" ? "Success!" : "Warning!"}
-                </h3>
-                <p className={popupType === "success" ? 'text-green-700' : 'text-yellow-700'}>
-                  {popupMessage}
+      {/* Popup Modal */}
+      {showPopup && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <div
+            className={`relative mx-4 p-6 rounded-lg shadow-2xl max-w-sm w-full transform transition-all duration-300 pointer-events-auto ${popupType === "success"
+              ? 'bg-green-50 border-2 border-green-400'
+              : 'bg-yellow-50 border-2 border-yellow-400'
+              }`}
+          >
+            <div className="flex items-center justify-center mb-4">
+              {popupType === "success" ? (
+                <CheckCircle2 className="h-12 w-12 text-green-500" />
+              ) : (
+                <AlertCircle className="h-12 w-12 text-yellow-500" />
+              )}
+            </div>
+            <div className="text-center">
+              <h3 className={`text-lg font-semibold mb-2 ${popupType === "success" ? 'text-green-800' : 'text-yellow-800'
+                }`}>
+                {popupType === "success" ? "Success!" : "Warning!"}
+              </h3>
+              <p className={popupType === "success" ? 'text-green-700' : 'text-yellow-700'}>
+                {popupMessage}
+              </p>
+              {popupType === "success" && successUniqueCode && (
+                <p className="mt-2 text-green-700 font-semibold">
+                  Unique Code: <span className="font-bold">{successUniqueCode}</span>
                 </p>
-                {popupType === "success" && successUniqueCode && (
-                  <p className="mt-2 text-green-700 font-semibold">
-                    Unique Code: <span className="font-bold">{successUniqueCode}</span>
-                  </p>
-                )}
+              )}
+            </div>
+            {/* Progress bar for auto-dismiss - only for warnings */}
+            {popupType === "warning" && (
+              <div className="mt-4 w-full bg-gray-200 rounded-full h-1">
+                <div
+                  className="h-1 rounded-full bg-yellow-500"
+                  style={{
+                    animation: 'shrink 2s linear forwards'
+                  }}
+                />
               </div>
-              {/* Progress bar for auto-dismiss - only for warnings */}
-              {popupType === "warning" && (
-                <div className="mt-4 w-full bg-gray-200 rounded-full h-1">
-                  <div
-                    className="h-1 rounded-full bg-yellow-500"
-                    style={{
-                      animation: 'shrink 2s linear forwards'
-                    }}
+            )}
+            {/* OK Button */}
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={handleClosePopup}
+                className={`px-6 py-2 rounded-md font-medium transition-colors ${popupType === "success"
+                  ? 'bg-green-500 hover:bg-green-600 text-white'
+                  : 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                  }`}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header Section */}
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+        <div className="flex items-center gap-3 w-full">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-red-500 truncate">
+              {showHistory ? "Hot Coil History" : "Hot Coil Processing"}
+            </h1>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+          <div className="relative w-full sm:flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              placeholder="Search across all columns..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          <button
+            onClick={toggleView}
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors w-full sm:w-auto"
+          >
+            {showHistory ? (
+              <>
+                <ArrowLeft className="h-4 w-4" />
+                Back to Pending
+              </>
+            ) : (
+              <>
+                <History className="h-4 w-4" />
+                View History
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Process Form Modal */}
+      {showProcessForm && (
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-50 pointer-events-none">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto pointer-events-auto">
+            <div className="bg-red-500 text-white p-4 rounded-t-lg flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Submit Hot Coil Data</h3>
+              <button onClick={handleCloseProcessForm} className="text-white hover:text-gray-200">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-4 md:p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                {/* SMS Short Code (Auto-filled from SMS Register) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    SMS Short Code / एसएमएस शॉर्ट कोड <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={processFormData.sms_short_code}
+                    readOnly
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md bg-gray-100 text-gray-600 text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1.5">Auto-filled from SMS Register</p>
+                </div>
+
+                {/* Size */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Size / आकार <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={processFormData.size}
+                    onChange={(e) => handleProcessFormChange("size", e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
+                    placeholder="e.g., 146x148x2.90"
+                    required
                   />
                 </div>
-              )}
-              {/* OK Button */}
-              <div className="mt-4 flex justify-center">
-                <button
-                  onClick={handleClosePopup}
-                  className={`px-6 py-2 rounded-md font-medium transition-colors ${popupType === "success"
-                    ? 'bg-green-500 hover:bg-green-600 text-white'
-                    : 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                    }`}
-                >
-                  OK
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Header Section */}
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-          <div className="flex items-center gap-3 w-full">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-red-500 truncate">
-                {showHistory ? "Hot Coil History" : "Hot Coil Processing"}
-              </h1>
-            </div>
-          </div>
+                {/* Mill Incharge */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mill Incharge / मिल इंचार्ज <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={processFormData.mill_incharge}
+                    onChange={(e) => handleProcessFormChange("mill_incharge", e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
+                    required
+                  >
+                    {millInchargeOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          <div className="flex flex-col-2 sm:flex-row gap-2 w-full md:w-auto">
-            <div className="relative w-full sm:flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="text"
-                placeholder="Search across all columns..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm("")}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <X size={16} />
-                </button>
-              )}
-            </div>
+                {/* Quality Supervisor */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Quality Supervisor / गुणवत्ता पर्यवेक्षक <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={processFormData.quality_supervisor}
+                    onChange={(e) => handleProcessFormChange("quality_supervisor", e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
+                    required
+                  >
+                    {qualitySupervisorOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <button
-              onClick={toggleView}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors w-full sm:w-auto"
-            >
-              {showHistory ? (
-                <>
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to Pending
-                </>
-              ) : (
-                <>
-                  <History className="h-4 w-4" />
-                  View History
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Process Form Modal */}
-        {showProcessForm && (
-          <div className="fixed inset-0 flex items-center justify-center p-4 z-50 pointer-events-none">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto pointer-events-auto">
-              <div className="bg-red-500 text-white p-4 rounded-t-lg flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Submit Hot Coil Data</h3>
-                <button onClick={handleCloseProcessForm} className="text-white hover:text-gray-200">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="p-4 md:p-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                  {/* SMS Short Code (Auto-filled from SMS Register) */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      SMS Short Code / एसएमएस शॉर्ट कोड <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={processFormData.sms_short_code}
-                      readOnly
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-md bg-gray-100 text-gray-600 text-sm"
-                    />
-                    <p className="text-xs text-gray-500 mt-1.5">Auto-filled from SMS Register</p>
-                  </div>
-
-                  {/* Size */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Size / आकार <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={processFormData.size}
-                      onChange={(e) => handleProcessFormChange("size", e.target.value)}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
-                      placeholder="e.g., 146x148x2.90"
-                      required
-                    />
-                  </div>
-
-                  {/* Mill Incharge */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Mill Incharge / मिल इंचार्ज <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={processFormData.mill_incharge}
-                      onChange={(e) => handleProcessFormChange("mill_incharge", e.target.value)}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
-                      required
-                    >
-                      {millInchargeOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Quality Supervisor */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Quality Supervisor / गुणवत्ता पर्यवेक्षक <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={processFormData.quality_supervisor}
-                      onChange={(e) => handleProcessFormChange("quality_supervisor", e.target.value)}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
-                      required
-                    >
-                      {qualitySupervisorOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Quality Supervisor Other */}
-                  {processFormData.quality_supervisor === "Other" && (
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Specify Quality Supervisor / गुणवत्ता पर्यवेक्षक निर्दिष्ट करें <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={processFormData.quality_supervisor_other}
-                        onChange={(e) => handleProcessFormChange("quality_supervisor_other", e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
-                        placeholder="Enter quality supervisor name"
-                        required
-                      />
-                    </div>
-                  )}
-
-                  {/* Electrical DC Operator */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Electrical DC Operator / इलेक्ट्रिकल डीसी ऑपरेटर <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={processFormData.electrical_dc_operator}
-                      onChange={(e) => handleProcessFormChange("electrical_dc_operator", e.target.value)}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
-                      required
-                    >
-                      {electricalDCOperatorOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Strand1 Temperature */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Strand1 Temperature / स्ट्रैंड1 तापमान <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={processFormData.strand1_temperature}
-                      onChange={(e) => handleProcessFormChange("strand1_temperature", e.target.value)}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
-                      placeholder="e.g., 960"
-                      required
-                    />
-                  </div>
-
-                  {/* Strand2 Temperature */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Strand2 Temperature / स्ट्रैंड2 तापमान <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={processFormData.strand2_temperature}
-                      onChange={(e) => handleProcessFormChange("strand2_temperature", e.target.value)}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
-                      placeholder="e.g., Colge"
-                      required
-                    />
-                  </div>
-
-                  {/* Shift Supervisor */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Shift Supervisor / शिफ्ट पर्यवेक्षक <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={processFormData.shift_supervisor}
-                      onChange={(e) => handleProcessFormChange("shift_supervisor", e.target.value)}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
-                      placeholder="Enter shift supervisor name"
-                      required
-                    />
-                  </div>
-
-                  {/* Remarks */}
+                {/* Quality Supervisor Other */}
+                {processFormData.quality_supervisor === "Other" && (
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Remarks / टिप्पणियाँ
+                      Specify Quality Supervisor / गुणवत्ता पर्यवेक्षक निर्दिष्ट करें <span className="text-red-500">*</span>
                     </label>
-                    <textarea
-                      value={processFormData.remarks}
-                      onChange={(e) => handleProcessFormChange("remarks", e.target.value)}
-                      rows={3}
+                    <input
+                      type="text"
+                      value={processFormData.quality_supervisor_other}
+                      onChange={(e) => handleProcessFormChange("quality_supervisor_other", e.target.value)}
                       className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
-                      placeholder="Enter any remarks / कोई टिप्पणी दर्ज करें"
+                      placeholder="Enter quality supervisor name"
+                      required
                     />
                   </div>
+                )}
+
+                {/* Electrical DC Operator */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Electrical DC Operator / इलेक्ट्रिकल डीसी ऑपरेटर <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={processFormData.electrical_dc_operator}
+                    onChange={(e) => handleProcessFormChange("electrical_dc_operator", e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
+                    required
+                  >
+                    {electricalDCOperatorOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Strand1 Temperature */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Strand1 Temperature / स्ट्रैंड1 तापमान <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={processFormData.strand1_temperature}
+                    onChange={(e) => handleProcessFormChange("strand1_temperature", e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
+                    placeholder="e.g., 960"
+                    required
+                  />
+                </div>
+
+                {/* Strand2 Temperature */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Strand2 Temperature / स्ट्रैंड2 तापमान <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={processFormData.strand2_temperature}
+                    onChange={(e) => handleProcessFormChange("strand2_temperature", e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
+                    placeholder="e.g., Colge"
+                    required
+                  />
+                </div>
+
+                {/* Shift Supervisor */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Shift Supervisor / शिफ्ट पर्यवेक्षक <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={processFormData.shift_supervisor}
+                    onChange={(e) => handleProcessFormChange("shift_supervisor", e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
+                    placeholder="Enter shift supervisor name"
+                    required
+                  />
+                </div>
+
+                {/* Remarks */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Remarks / टिप्पणियाँ
+                  </label>
+                  <textarea
+                    value={processFormData.remarks}
+                    onChange={(e) => handleProcessFormChange("remarks", e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors hover:border-gray-400"
+                    placeholder="Enter any remarks / कोई टिप्पणी दर्ज करें"
+                  />
                 </div>
               </div>
+            </div>
 
-              <div className="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3">
-                <button
-                  onClick={handleCloseProcessForm}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100"
-                >
-                  Cancel / रद्द करें
-                </button>
-                <button
-                  onClick={handleProcessSubmit}
-                  disabled={isSubmitting}
-                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  <Save className="h-4 w-4" />
-                  {isSubmitting ? "Submitting... / जमा किया जा रहा है..." : "Submit Data / डेटा जमा करें"}
-                </button>
-              </div>
+            <div className="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3">
+              <button
+                onClick={handleCloseProcessForm}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100"
+              >
+                Cancel / रद्द करें
+              </button>
+              <button
+                onClick={handleProcessSubmit}
+                disabled={isSubmitting}
+                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <Save className="h-4 w-4" />
+                {isSubmitting ? "Submitting... / जमा किया जा रहा है..." : "Submit Data / डेटा जमा करें"}
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        <div className="rounded-lg border border-gray-200 shadow-md bg-white overflow-hidden">
-          <div className="bg-gradient-to-r from-red-500 to-red-400 border-b border-red-200 p-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <h2 className="text-white text-lg font-semibold">
-                  {showHistory ? "Hot Coil Records" : "Pending Hot Coil"}
-                </h2>
-                <div className="relative flex items-center justify-center w-10 h-10">
-                  <div className="absolute inset-0 rounded-full bg-white/20 p-0.5">
-                    <div className="w-full h-full rounded-full bg-transparent flex items-center justify-center">
-                      <span className="text-white text-sm font-bold">
-                        {showHistory ? filteredHistoryData.length : filteredPendingData.length}
-                      </span>
-                    </div>
+      <div className="rounded-lg border border-gray-200 shadow-md bg-white overflow-hidden">
+        <div className="bg-gradient-to-r from-red-500 to-red-400 border-b border-red-200 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <h2 className="text-white text-lg font-semibold">
+                {showHistory ? "Hot Coil Records" : "Pending Hot Coil"}
+              </h2>
+              <div className="relative flex items-center justify-center w-10 h-10">
+                <div className="absolute inset-0 rounded-full bg-white/20 p-0.5">
+                  <div className="w-full h-full rounded-full bg-transparent flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">
+                      {showHistory ? filteredHistoryData.length : filteredPendingData.length}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          {loading ? (
-            <div className="text-center py-10">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500 mb-4"></div>
-              <p className="text-red-600">Loading data...</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              {showHistory ? (
-                /* HISTORY VIEW - Hot Coil Records */
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date / तारीख
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        SMS Code /  कोड
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Hot Coil /  कोड
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Size / आकार
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Mill Incharge / मिल इंचार्ज
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Quality Supervisor / गुणवत्ता पर्यवेक्षक
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Electrical DC Operator / इलेक्ट्रिकल ऑपरेटर
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Strand1 Temp / स्ट्रैंड1 ताप
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Strand2 Temp / स्ट्रैंड2 ताप
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Shift Supervisor / शिफ्ट पर्यवेक्षक
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Remarks / टिप्पणियाँ
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredHistoryData.length > 0 ? (
-                      filteredHistoryData.map((record, index) => (
-                        <tr key={record.id || record._id || index} className="hover:bg-gray-50">
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatIndianDateTime(record.sample_timestamp) || 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {record.sms_short_code || 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {record.unique_code || 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {record.size || 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {record.mill_incharge || 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {record.quality_supervisor || 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {record.electrical_dc_operator || 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {record.strand1_temperature || 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {record.strand2_temperature || 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {record.shift_supervisor || 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 text-sm text-gray-900">
-                            {record.remarks || '—'}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={11} className="px-4 py-8 text-center text-gray-500">
-                          <div className="flex flex-col items-center justify-center">
-                            <Search className="h-12 w-12 text-gray-300 mb-4" />
-                            <p className="text-lg font-medium mb-2">
-                              {searchTerm ? "No matching Hot Coil records found" : "No Hot Coil records found"}
-                            </p>
-                            <p className="text-sm mb-4">
-                              {searchTerm ? "Try adjusting your search terms" : "Submit a Hot Coil entry first to see records here"}
-                            </p>
-                            <div className="flex gap-2">
-                              {searchTerm && (
-                                <button
-                                  onClick={() => setSearchTerm("")}
-                                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
-                                >
-                                  Clear Search
-                                </button>
-                              )}
-                              <button
-                                onClick={fetchHistoryData}
-                                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-                              >
-                                Refresh Data
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              ) : (
-                /* PENDING VIEW - SMS Register Records */
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Action / कार्रवाई
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        SMS Batch Code / एसएमएस बैच कोड
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date / तारीख
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Sequence / अनुक्रम
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Laddle No. / लेडल नंबर
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Furnace / भट्ठी
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Temperature / तापमान
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredPendingData.length > 0 ? (
-                      filteredPendingData.map((record, index) => (
-                        <tr key={record.id || record._id || index} className="hover:bg-gray-50">
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <button
-                              onClick={() => handleProcessClick(record)}
-                              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors"
-                            >
-                              <Edit className="h-3 w-3" />
-                              Process
-                            </button>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {record.unique_code || generateShortCode(record) || 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatIndianDateTime(record.sample_timestamp) || 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {record.sequence_number || 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {record.laddle_number || 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {record.furnace_number || 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {record.temperature ? `${record.temperature}°C` : 'N/A'}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                          <div className="flex flex-col items-center justify-center">
-                            <CheckCircle2 className="h-12 w-12 text-green-300 mb-4" />
-                            <p className="text-lg font-medium mb-2">
-                              {searchTerm ? "No matching pending SMS records found" : "No pending SMS records for Hot Coil processing"}
-                            </p>
-                            <p className="text-sm mb-4">
-                              {searchTerm ? "Try adjusting your search terms" : "All SMS records have been processed for Hot Coil"}
-                            </p>
-                            <div className="flex gap-2">
-                              {searchTerm && (
-                                <button
-                                  onClick={() => setSearchTerm("")}
-                                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
-                                >
-                                  Clear Search
-                                </button>
-                              )}
-                              <button
-                                onClick={fetchPendingSMSData}
-                                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-                              >
-                                Refresh Data
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          )}
         </div>
+
+        {loading ? (
+          <div className="text-center py-10">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500 mb-4"></div>
+            <p className="text-red-600">Loading data...</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            {showHistory ? (
+              /* HISTORY VIEW - Hot Coil Records */
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date / तारीख
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      SMS Code /  कोड
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Hot Coil /  कोड
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Size / आकार
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Mill Incharge / मिल इंचार्ज
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Quality Supervisor / गुणवत्ता पर्यवेक्षक
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Electrical DC Operator / इलेक्ट्रिकल ऑपरेटर
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Strand1 Temp / स्ट्रैंड1 ताप
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Strand2 Temp / स्ट्रैंड2 ताप
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Shift Supervisor / शिफ्ट पर्यवेक्षक
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Remarks / टिप्पणियाँ
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredHistoryData.length > 0 ? (
+                    filteredHistoryData.map((record, index) => (
+                      <tr key={record.id || record._id || index} className="hover:bg-gray-50">
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {formatIndianDateTime(record.sample_timestamp) || 'N/A'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {record.sms_short_code || 'N/A'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {record.unique_code || 'N/A'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {record.size || 'N/A'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {record.mill_incharge || 'N/A'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {record.quality_supervisor || 'N/A'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {record.electrical_dc_operator || 'N/A'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {record.strand1_temperature || 'N/A'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {record.strand2_temperature || 'N/A'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {record.shift_supervisor || 'N/A'}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-900">
+                          {record.remarks || '—'}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={11} className="px-4 py-8 text-center text-gray-500">
+                        <div className="flex flex-col items-center justify-center">
+                          <Search className="h-12 w-12 text-gray-300 mb-4" />
+                          <p className="text-lg font-medium mb-2">
+                            {searchTerm ? "No matching Hot Coil records found" : "No Hot Coil records found"}
+                          </p>
+                          <p className="text-sm mb-4">
+                            {searchTerm ? "Try adjusting your search terms" : "Submit a Hot Coil entry first to see records here"}
+                          </p>
+                          <div className="flex gap-2">
+                            {searchTerm && (
+                              <button
+                                onClick={() => setSearchTerm("")}
+                                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                              >
+                                Clear Search
+                              </button>
+                            )}
+                            <button
+                              onClick={fetchHistoryData}
+                              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                            >
+                              Refresh Data
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            ) : (
+              /* PENDING VIEW - SMS Register Records */
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Action / कार्रवाई
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      SMS Batch Code / एसएमएस बैच कोड
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Date / तारीख
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Sequence / अनुक्रम
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Laddle No. / लेडल नंबर
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Furnace / भट्ठी
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Temperature / तापमान
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredPendingData.length > 0 ? (
+                    filteredPendingData.map((record, index) => (
+                      <tr key={record.id || record._id || index} className="hover:bg-gray-50">
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <button
+                            onClick={() => handleProcessClick(record)}
+                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors"
+                          >
+                            <Edit className="h-3 w-3" />
+                            Process
+                          </button>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {record.unique_code || generateShortCode(record) || 'N/A'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {formatIndianDateTime(record.sample_timestamp) || 'N/A'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {record.sequence_number || 'N/A'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {record.laddle_number || 'N/A'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {record.furnace_number || 'N/A'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {record.temperature ? `${record.temperature}°C` : 'N/A'}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                        <div className="flex flex-col items-center justify-center">
+                          <CheckCircle2 className="h-12 w-12 text-green-300 mb-4" />
+                          <p className="text-lg font-medium mb-2">
+                            {searchTerm ? "No matching pending SMS records found" : "No pending SMS records for Hot Coil processing"}
+                          </p>
+                          <p className="text-sm mb-4">
+                            {searchTerm ? "Try adjusting your search terms" : "All SMS records have been processed for Hot Coil"}
+                          </p>
+                          <div className="flex gap-2">
+                            {searchTerm && (
+                              <button
+                                onClick={() => setSearchTerm("")}
+                                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                              >
+                                Clear Search
+                              </button>
+                            )}
+                            <button
+                              onClick={fetchPendingSMSData}
+                              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                            >
+                              Refresh Data
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

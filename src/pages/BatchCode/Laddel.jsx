@@ -243,11 +243,11 @@ function LaddleFormPage() {
 
             if (response.data.success) {
                 // Extract unique_code from response - try multiple possible locations
-                const uniqueCode = response.data.data?.unique_code 
-                    || response.data?.data?.unique_code 
+                const uniqueCode = response.data.data?.unique_code
+                    || response.data?.data?.unique_code
                     || response.data?.unique_code
                     || (response.data.data && generateUniqueCode(response.data.data))
-                    || generateUniqueCode(submissionData) 
+                    || generateUniqueCode(submissionData)
                     || ""
                 setSuccessUniqueCode(uniqueCode)
                 showPopupMessage("Laddle form submitted successfully! / लेडल फॉर्म सफलतापूर्वक सबमिट हो गया!", "success")
@@ -421,7 +421,7 @@ function LaddleFormPage() {
                 {/* Popup Modal */}
                 {showPopup && (
                     <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-                        <div 
+                        <div
                             className={`relative mx-4 p-6 rounded-lg shadow-2xl max-w-sm w-full transform transition-all duration-300 pointer-events-auto ${popupType === "success"
                                 ? 'bg-green-50 border-2 border-green-400'
                                 : 'bg-yellow-50 border-2 border-yellow-400'
@@ -479,12 +479,12 @@ function LaddleFormPage() {
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                     <div className="flex items-center gap-3 w-full md:w-auto">
                         <div className="flex-1 min-w-0">
-                            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-red-500 truncate">
+                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-red-500 truncate">
                                 {viewMode === "form" ? "Create Laddle Form" : "Laddle Form Records"}
                             </h1>
                         </div>
                     </div>
-                    <div className="flex flex-col-2 sm:flex-row gap-2 w-full md:w-auto">
+                    <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                         {viewMode === "list" && (
                             <div className="relative w-full sm:w-64">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -533,7 +533,7 @@ function LaddleFormPage() {
 
                         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
                             {/* Laddle Number and Date Section - Two columns on larger screens */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                                 <div>
                                     <label htmlFor="laddle_number" className="block text-sm font-medium text-gray-700 mb-2">
                                         Laddle Number / लेडल नंबर <span className="text-red-500">*</span>
@@ -587,7 +587,7 @@ function LaddleFormPage() {
                                     </h3>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                                     {checklistItems.map((item) => (
                                         <div key={item.id} className="p-4 border border-gray-200 rounded-lg hover:bg-white hover:shadow-sm transition-all bg-white">
                                             <div className="mb-3">
@@ -619,7 +619,7 @@ function LaddleFormPage() {
                             </div>
 
                             {/* Plate Life and Timber Man Name - Two columns on larger screens */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                                 <div>
                                     <label htmlFor="plate_life" className="block text-sm font-medium text-gray-700 mb-2">
                                         Plate life / प्लेट की लाइफ कितनी है <span className="text-red-500">*</span>
@@ -669,7 +669,7 @@ function LaddleFormPage() {
                                     Checked By - किस किस के द्वारा चेक किया गया <span className="text-red-500">*</span>
                                 </h3>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                                     <div>
                                         <label htmlFor="laddle_man_name" className="block text-sm font-medium text-gray-700 mb-2">
                                             Laddle Man Name / लेडल मेन का नाम <span className="text-red-500">*</span>
