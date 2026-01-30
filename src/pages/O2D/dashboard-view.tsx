@@ -811,7 +811,7 @@ export function DashboardView() {
         {/* Summary Cards - New Layout */}
         <div className="space-y-4">
           {/* Row 1: Sauda Rate + GD Metrics - 2 Composite Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Sauda Rate Composite Card */}
             <Card className="border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50/50 to-white shadow-lg">
               <CardHeader className="bg-gradient-to-r from-purple-50 to-transparent pb-4">
@@ -899,7 +899,7 @@ export function DashboardView() {
           </div>
 
           {/* Row 2: Working Party & Pending Order - 2 Composite Cards with Horizontal Inner Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Working Party Composite Card */}
             <Card className="border-l-4 border-l-cyan-500 bg-gradient-to-br from-cyan-50/50 to-white shadow-lg">
               <CardHeader className="bg-gradient-to-r from-cyan-50 to-transparent pb-4">
@@ -1173,12 +1173,12 @@ export function DashboardView() {
               </Badge>
             </div>
           </CardHeader>
-          <CardContent className="p-4 sm:p-10 relative overflow-hidden">
+          <CardContent className="p-3 sm:p-10 relative overflow-hidden">
             {/* Background decorative elements */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl -ml-32 -mb-32"></div>
 
-            <div className="min-h-[450px] lg:h-[480px] w-full flex flex-col lg:flex-row items-center justify-center gap-12 relative z-10">
+            <div className="min-h-[450px] lg:h-[480px] w-full flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-12 relative z-10">
               {/* Chart Side */}
               <div className="w-full aspect-square max-w-[380px] lg:flex-1 lg:max-w-none lg:h-full relative flex items-center justify-center">
                 <div className="absolute inset-0 bg-blue-500/5 rounded-full blur-2xl animate-pulse"></div>
@@ -1247,7 +1247,7 @@ export function DashboardView() {
               </div>
 
               {/* Legend Side */}
-              <div className="w-full lg:w-[350px] max-h-full overflow-y-auto no-scrollbar bg-white/5 backdrop-blur-md rounded-3xl p-8 border border-white/10 flex flex-col gap-6 shadow-inner">
+              <div className="w-full lg:w-[350px] max-h-full overflow-y-auto no-scrollbar bg-white/5 backdrop-blur-md rounded-3xl p-4 sm:p-8 border border-white/10 flex flex-col gap-4 sm:gap-6 shadow-inner">
                 <div className="flex items-center justify-between border-b border-white/10 pb-4">
                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Ranking</h4>
                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">Volume</h4>
@@ -1290,8 +1290,8 @@ export function DashboardView() {
                 <Trophy className="w-5 h-5 text-indigo-300" />
               </div>
               <div>
-                <CardTitle className="text-xl font-black text-balck tracking-tight">Top 10 Customers</CardTitle>
-                <CardDescription className="text-xs font-bold text-balck/60 uppercase tracking-widest mt-1">
+                <CardTitle className="text-xl font-black text-white tracking-tight">Top 10 Customers</CardTitle>
+                <CardDescription className="text-xs font-bold text-white/60 uppercase tracking-widest mt-1">
                   Performance Leaders by Volume {hasActiveFilters ? "• Filtered" : ""}
                 </CardDescription>
               </div>

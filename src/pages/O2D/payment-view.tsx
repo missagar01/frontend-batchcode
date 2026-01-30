@@ -489,10 +489,10 @@ export function PaymentView() {
               />
             </div>
 
-            <div className="flex items-end">
+            <div className="flex items-end w-full sm:w-auto">
               <button
                 onClick={clearFilters}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
               >
                 Clear Filters
               </button>

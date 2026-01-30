@@ -386,7 +386,7 @@ const EnquiryView = () => {
                             )}
 
                             {/* Action Buttons */}
-                            <div className="flex gap-4 justify-end pt-4 border-t">
+                            <div className="flex flex-col sm:flex-row gap-4 justify-end pt-4 border-t">
                                 <button
                                     type="button"
                                     onClick={handleReset}
