@@ -52,14 +52,14 @@ const AppHeader: React.FC = () => {
   }, []);
 
   return (
-    <header className="relative sticky top-0 flex w-full bg-white border-slate-200 z-99999 dark:border-slate-700 dark:bg-slate-900 lg:border-b shadow-sm">
+    <header className="relative sticky top-0 flex w-full bg-white border-slate-200 z-[990] dark:border-slate-700 dark:bg-slate-900 lg:border-b shadow-sm">
       {showHeaderGlow && (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-amber-300 via-orange-500 to-red-500 opacity-90 animate-pulse" />
       )}
-        <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
+      <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
         <div className="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-slate-200 dark:border-slate-700 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
           <button
-            className="items-center justify-center w-10 h-10 text-slate-700 border-slate-200 rounded-lg z-99999 dark:border-slate-700 lg:flex dark:text-slate-300 lg:h-11 lg:w-11 lg:border hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="flex items-center justify-center w-10 h-10 text-slate-700 border-slate-200 rounded-lg z-[1001] dark:border-slate-700 dark:text-slate-300 lg:h-11 lg:w-11 lg:border hover:bg-slate-100 dark:hover:bg-slate-800"
             onClick={handleToggle}
             aria-label="Toggle Sidebar"
           >
@@ -107,7 +107,7 @@ const AppHeader: React.FC = () => {
 
           <button
             onClick={toggleApplicationMenu}
-            className="flex items-center justify-center w-10 h-10 text-slate-700 rounded-lg z-99999 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 lg:hidden"
+            className="flex items-center justify-center w-10 h-10 text-slate-700 rounded-lg z-[1001] hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 lg:hidden"
           >
             <svg
               width="24"
@@ -161,9 +161,8 @@ const AppHeader: React.FC = () => {
           </div>
         </div>
         <div
-          className={`${
-            isApplicationMenuOpen ? "flex" : "hidden"
-          } items-center justify-between w-full gap-4 px-5 py-4 lg:flex shadow-theme-md lg:justify-end lg:px-0 lg:shadow-none`}
+          className={`${isApplicationMenuOpen ? "flex" : "hidden"
+            } items-center justify-between w-full gap-4 px-5 py-4 lg:flex shadow-theme-md lg:justify-end lg:px-0 lg:shadow-none`}
         >
           <div className="flex items-center gap-2 2xsm:gap-3">
             <NotificationDropdown />

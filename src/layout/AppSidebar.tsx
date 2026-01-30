@@ -455,17 +455,9 @@ const AppSidebar: FC = () => {
 
   return (
     <>
-      {/* Mobile Backdrop */}
-      {isMobileOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[990] lg:hidden"
-          onClick={toggleMobileSidebar}
-        />
-      )}
-
       <aside
         className={`fixed inset-y-0 left-0 flex flex-col bg-white text-gray-800 transition-all duration-300 ease-in-out z-[1000] border-r border-gray-100 shadow-2xl
-          h-screen
+          h-[100dvh]
           ${isExpanded || isMobileOpen || isHovered ? "w-[290px]" : "w-[90px]"}
           ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
@@ -524,10 +516,10 @@ const AppSidebar: FC = () => {
         </div>
 
         {/* Logout Section */}
-        <div className="mt-auto shrink-0 pb-6 pt-4 px-5 border-t border-gray-100 bg-white">
+        <div className="mt-auto shrink-0 pb-4 pt-4 px-5 border-t border-gray-100 bg-white">
           <button
             onClick={logout}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-bold transition-all duration-300 rounded-xl
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl
               ${isExpanded || isHovered || isMobileOpen
                 ? "bg-red-600 text-white shadow-lg shadow-red-600/20 border border-red-500/20 hover:bg-red-700"
                 : "text-gray-400 hover:bg-red-50 hover:text-red-600 justify-center"
