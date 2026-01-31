@@ -345,6 +345,23 @@ function CallTracker() {
     }
   }, [])
 
+  // Handle modal visibility and body scroll
+  useEffect(() => {
+    if (showCallTrackerModal || showNewCallTrackerForm) {
+      document.body.style.overflow = 'hidden'
+      const navContainer = document.getElementById('main-nav-container')
+      if (navContainer) navContainer.style.display = 'none'
+      const sidebar = document.querySelector('aside')
+      if (sidebar) sidebar.style.display = 'none'
+    } else {
+      document.body.style.overflow = 'auto'
+      const navContainer = document.getElementById('main-nav-container')
+      if (navContainer) navContainer.style.display = ''
+      const sidebar = document.querySelector('aside')
+      if (sidebar) sidebar.style.display = ''
+    }
+  }, [showCallTrackerModal, showNewCallTrackerForm])
+
 
 
   // Function to fetch data from FMS and Enquiry Tracker sheets
@@ -889,7 +906,7 @@ function CallTracker() {
             </div>
           ) : (
             <div className="relative">
-              <div className="overflow-x-auto custom-scrollbar">
+              <div className="overflow-x-auto custom-scrollbar hidden lg:block">
                 {activeTab === "pending" && (
                   <table className="w-full text-left border-collapse min-w-[1400px]">
                     <thead>
@@ -912,11 +929,6 @@ function CallTracker() {
                                 onClick={() => {
                                   setSelectedLeadForCallTracker(tracker.leadId)
                                   setShowCallTrackerModal(true)
-                                  document.body.style.overflow = 'hidden'
-                                  const navContainer = document.getElementById('main-nav-container')
-                                  if (navContainer) navContainer.style.display = 'none'
-                                  const sidebar = document.querySelector('aside')
-                                  if (sidebar) sidebar.style.display = 'none'
                                 }}
                                 className="px-4 py-2 bg-purple-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-purple-200 hover:bg-purple-700 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 whitespace-nowrap"
                               >
@@ -1015,11 +1027,6 @@ function CallTracker() {
                                     e.stopPropagation()
                                     setSelectedLeadForCallTracker(tracker.leadId)
                                     setShowCallTrackerModal(true)
-                                    document.body.style.overflow = 'hidden'
-                                    const navContainer = document.getElementById('main-nav-container')
-                                    if (navContainer) navContainer.style.display = 'none'
-                                    const sidebar = document.querySelector('aside')
-                                    if (sidebar) sidebar.style.display = 'none'
                                   }}
                                   className="px-3 py-1.5 bg-purple-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-purple-200 hover:bg-purple-700 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 whitespace-nowrap"
                                 >
@@ -1147,6 +1154,170 @@ function CallTracker() {
                       )}
                     </tbody>
                   </table>
+                )}
+              </div>
+
+              {/* Mobile/Tablet Card View */}
+              <div className="lg:hidden p-4 space-y-4 bg-slate-50">
+                {activeTab === "pending" && (
+                  filteredPendingCallTrackers.length > 0 ? (
+                    filteredPendingCallTrackers.map((tracker, idx) => (
+                      <div key={idx} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex flex-col">
+                            <span className="text-xs font-black font-mono text-slate-700 bg-slate-100 px-2 py-1 rounded w-fit mb-1">{tracker.leadId}</span>
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter w-fit ${tracker.priority === "High" ? "bg-rose-100 text-rose-600" : tracker.priority === "Medium" ? "bg-amber-100 text-amber-600" : "bg-slate-100 text-slate-500"}`}>{tracker.priority} Priority</span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setSelectedLeadForCallTracker(tracker.leadId)
+                              setShowCallTrackerModal(true)
+                            }}
+                            className="p-2 bg-purple-600 text-white rounded-lg shadow-lg shadow-purple-200"
+                          >
+                            <ArrowRightIcon className="w-5 h-5" />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-black uppercase text-slate-400">Schedule</span>
+                            <span className="text-sm font-black text-slate-700">{tracker.callingDate}</span>
+                            <span className={`text-[10px] font-bold ${isOverdue(tracker.callingDate) ? "text-rose-500" : isToday(tracker.callingDate) ? "text-amber-500" : "text-slate-400"}`}>
+                              {isOverdue(tracker.callingDate) ? "Overdue" : isToday(tracker.callingDate) ? "Today" : "Upcoming"}
+                            </span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-black uppercase text-slate-400">Stage</span>
+                            <span className="text-[10px] font-black text-purple-600 uppercase bg-purple-50 px-2 py-1 rounded w-fit mt-1">
+                              {tracker.currentStage.replace('-', ' ')}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3 pt-3 border-t border-slate-100">
+                          <div className="flex items-center gap-3">
+                            <BuildingIcon className="w-4 h-4 text-slate-400" />
+                            <div className="flex flex-col">
+                              <span className="text-sm font-black text-slate-800">{tracker.companyName}</span>
+                              <span className="text-xs text-slate-500">{tracker.salespersonName} • {tracker.phoneNumber}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-slate-100">
+                          <span className="text-[10px] font-black uppercase text-slate-400 block mb-2">Items</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {JSON.parse(tracker.itemQty || '[]').filter(i => i.name && i.quantity !== "0").map((item, k) => (
+                              <span key={k} className="px-2 py-1 bg-slate-50 border border-slate-100 text-slate-600 text-[10px] font-black rounded-md">
+                                {item.name} ({item.quantity})
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-12 text-center opacity-40">
+                      <SearchIcon className="w-10 h-10 mx-auto text-slate-300 mb-2" />
+                      <p className="text-xs font-black uppercase">No Sequences</p>
+                    </div>
+                  )
+                )}
+
+                {activeTab === "directEnquiry" && (
+                  filteredDirectEnquiryPendingTrackers.length > 0 ? (
+                    filteredDirectEnquiryPendingTrackers.map((tracker, idx) => (
+                      <div key={idx} className={`bg-white rounded-2xl p-5 shadow-sm border ${isOverdue(tracker.callingDate1) ? 'border-rose-200 bg-rose-50/20' : 'border-slate-200'}`}>
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex flex-col">
+                            <span className="text-xs font-black font-mono text-slate-700 bg-slate-100 px-2 py-1 rounded w-fit mb-1">{tracker.leadId}</span>
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">{tracker.leadSource}</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setSelectedTracker(tracker)
+                                setShowPopup(true)
+                              }}
+                              className="p-2 bg-white border border-slate-200 text-slate-600 rounded-lg"
+                            >
+                              <SearchIcon className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedLeadForCallTracker(tracker.leadId)
+                                setShowCallTrackerModal(true)
+                              }}
+                              className="p-2 bg-purple-600 text-white rounded-lg shadow-lg shadow-purple-200"
+                            >
+                              <ArrowRightIcon className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-black uppercase text-slate-400">Schedule</span>
+                            <span className={`text-sm font-black ${isOverdue(tracker.callingDate1) ? 'text-rose-600' : 'text-slate-700'}`}>{tracker.callingDate1}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-black uppercase text-slate-400">Stage</span>
+                            <span className="text-[10px] font-black text-slate-700 bg-slate-100 px-2 py-1 rounded w-fit mt-1">
+                              {tracker.currentStage?.replace('-', ' ')}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3 pt-3 border-t border-slate-100">
+                          <div className="flex items-center gap-3">
+                            <BuildingIcon className="w-4 h-4 text-slate-400" />
+                            <div className="flex flex-col">
+                              <span className="text-sm font-black text-slate-800">{tracker.companyName}</span>
+                              <span className="text-xs text-slate-500">Receiver: {tracker.enquiryReceiverName}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {formatItemQty(tracker.itemQty) && (
+                          <div className="mt-4 pt-3 border-t border-slate-100">
+                            <span className="text-[10px] font-black uppercase text-slate-400 block mb-1">Items</span>
+                            <p className="text-xs font-bold text-slate-600">{formatItemQty(tracker.itemQty)}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-12 text-center text-slate-400">No records found</div>
+                  )
+                )}
+
+                {activeTab === "history" && (
+                  filteredHistoryCallTrackers.length > 0 ? (
+                    filteredHistoryCallTrackers.map((tracker, idx) => (
+                      <div key={idx} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                        <div className="flex justify-between items-center mb-4">
+                          <span className="text-xs font-black font-mono text-slate-700 bg-slate-100 px-2 py-1 rounded">{tracker.enquiryNo}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${tracker.enquiryStatus === "Hot" ? "bg-rose-100 text-rose-600" : tracker.enquiryStatus === "Warm" ? "bg-amber-100 text-amber-600" : "bg-blue-100 text-blue-600"}`}>
+                            {tracker.enquiryStatus}
+                          </span>
+                        </div>
+
+                        <div className="space-y-3">
+                          {columnOptions.map(col => visibleColumns[col.key] && col.key !== 'enquiryNo' && (
+                            <div key={col.key} className="flex justify-between items-start gap-4">
+                              <span className="text-[10px] font-black uppercase text-slate-400 shrink-0">{col.label}</span>
+                              <span className="text-xs font-bold text-slate-700 text-right">
+                                {col.key === 'itemQty' ? formatItemQty(tracker[col.key]) : (tracker[col.key] || "—")}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-12 text-center text-slate-400">No history found</div>
+                  )
                 )}
               </div>
             </div>
