@@ -51,8 +51,8 @@ const IndiaMask = () => {
             <Polygon
                 positions={[worldOuterBounds, ...holes]}
                 pathOptions={{
-                    fillColor: "#0b0f1a", // Deep dark background
-                    fillOpacity: 1,      // 100% Solid
+                    fillColor: "#ffffff", // Pure white background
+                    fillOpacity: 0.85,     // High opacity for a clean hide
                     stroke: false,
                     interactive: false,
                 }}

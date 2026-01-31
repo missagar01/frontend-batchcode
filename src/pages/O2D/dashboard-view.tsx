@@ -13,7 +13,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Cell, Pie, PieChart, ResponsiveContainer, Legend, Tooltip } from "recharts"
 import { cn } from "../../lib/utils"
 import { o2dAPI } from "../../services/o2dAPI";
-import { IndiaMap } from "../../components/IndiaMap";
 type DashboardRow = {
   indate?: string | null
   outdate?: string | null
@@ -1277,38 +1276,116 @@ export function DashboardView() {
         </Card>
 
 
-        {/* Geographic Distribution Map & Top Customers Grid */}
-        {/* <div className="w-full mb-6">
-          <Card className="w-full overflow-hidden border border-slate-200 bg-white shadow-lg relative min-h-[600px]">
-            <CardHeader className="p-4 sm:p-6 bg-slate-50 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <CardTitle className="text-lg font-bold text-slate-800">Geographic Distribution</CardTitle>
-                  <CardDescription className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                    State-wise Dispatch Volume
-                  </CardDescription>
+        {/* Sale Performance State Wise Section */}
+        <div className="w-full mb-10">
+          <div className="flex items-center justify-between mb-8 px-1">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                <Trophy className="w-6 h-6 text-white" />
+              </div>
+              <div className="space-y-0.5">
+                <h2 className="text-2xl font-black text-slate-800 tracking-tight">Sale Performance State Wise</h2>
+                <div className="flex items-center gap-2">
+                  <span className="flex w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Real-time Volume Analysis</p>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-0 h-[400px] md:h-[500px] lg:h-[600px] bg-[#0b0f1a] relative">
-              <IndiaMap
-                data={stateDistributionData}
-                onStateClick={(state) => {
-                  setSelectedState(state);
-                  const element = document.getElementById('dashboard-filter-section');
-                  if (element) element.scrollIntoView({ behavior: 'smooth' });
-                }}
-              />
-            </CardContent>
-          </Card>
-        </div> */}
+            </div>
+            <div className="hidden sm:flex items-center gap-2 bg-slate-100 p-1 rounded-lg border border-slate-200">
+              <Badge variant="ghost" className="text-slate-600 font-bold text-[10px]">ALL STATES</Badge>
+              <Badge className="bg-white text-indigo-600 border border-slate-200 shadow-sm font-black text-[10px]">
+                {stateDistributionData.length} ACTIVE
+              </Badge>
+            </div>
+          </div>
 
-        <Card className="w-full overflow-hidden border-none bg-gradient-to-br from-[rgb(6,78,59)] via-[rgb(6,95,70)] to-[rgb(6,78,59)] shadow-2xl relative">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+            {stateDistributionData.map((item, index) => {
+              const totalVolume = stateDistributionData.reduce((acc, curr) => acc + curr.count, 0);
+              const percentage = totalVolume > 0 ? ((item.count / totalVolume) * 100).toFixed(1) : "0";
+
+              const gradients = [
+                "from-indigo-600 via-indigo-700 to-indigo-800 shadow-indigo-200/50", // Indigo
+                "from-sky-500 via-sky-600 to-sky-700 shadow-sky-200/50", // Sky
+                "from-emerald-600 via-emerald-700 to-emerald-800 shadow-emerald-200/50", // Emerald
+                "from-amber-500 via-amber-600 to-amber-700 shadow-amber-200/50", // Amber
+                "from-rose-500 via-rose-600 to-rose-700 shadow-rose-200/50", // Red/Rose
+                "from-violet-600 via-violet-700 to-violet-800 shadow-violet-200/50", // Violet
+                "from-cyan-600 via-cyan-700 to-cyan-800 shadow-cyan-200/50", // Cyan
+                "from-fuchsia-600 via-fuchsia-700 to-fuchsia-800 shadow-fuchsia-200/50", // Pink/Fuchsia
+                "from-teal-600 via-teal-700 to-teal-800 shadow-teal-200/50", // Teal
+                "from-orange-500 via-orange-600 to-orange-700 shadow-orange-200/50", // Orange
+              ];
+              const gradient = gradients[index % gradients.length];
+
+              return (
+                <Card
+                  key={item.state}
+                  className={cn(
+                    "group relative border-none transition-all duration-500 shadow-lg hover:shadow-2xl hover:-translate-y-2 overflow-hidden flex flex-col justify-between min-h-[170px] bg-gradient-to-br",
+                    gradient
+                  )}
+                >
+                  {/* Decorative Elements */}
+                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
+                    <Trophy className="w-16 h-16 text-white rotate-12" />
+                  </div>
+
+                  <CardHeader className="p-5 pb-0 relative z-10">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center justify-center min-w-7 h-7 px-2 rounded-lg bg-white/20 backdrop-blur-md border border-white/20 group-hover:bg-white/30 transition-all duration-300">
+                        <span className="text-[10px] font-black text-white uppercase tracking-tighter">Rank #{index + 1}</span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <div className="px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-md border border-white/20 flex items-center gap-1.5">
+                          <span className="text-[11px] font-black text-white font-mono">{item.count.toLocaleString()}</span>
+                          <span className="text-[8px] font-bold text-white/60 uppercase tracking-widest">Units</span>
+                        </div>
+                        <div className="w-14 h-1.5 bg-black/20 rounded-full mt-2 overflow-hidden border border-white/5">
+                          <div className="h-full bg-white rounded-full transition-all duration-1000" style={{ width: `${percentage}%` }}></div>
+                        </div>
+                      </div>
+                    </div>
+                    <CardTitle className="text-lg font-black text-white uppercase tracking-tighter mt-5 group-hover:tracking-normal transition-all truncate drop-shadow-sm">
+                      {item.state}
+                    </CardTitle>
+                  </CardHeader>
+
+                  <CardContent className="p-5 pt-3 flex items-end justify-between relative z-10">
+                    <div className="space-y-0.5">
+                      <span className="text-4xl font-black text-white tracking-widest leading-none block drop-shadow-md">
+                        {percentage}%
+                      </span>
+                      <p className="text-[10px] font-black text-white/60 uppercase tracking-widest">Market Share</p>
+                    </div>
+
+                    {/* Visual Signal Element */}
+                    <div className="flex items-end gap-1 h-10 px-2 py-1 rounded-lg bg-black/10 backdrop-blur-sm border border-white/5">
+                      {[0.4, 0.7, 0.5, 0.9, 0.6].map((h, i) => (
+                        <div
+                          key={i}
+                          className="w-1.5 bg-white rounded-full transition-all duration-700 group-hover:opacity-100"
+                          style={{
+                            height: `${h * 100}%`,
+                            opacity: 0.2 + (i * 0.15)
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </CardContent>
+
+                  {/* Premium Glass Effect Reflection */}
+                  <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/10 via-white/5 to-transparent pointer-events-none opacity-50"></div>
+
+                  {/* Subtle Grainy Overlay */}
+                  <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")' }}></div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* <Card className="w-full overflow-hidden border-none bg-gradient-to-br from-[rgb(6,78,59)] via-[rgb(6,95,70)] to-[rgb(6,78,59)] shadow-2xl relative">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[rgb(52,211,153)] to-[rgb(45,212,191)] opacity-60"></div>
           <CardHeader className="p-6 bg-white/5 backdrop-blur-md border-b border-white/10">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -1412,7 +1489,7 @@ export function DashboardView() {
               </div>
             )}
           </CardContent>
-        </Card>
+        </Card> */}
       </div >
     </div >
   )

@@ -124,7 +124,7 @@ export const IndiaMap: React.FC<IndiaMapProps> = ({ data, onStateClick }) => {
     }, [data, totalCount]);
 
     return (
-        <div className="w-full h-full bg-[#0b0f1a] rounded-xl overflow-hidden relative z-0 border border-slate-200 shadow-sm">
+        <div className="w-full h-full bg-white rounded-xl overflow-hidden relative z-0 border border-slate-200 shadow-sm">
             <MapContainer
                 center={DEFAULT_CENTER}
                 zoom={DEFAULT_ZOOM}
