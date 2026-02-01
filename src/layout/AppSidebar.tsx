@@ -34,6 +34,7 @@ const o2dItem: NavItem = {
   name: "O2D",
   path: "/?tab=o2d",
   subItems: [
+    { name: "Analytics", path: "/o2d/analytics", pro: false, new: true },
     { name: "Orders", path: "/o2d/orders", pro: false },
     { name: "Gate Entry", path: "/o2d/gate-entry", pro: false },
     { name: "First Weight", path: "/o2d/first-weight", pro: false },

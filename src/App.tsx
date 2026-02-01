@@ -41,6 +41,7 @@ import { OrdersView as O2DOrders } from "./pages/O2D/order-view";
 import { ComplaintDetailsView as O2DComplaintDetails } from "./pages/O2D/complaint-details-view";
 import { PermissionsView as O2DPermissions } from "./pages/O2D/permissions-view";
 import { PendingVehicles as O2DProcess } from "./pages/O2D/pendding-vehicle";
+import { AnalyticsView as O2DAnalytics } from "./pages/O2D/analytics-view";
 
 export default function App() {
   return (
@@ -104,6 +105,7 @@ export default function App() {
             <Route path="/o2d/process" element={<RouteGuard><O2DProcess /></RouteGuard>} />
             <Route path="/o2d/complaint-details" element={<RouteGuard><O2DComplaintDetails /></RouteGuard>} />
             <Route path="/o2d/permissions" element={<RouteGuard><O2DPermissions /></RouteGuard>} />
+            <Route path="/o2d/analytics" element={<RouteGuard><O2DAnalytics /></RouteGuard>} />
           </Route>
 
           {/* Catch all - redirect to login if not authenticated, otherwise home */}
