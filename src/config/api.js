@@ -14,11 +14,15 @@ const isDevelopment = import.meta.env.DEV ||
 
 const envBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').trim();
 
-// In production (Vercel), we should ALWAYS use the rewrite rules (relative path)
-// if the backend is HTTP, to avoid Mixed Content errors.
-// So we force an empty base URL in production, which makes requests relative (e.g. /api/...)
-// triggering the vercel.json rewrite.
-const API_BASE_URL = import.meta.env.PROD ? '' : (envBaseUrl || '');
+// For S3 deployments, we MUST use the full backend URL since S3 cannot proxy API calls
+// For Vercel/platforms with rewrites, use empty string to trigger proxy
+// Check if we're on S3 by looking for s3-website in hostname
+const isS3Deployment = typeof window !== 'undefined' &&
+  (window.location.hostname.includes('s3-website') ||
+    window.location.hostname.includes('s3.amazonaws.com'));
+
+// Use backend URL for S3 deployments, otherwise use configured value
+const API_BASE_URL = isS3Deployment ? envBaseUrl : (import.meta.env.PROD ? '' : (envBaseUrl || ''));
 
 
 // Create axios instance
@@ -158,6 +162,7 @@ export const API_ENDPOINTS = {
     },
     DASHBOARD: {
       SUMMARY: '/api/o2d/dashboard/summary',
+      METRICS: '/api/o2d/dashboard/metrics',
     },
     GATE_ENTRY: {
       PENDING: '/api/o2d/gate-entry/pending',
@@ -186,3 +191,5 @@ export const API_ENDPOINTS = {
 
 export default api;
 export { API_BASE_URL };
+
+

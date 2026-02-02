@@ -1292,7 +1292,7 @@ export function DashboardView() {
               </div>
             </div>
             <div className="hidden sm:flex items-center gap-2 bg-slate-100 p-1 rounded-lg border border-slate-200">
-              <Badge variant="ghost" className="text-slate-600 font-bold text-[10px]">ALL STATES</Badge>
+              <Badge variant="secondary" className="text-slate-600 font-bold text-[10px] bg-slate-100 hover:bg-slate-200 border-none">ALL STATES</Badge>
               <Badge className="bg-white text-indigo-600 border border-slate-200 shadow-sm font-black text-[10px]">
                 {stateDistributionData.length} ACTIVE
               </Badge>

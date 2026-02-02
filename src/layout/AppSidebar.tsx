@@ -3,8 +3,6 @@ import { Link, useLocation } from "react-router";
 // Assume these icons are imported from an icon library
 import {
   BoxCubeIcon,
-  HorizontaLDots,
-  ListIcon,
   PieChartIcon,
   PlugInIcon,
 } from "../icons";
