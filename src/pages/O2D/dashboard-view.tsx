@@ -743,183 +743,7 @@ export function DashboardView() {
         </div>
       )}
 
-      {/* Top Value Cards Section - Wrapped in Scoresheet Card */}
-      <Card className="w-full bg-white border-none shadow-lg overflow-hidden animate-in slide-in-from-top-4 duration-500">
-        <CardHeader className="bg-white border-b border-slate-100 py-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-600 rounded-lg shadow-lg shadow-indigo-200">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /><path d="M8 14h.01" /><path d="M12 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M12 18h.01" /><path d="M16 18h.01" /></svg>
-            </div>
-            <CardTitle className="text-xl font-black text-slate-800 tracking-tight">ScotSheet</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Total Customers Card */}
-            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden relative group">
-              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
-                <div className="flex gap-1">
-                  <div className="w-16 h-16 rounded-full border-4 border-white/40"></div>
-                  <div className="w-16 h-16 rounded-full border-4 border-white/40 -ml-8"></div>
-                </div>
-              </div>
-              <CardHeader className="pb-2">
-                <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-                </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-blue-100">Total Customers</p>
-              </CardHeader>
-              <CardContent>
-                <div className="text-5xl font-black tracking-tighter">{totalCustomers.toLocaleString()}</div>
-              </CardContent>
-            </Card>
 
-            {/* Total Follow-ups Card */}
-            <Card className="bg-gradient-to-br from-purple-500 to-fuchsia-600 text-white border-none shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden relative group">
-              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
-                <div className="w-32 h-32 rounded-full border-8 border-white/30 -mr-16 -mt-16"></div>
-              </div>
-              <CardHeader className="pb-2">
-                <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
-                </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-purple-100">Total Follow-ups</p>
-              </CardHeader>
-              <CardContent>
-                <div className="text-5xl font-black tracking-tighter">{followupStats.totalFollowUps.toLocaleString()}</div>
-              </CardContent>
-            </Card>
-
-            {/* Orders Booked Card */}
-            <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-none shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden relative group">
-              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
-                <div className="w-32 h-32 rounded-full border-8 border-white/30 -mr-16 -mt-16"></div>
-              </div>
-              <CardHeader className="pb-2">
-                <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><polyline points="20 6 9 17 4 12" /></svg>
-                </div>
-                <p className="text-xs font-bold uppercase tracking-wider text-emerald-100">Orders Booked</p>
-              </CardHeader>
-              <CardContent>
-                <div className="text-5xl font-black tracking-tighter">{followupStats.ordersBooked.toLocaleString()}</div>
-              </CardContent>
-            </Card>
-          </div>
-
-
-          {/* Sales Performance Report Section */}
-          <div className='w-full'>
-            <Card className="border-none shadow-lg overflow-hidden bg-white">
-              <CardHeader className="bg-white border-b border-slate-100 py-6">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-200">
-                      <Filter className="w-5 h-5 text-white" />
-                    </div>
-                    <CardTitle className="text-xl font-black text-slate-800 tracking-tight">Sales Performance Report</CardTitle>
-                  </div>
-                  <div>
-                    <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                      <SelectTrigger className="w-[180px] bg-slate-50 border-slate-200 font-bold text-slate-700">
-                        <SelectValue placeholder="Select Month" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="All Months">All Months</SelectItem>
-                        {
-                          // Dynamic Month List - Last 12 months + typical range
-                          Array.from({ length: 18 }, (_, i) => {
-                            const d = new Date();
-                            d.setMonth(d.getMonth() - i + 1); // +1 to include maybe future month or current
-                            return format(d, "yyyy-MM");
-                          }).map(m => (
-                            <SelectItem key={m} value={m}>
-                              {new Date(m).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-                            </SelectItem>
-                          ))
-                        }
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="text-xs text-white uppercase bg-blue-600 sticky top-0 z-10">
-                      <tr>
-                        <th scope="col" className="px-6 py-4 font-bold tracking-wider">Sales Person</th>
-                        <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">No of Callings</th>
-                        <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Order Clients</th>
-                        <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Conversion Ratio</th>
-                        <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Total Rs Sale</th>
-                        <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Average Rs Sale</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {salesPerformance.length === 0 ? (
-                        <tr>
-                          <td colSpan={6} className="px-6 py-8 text-center text-slate-400 font-medium">
-                            <div className="flex flex-col items-center justify-center p-4">
-                              <div className="text-lg">No data available</div>
-                              <div className="text-sm mt-1">Try selecting a different date range</div>
-                            </div>
-                          </td>
-                        </tr>
-                      ) : (
-                        salesPerformance.map((row, idx) => {
-                          const isTotalRow = row.salesPerson === 'Total';
-
-                          const rowClass = isTotalRow
-                            ? "bg-blue-50 font-bold border-t-2 border-blue-100" // Light blue summary row
-                            : idx % 2 === 0 ? "bg-white" : "bg-slate-50/50";
-
-                          // Generate avatar initials
-                          const initials = row.salesPerson !== 'Total'
-                            ? row.salesPerson.split(' ').map((n: any) => n[0]).join('').substring(0, 2).toUpperCase()
-                            : 'Σ';
-
-                          // Determine avatar color
-                          const avatarColor = idx % 3 === 0 ? "bg-blue-500" : idx % 3 === 1 ? "bg-purple-500" : "bg-indigo-500";
-
-                          return (
-                            <tr key={idx} className={`${rowClass} hover:bg-blue-50/80 transition-colors`}>
-                              <td className="px-6 py-4 font-medium flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-full ${isTotalRow ? 'bg-blue-600' : avatarColor} flex items-center justify-center text-white text-xs font-bold shadow-sm`}>
-                                  {initials}
-                                </div>
-                                {row.salesPerson}
-                              </td>
-                              <td className="px-6 py-4 text-center">{row.noOfCallings}</td>
-                              <td className="px-6 py-4 text-center">{row.orderClients}</td>
-                              <td className="px-6 py-4 text-center">
-                                <div className="flex flex-col items-center">
-                                  <span className={`${isTotalRow ? 'text-blue-700' : 'text-slate-700'} font-bold`}>{row.conversionRatio}%</span>
-                                  {!isTotalRow && <div className="w-12 h-1 bg-slate-200 rounded-full mt-1 overflow-hidden">
-                                    <div className="h-full bg-green-500 rounded-full" style={{ width: `${Math.min(parseFloat(row.conversionRatio), 100)}%` }}></div>
-                                  </div>}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 text-center font-mono text-slate-700">
-                                {row.totalRsSale ? Number(row.totalRsSale).toLocaleString() : '0'}
-                              </td>
-                              <td className="px-6 py-4 text-center font-mono">
-                                <span className={`${parseFloat(row.avgRsSale) > 50 ? 'text-emerald-600 font-bold' : 'text-slate-600'}`}>
-                                  {row.avgRsSale}
-                                </span>
-                              </td>
-                            </tr>
-                          )
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </CardContent>
-      </Card>
 
 
 
@@ -1689,6 +1513,186 @@ export function DashboardView() {
           </CardContent>
         </Card>
 
+        {/* Top Value Cards Section - Wrapped in Scoresheet Card */}
+        <Card className="w-full bg-white border-none shadow-lg overflow-hidden animate-in slide-in-from-top-4 duration-500">
+          <CardHeader className="bg-white border-b border-slate-100 py-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-indigo-600 rounded-lg shadow-lg shadow-indigo-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /><path d="M8 14h.01" /><path d="M12 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M12 18h.01" /><path d="M16 18h.01" /></svg>
+              </div>
+              <CardTitle className="text-xl font-black text-slate-800 tracking-tight">ScotSheet</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Total Customers Card */}
+              <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden relative group">
+                <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                  <div className="flex gap-1">
+                    <div className="w-16 h-16 rounded-full border-4 border-white/40"></div>
+                    <div className="w-16 h-16 rounded-full border-4 border-white/40 -ml-8"></div>
+                  </div>
+                </div>
+                <CardHeader className="pb-2">
+                  <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                  </div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-blue-100">Total Customers</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-5xl font-black tracking-tighter">{totalCustomers.toLocaleString()}</div>
+                </CardContent>
+              </Card>
+
+              {/* Total Follow-ups Card */}
+              <Card className="bg-gradient-to-br from-purple-500 to-fuchsia-600 text-white border-none shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden relative group">
+                <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                  <div className="w-32 h-32 rounded-full border-8 border-white/30 -mr-16 -mt-16"></div>
+                </div>
+                <CardHeader className="pb-2">
+                  <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+                  </div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-purple-100">Total Follow-ups</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-5xl font-black tracking-tighter">{followupStats.totalFollowUps.toLocaleString()}</div>
+                </CardContent>
+              </Card>
+
+              {/* Orders Booked Card */}
+              <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-none shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden relative group">
+                <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                  <div className="w-32 h-32 rounded-full border-8 border-white/30 -mr-16 -mt-16"></div>
+                </div>
+                <CardHeader className="pb-2">
+                  <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><polyline points="20 6 9 17 4 12" /></svg>
+                  </div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-emerald-100">Orders Booked</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-5xl font-black tracking-tighter">{followupStats.ordersBooked.toLocaleString()}</div>
+                </CardContent>
+              </Card>
+            </div>
+
+
+            {/* Sales Performance Report Section */}
+            <div className='w-full'>
+              <Card className="border-none shadow-lg overflow-hidden bg-white">
+                <CardHeader className="bg-white border-b border-slate-100 py-6">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-200">
+                        <Filter className="w-5 h-5 text-white" />
+                      </div>
+                      <CardTitle className="text-xl font-black text-slate-800 tracking-tight">Sales Performance Report</CardTitle>
+                    </div>
+                    <div>
+                      <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                        <SelectTrigger className="w-[180px] bg-slate-50 border-slate-200 font-bold text-slate-700">
+                          <SelectValue placeholder="Select Month" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="All Months">All Months</SelectItem>
+                          {
+                            // Dynamic Month List - Last 12 months + typical range
+                            Array.from({ length: 18 }, (_, i) => {
+                              const d = new Date();
+                              d.setMonth(d.getMonth() - i + 1); // +1 to include maybe future month or current
+                              return format(d, "yyyy-MM");
+                            }).map(m => (
+                              <SelectItem key={m} value={m}>
+                                {new Date(m).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                              </SelectItem>
+                            ))
+                          }
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead className="text-xs text-white uppercase bg-blue-600 sticky top-0 z-10">
+                        <tr>
+                          <th scope="col" className="px-6 py-4 font-bold tracking-wider">Sales Person</th>
+                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">No of Callings</th>
+                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Order Clients</th>
+                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Conversion Ratio</th>
+                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Total Rs Sale</th>
+                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Average Rs Sale</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {salesPerformance.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-8 text-center text-slate-400 font-medium">
+                              <div className="flex flex-col items-center justify-center p-4">
+                                <div className="text-lg">No data available</div>
+                                <div className="text-sm mt-1">Try selecting a different date range</div>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          salesPerformance.map((row, idx) => {
+                            const isTotalRow = row.salesPerson === 'Total';
+
+                            const rowClass = isTotalRow
+                              ? "bg-blue-50 font-bold border-t-2 border-blue-100" // Light blue summary row
+                              : idx % 2 === 0 ? "bg-white" : "bg-slate-50/50";
+
+                            // Generate avatar initials
+                            const initials = row.salesPerson !== 'Total'
+                              ? row.salesPerson.split(' ').map((n: any) => n[0]).join('').substring(0, 2).toUpperCase()
+                              : 'Σ';
+
+                            // Determine avatar color
+                            const avatarColor = idx % 3 === 0 ? "bg-blue-500" : idx % 3 === 1 ? "bg-purple-500" : "bg-indigo-500";
+
+                            return (
+                              <tr key={idx} className={`${rowClass} hover:bg-blue-50/80 transition-colors`}>
+                                <td className="px-6 py-4 font-medium flex items-center gap-3">
+                                  <div className={`w-8 h-8 rounded-full ${isTotalRow ? 'bg-blue-600' : avatarColor} flex items-center justify-center text-white text-xs font-bold shadow-sm`}>
+                                    {initials}
+                                  </div>
+                                  {row.salesPerson}
+                                </td>
+                                <td className="px-6 py-4 text-center">{row.noOfCallings}</td>
+                                <td className="px-6 py-4 text-center">{row.orderClients}</td>
+                                <td className="px-6 py-4 text-center">
+                                  <div className="flex flex-col items-center">
+                                    <span className={`${isTotalRow ? 'text-blue-700' : 'text-slate-700'} font-bold`}>{row.conversionRatio}%</span>
+                                    {!isTotalRow && <div className="w-12 h-1 bg-slate-200 rounded-full mt-1 overflow-hidden">
+                                      <div className="h-full bg-green-500 rounded-full" style={{ width: `${Math.min(parseFloat(row.conversionRatio), 100)}%` }}></div>
+                                    </div>}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 text-center font-mono text-slate-700">
+                                  {row.totalRsSale ? Number(row.totalRsSale).toLocaleString() : '0'}
+                                </td>
+                                <td className="px-6 py-4 text-center font-mono">
+                                  <span className={`${parseFloat(row.avgRsSale) > 50 ? 'text-emerald-600 font-bold' : 'text-slate-600'}`}>
+                                    {row.avgRsSale}
+                                  </span>
+                                </td>
+                              </tr>
+                            )
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </CardContent>
+        </Card>
+
+
+
         <Card className="w-full overflow-hidden border-none bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative group">
           {/* Decorative accent line */}
           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-80 group-hover:opacity-100 transition-opacity"></div>
@@ -1823,5 +1827,4 @@ export function DashboardView() {
     </div>
   )
 }
-
 
