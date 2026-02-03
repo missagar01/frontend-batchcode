@@ -183,7 +183,10 @@ export const API_ENDPOINTS = {
     PROCESS: {
       TIMELINE: '/api/o2d/process/timeline',
     },
-    SIZE_MASTER: '/api/o2d/size-master',
+    SIZE_MASTER: {
+      BASE: '/api/o2d/size-master',
+      REPORT_CURRENT_MONTH: '/api/o2d/size-master/report/current-month',
+    },
     CLIENT: '/api/o2d/client',
     FOLLOWUP: '/api/o2d/followup',
   },

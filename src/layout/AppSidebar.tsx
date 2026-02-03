@@ -320,24 +320,6 @@ const AppSidebar: FC = () => {
           </Link>
         </div>
 
-        {/* User Profile */}
-        {/* {(isExpanded || isHovered || isMobileOpen) && (
-          <div className="mx-4 mt-6 mb-4 p-4 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center gap-4 group cursor-default shadow-sm hover:shadow-md transition-all">
-            <div className="w-11 h-11 rounded-xl bg-white border-2 border-gray-100 flex items-center justify-center text-sm font-black text-blue-600 shadow-sm">
-              <span className="uppercase">{user?.role?.slice(0, 2) || "AD"}</span>
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-[14px] font-bold text-[#111827] truncate">
-                {user?.role || "Administrator"}
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                <span className="text-[10px] font-black text-green-600 uppercase tracking-widest">Active Now</span>
-              </div>
-            </div>
-          </div>
-        )} */}
-
         {/* Navigation */}
         <div className="flex flex-col flex-1 overflow-y-auto duration-300 no-scrollbar py-2">
           {showDashboard && renderSection("Main Navigation", [dashboardItem])}

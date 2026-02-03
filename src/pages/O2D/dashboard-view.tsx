@@ -33,6 +33,7 @@ type DashboardSummary = {
   pendingOrdersTotal?: number
   conversionRatio?: string
   saudaAvg?: Array<{ ITEM: string; AVERAGE: number }>
+  allSaudaAvg?: Array<{ ITEM: string; AVERAGE: number }>
   salesAvg?: Array<{ ITEM: string; AVERAGE: number }>
   saudaRate2026?: number
   monthlyGd?: number
@@ -69,9 +70,81 @@ export function DashboardView() {
   const [selectedItem, setSelectedItem] = useState("All Items")
   const [selectedSales, setSelectedSales] = useState("All Salespersons")
   const [selectedState, setSelectedState] = useState("All States")
-  const [selectedMonth, setSelectedMonth] = useState<string>("All Months")
+  const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), "yyyy-MM"))
+  const [enquiryReport, setEnquiryReport] = useState<any[]>([])
+  const [loadingEnquiry, setLoadingEnquiry] = useState(false)
 
   const dashboardRef = useRef<HTMLDivElement | null>(null)
+
+  // New Stats State
+  const [totalCustomers, setTotalCustomers] = useState(0)
+  const [followupStats, setFollowupStats] = useState({ totalFollowUps: 0, ordersBooked: 0 })
+  const [salesPerformance, setSalesPerformance] = useState<any[]>([])
+
+  const fetchEnquiryReport = async () => {
+    setLoadingEnquiry(true)
+    try {
+      const response = await o2dAPI.getCurrentMonthEnquiryReport(selectedMonth)
+      if (response.data?.success) {
+        setEnquiryReport(response.data.data)
+      }
+    } catch (err) {
+      console.error("Error fetching enquiry report:", err)
+    } finally {
+      setLoadingEnquiry(false)
+    }
+  }
+
+  const fetchAdditionalStats = async () => {
+    // 1. Fetch Client Count (Independent of date filter)
+    try {
+      const countRes = await o2dAPI.getClientCount()
+      if (countRes.data?.success) {
+        setTotalCustomers(countRes.data.data)
+      }
+    } catch (err) {
+      console.error("Error fetching client count:", err)
+    }
+
+    // 2. Fetch Sales/Followup Stats (Dependent on date range)
+    try {
+      const params: any = {}
+
+      if (selectedMonth !== "All Months") {
+        const [year, month] = selectedMonth.split("-")
+        // Start date: 1st of the month
+        const fromDate = new Date(parseInt(year), parseInt(month) - 1, 1)
+        // End date: Last day of the month
+        const toDate = new Date(parseInt(year), parseInt(month), 0)
+
+        params.startDate = format(fromDate, "yyyy-MM-dd")
+        params.endDate = format(toDate, "yyyy-MM-dd")
+      } else {
+        // For "All Months", send a wide range. 
+        // Start of 2024 to Current Date seems appropriate based on user context.
+        params.startDate = '2024-01-01'
+        params.endDate = format(new Date(), "yyyy-MM-dd")
+      }
+
+      // Fetch Followup Stats WITHOUT params to get matching Postman result (Total Lifetime Stats)
+      // Fetch Sales Performance WITH params to respect the date filter
+      const [statsRes, perfRes] = await Promise.all([
+        o2dAPI.getFollowupStats(), // No params = Global Total
+        o2dAPI.getSalesPerformance(params) // Respects filter
+      ])
+
+      if (statsRes.data?.success) setFollowupStats(statsRes.data.data)
+      if (perfRes.data?.success) setSalesPerformance(perfRes.data.data)
+
+    } catch (err) {
+      console.error("Error fetching sales/followup stats:", err)
+    }
+  }
+
+  useEffect(() => {
+    // Fetch stats when component mounts or when selectedMonth changes
+    fetchAdditionalStats()
+  }, [selectedMonth]) // Re-run when month filter changes
 
   const fetchDashboard = useCallback(async () => {
     setLoading(true)
@@ -86,7 +159,14 @@ export function DashboardView() {
       if (selectedMonth !== "All Months") {
         const [year, month] = selectedMonth.split("-")
         const fromDate = new Date(parseInt(year), parseInt(month) - 1, 1)
-        const toDate = new Date(parseInt(year), parseInt(month), 0)
+        let toDate = new Date(parseInt(year), parseInt(month), 0)
+
+        // If it's the current month (matching year & month), use today as toDate
+        const now = new Date();
+        if (parseInt(year) === now.getFullYear() && (parseInt(month) - 1) === now.getMonth()) {
+          toDate = now;
+        }
+
         params.fromDate = format(fromDate, "yyyy-MM-dd")
         params.toDate = format(toDate, "yyyy-MM-dd")
       }
@@ -98,6 +178,9 @@ export function DashboardView() {
       }
       setData(payload.data as DashboardResponse)
       setLastUpdated(payload.data.lastUpdated ? new Date(payload.data.lastUpdated) : new Date())
+
+      // Also fetch enquiry report
+      fetchEnquiryReport()
     } catch (err: unknown) {
       console.error("Error fetching dashboard:", err)
       const errorMessage = err instanceof Error ? err.message : "Failed to load dashboard data"
@@ -106,6 +189,15 @@ export function DashboardView() {
       setLoading(false)
     }
   }, [selectedParty, selectedItem, selectedSales, selectedState, selectedMonth])
+
+  useEffect(() => {
+    // Reset filters on mount to ensure a clean slate
+    setSelectedParty("All Parties");
+    setSelectedItem("All Items");
+    setSelectedSales("All Salespersons");
+    setSelectedState("All States");
+    setSelectedMonth(format(new Date(), "yyyy-MM"));
+  }, []);
 
   useEffect(() => {
     if (authLoading) {
@@ -293,7 +385,7 @@ export function DashboardView() {
   // Get all three item averages for the composite card
   const getItemAverages = () => {
     const summary: DashboardSummary = data?.summary || {}
-    const saudaAvgList = summary.saudaAvg || []
+    const saudaAvgList = summary.allSaudaAvg || []
     const salesAvgList = summary.salesAvg || []
 
     const items = ['PIPE', 'STRIPS', 'BILLET']
@@ -409,9 +501,31 @@ export function DashboardView() {
         stateMap[stateName] = (stateMap[stateName] || 0) + 1;
       }
     });
-    return Object.entries(stateMap)
+
+    const entries = Object.entries(stateMap)
       .map(([state, count]) => ({ state, count }))
       .sort((a, b) => b.count - a.count);
+
+    const totalCount = entries.reduce((acc, curr) => acc + curr.count, 0);
+    if (totalCount === 0) return [];
+
+    const result: { state: string; count: number }[] = [];
+    let miscCount = 0;
+
+    entries.forEach(entry => {
+      const percentage = (entry.count / totalCount) * 100;
+      if (percentage < 2) {
+        miscCount += entry.count;
+      } else {
+        result.push(entry);
+      }
+    });
+
+    if (miscCount > 0) {
+      result.push({ state: "Miscellaneous", count: miscCount });
+    }
+
+    return result;
   }, [filteredData]);
 
   const downloadPDF = async () => {
@@ -616,27 +730,204 @@ export function DashboardView() {
 
 
 
+  // New Stats State (Moved to top)
+
   return (
-    <div className="relative space-y-4 sm:space-y-6 p-2 sm:p-4 lg:p-6" ref={dashboardRef}>
+    <div className="relative space-y-4 sm:space-y-8 p-2 sm:p-4 lg:p-8 bg-slate-50/50 min-h-screen" ref={dashboardRef}>
       {loading && data && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
           <div className="flex flex-col items-center justify-center space-y-4 bg-white rounded-lg shadow-2xl p-8">
-            <div className="relative">
-              <div className="w-16 h-16 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-gray-100 border-t-blue-500 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }}></div>
-              </div>
-            </div>
-            <div className="flex flex-col items-center space-y-2">
-              <p className="text-lg font-semibold text-gray-700">Loading...</p>
-              <p className="text-sm text-gray-500">Please wait</p>
-            </div>
+            <Loader2 className="h-12 w-12 text-blue-600 animate-spin" />
+            <p className="text-lg font-semibold text-gray-700">Loading...</p>
           </div>
         </div>
       )}
 
+      {/* Top Value Cards Section - Wrapped in Scoresheet Card */}
+      <Card className="w-full bg-white border-none shadow-lg overflow-hidden animate-in slide-in-from-top-4 duration-500">
+        <CardHeader className="bg-white border-b border-slate-100 py-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-600 rounded-lg shadow-lg shadow-indigo-200">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /><path d="M8 14h.01" /><path d="M12 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M12 18h.01" /><path d="M16 18h.01" /></svg>
+            </div>
+            <CardTitle className="text-xl font-black text-slate-800 tracking-tight">ScotSheet</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Total Customers Card */}
+            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden relative group">
+              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                <div className="flex gap-1">
+                  <div className="w-16 h-16 rounded-full border-4 border-white/40"></div>
+                  <div className="w-16 h-16 rounded-full border-4 border-white/40 -ml-8"></div>
+                </div>
+              </div>
+              <CardHeader className="pb-2">
+                <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                </div>
+                <p className="text-xs font-bold uppercase tracking-wider text-blue-100">Total Customers</p>
+              </CardHeader>
+              <CardContent>
+                <div className="text-5xl font-black tracking-tighter">{totalCustomers.toLocaleString()}</div>
+              </CardContent>
+            </Card>
+
+            {/* Total Follow-ups Card */}
+            <Card className="bg-gradient-to-br from-purple-500 to-fuchsia-600 text-white border-none shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden relative group">
+              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                <div className="w-32 h-32 rounded-full border-8 border-white/30 -mr-16 -mt-16"></div>
+              </div>
+              <CardHeader className="pb-2">
+                <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+                </div>
+                <p className="text-xs font-bold uppercase tracking-wider text-purple-100">Total Follow-ups</p>
+              </CardHeader>
+              <CardContent>
+                <div className="text-5xl font-black tracking-tighter">{followupStats.totalFollowUps.toLocaleString()}</div>
+              </CardContent>
+            </Card>
+
+            {/* Orders Booked Card */}
+            <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-none shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden relative group">
+              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                <div className="w-32 h-32 rounded-full border-8 border-white/30 -mr-16 -mt-16"></div>
+              </div>
+              <CardHeader className="pb-2">
+                <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><polyline points="20 6 9 17 4 12" /></svg>
+                </div>
+                <p className="text-xs font-bold uppercase tracking-wider text-emerald-100">Orders Booked</p>
+              </CardHeader>
+              <CardContent>
+                <div className="text-5xl font-black tracking-tighter">{followupStats.ordersBooked.toLocaleString()}</div>
+              </CardContent>
+            </Card>
+          </div>
+
+
+          {/* Sales Performance Report Section */}
+          <div className='w-full'>
+            <Card className="border-none shadow-lg overflow-hidden bg-white">
+              <CardHeader className="bg-white border-b border-slate-100 py-6">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-200">
+                      <Filter className="w-5 h-5 text-white" />
+                    </div>
+                    <CardTitle className="text-xl font-black text-slate-800 tracking-tight">Sales Performance Report</CardTitle>
+                  </div>
+                  <div>
+                    <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                      <SelectTrigger className="w-[180px] bg-slate-50 border-slate-200 font-bold text-slate-700">
+                        <SelectValue placeholder="Select Month" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="All Months">All Months</SelectItem>
+                        {
+                          // Dynamic Month List - Last 12 months + typical range
+                          Array.from({ length: 18 }, (_, i) => {
+                            const d = new Date();
+                            d.setMonth(d.getMonth() - i + 1); // +1 to include maybe future month or current
+                            return format(d, "yyyy-MM");
+                          }).map(m => (
+                            <SelectItem key={m} value={m}>
+                              {new Date(m).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                            </SelectItem>
+                          ))
+                        }
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left">
+                    <thead className="text-xs text-white uppercase bg-blue-600 sticky top-0 z-10">
+                      <tr>
+                        <th scope="col" className="px-6 py-4 font-bold tracking-wider">Sales Person</th>
+                        <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">No of Callings</th>
+                        <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Order Clients</th>
+                        <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Conversion Ratio</th>
+                        <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Total Rs Sale</th>
+                        <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Average Rs Sale</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {salesPerformance.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-6 py-8 text-center text-slate-400 font-medium">
+                            <div className="flex flex-col items-center justify-center p-4">
+                              <div className="text-lg">No data available</div>
+                              <div className="text-sm mt-1">Try selecting a different date range</div>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        salesPerformance.map((row, idx) => {
+                          const isTotalRow = row.salesPerson === 'Total';
+
+                          const rowClass = isTotalRow
+                            ? "bg-blue-50 font-bold border-t-2 border-blue-100" // Light blue summary row
+                            : idx % 2 === 0 ? "bg-white" : "bg-slate-50/50";
+
+                          // Generate avatar initials
+                          const initials = row.salesPerson !== 'Total'
+                            ? row.salesPerson.split(' ').map((n: any) => n[0]).join('').substring(0, 2).toUpperCase()
+                            : 'Σ';
+
+                          // Determine avatar color
+                          const avatarColor = idx % 3 === 0 ? "bg-blue-500" : idx % 3 === 1 ? "bg-purple-500" : "bg-indigo-500";
+
+                          return (
+                            <tr key={idx} className={`${rowClass} hover:bg-blue-50/80 transition-colors`}>
+                              <td className="px-6 py-4 font-medium flex items-center gap-3">
+                                <div className={`w-8 h-8 rounded-full ${isTotalRow ? 'bg-blue-600' : avatarColor} flex items-center justify-center text-white text-xs font-bold shadow-sm`}>
+                                  {initials}
+                                </div>
+                                {row.salesPerson}
+                              </td>
+                              <td className="px-6 py-4 text-center">{row.noOfCallings}</td>
+                              <td className="px-6 py-4 text-center">{row.orderClients}</td>
+                              <td className="px-6 py-4 text-center">
+                                <div className="flex flex-col items-center">
+                                  <span className={`${isTotalRow ? 'text-blue-700' : 'text-slate-700'} font-bold`}>{row.conversionRatio}%</span>
+                                  {!isTotalRow && <div className="w-12 h-1 bg-slate-200 rounded-full mt-1 overflow-hidden">
+                                    <div className="h-full bg-green-500 rounded-full" style={{ width: `${Math.min(parseFloat(row.conversionRatio), 100)}%` }}></div>
+                                  </div>}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 text-center font-mono text-slate-700">
+                                {row.totalRsSale ? Number(row.totalRsSale).toLocaleString() : '0'}
+                              </td>
+                              <td className="px-6 py-4 text-center font-mono">
+                                <span className={`${parseFloat(row.avgRsSale) > 50 ? 'text-emerald-600 font-bold' : 'text-slate-600'}`}>
+                                  {row.avgRsSale}
+                                </span>
+                              </td>
+                            </tr>
+                          )
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </CardContent>
+      </Card>
+
+
+
+
+
       {/* O2D Dashboard Content */}
       <div className="space-y-4 sm:space-y-6 animate-in fade-in-50 duration-200">
+
         <div className="flex items-center justify-between">
           <div>
             {lastUpdated && <p className="text-xs text-gray-500">Last updated: {lastUpdated.toLocaleTimeString()}</p>}
@@ -1144,6 +1435,259 @@ export function DashboardView() {
         </Card>
 
 
+        {/* Sale Performance State Wise Section */}
+        <div className="w-full mb-10">
+          <div className="flex items-center justify-between mb-8 px-1">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-200">
+                <Trophy className="w-6 h-6 text-white" />
+              </div>
+              <div className="space-y-0.5">
+                <h2 className="text-2xl font-black text-slate-800 tracking-tight">Sale Performance State Wise</h2>
+                <div className="flex items-center gap-2">
+                  <span className="flex w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Real-time Volume Analysis</p>
+                </div>
+              </div>
+            </div>
+            <div className="hidden sm:flex items-center gap-2 bg-slate-100 p-1 rounded-lg border border-slate-200">
+              <Badge variant="secondary" className="text-slate-600 font-bold text-[10px] bg-slate-100 hover:bg-slate-200 border-none">ALL STATES</Badge>
+              <Badge className="bg-white text-indigo-600 border border-slate-200 shadow-sm font-black text-[10px]">
+                {stateDistributionData.length} ACTIVE
+              </Badge>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+            {stateDistributionData.map((item, index) => {
+              const totalVolume = stateDistributionData.reduce((acc, curr) => acc + curr.count, 0);
+              const percentage = totalVolume > 0 ? ((item.count / totalVolume) * 100).toFixed(1) : "0";
+
+              const gradients = [
+                "from-indigo-600 via-indigo-700 to-indigo-800 shadow-indigo-200/50", // Indigo
+                "from-sky-500 via-sky-600 to-sky-700 shadow-sky-200/50", // Sky
+                "from-emerald-600 via-emerald-700 to-emerald-800 shadow-emerald-200/50", // Emerald
+                "from-amber-500 via-amber-600 to-amber-700 shadow-amber-200/50", // Amber
+                "from-rose-500 via-rose-600 to-rose-700 shadow-rose-200/50", // Red/Rose
+                "from-violet-600 via-violet-700 to-violet-800 shadow-violet-200/50", // Violet
+                "from-cyan-600 via-cyan-700 to-cyan-800 shadow-cyan-200/50", // Cyan
+                "from-fuchsia-600 via-fuchsia-700 to-fuchsia-800 shadow-fuchsia-200/50", // Pink/Fuchsia
+                "from-teal-600 via-teal-700 to-teal-800 shadow-teal-200/50", // Teal
+                "from-orange-500 via-orange-600 to-orange-700 shadow-orange-200/50", // Orange
+              ];
+              const gradient = gradients[index % gradients.length];
+
+              return (
+                <Card
+                  key={item.state}
+                  className={cn(
+                    "group relative border-none transition-all duration-500 shadow-lg hover:shadow-2xl hover:-translate-y-2 overflow-hidden flex flex-col justify-between min-h-[170px] bg-gradient-to-br",
+                    gradient
+                  )}
+                >
+                  {/* Decorative Elements */}
+                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
+                    <Trophy className="w-16 h-16 text-white rotate-12" />
+                  </div>
+
+                  <CardHeader className="p-5 pb-0 relative z-10">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center justify-center min-w-7 h-7 px-2 rounded-lg bg-white/20 backdrop-blur-md border border-white/20 group-hover:bg-white/30 transition-all duration-300">
+                        <span className="text-[10px] font-black text-white uppercase tracking-tighter">
+                          {item.state === "Miscellaneous" ? "OTHER" : `Rank #${index + 1}`}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <div className="px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-md border border-white/20 flex items-center gap-1.5">
+                          <span className="text-[11px] font-black text-white font-mono">{item.count.toLocaleString()}</span>
+                          <span className="text-[8px] font-bold text-white/60 uppercase tracking-widest">Units</span>
+                        </div>
+                        <div className="w-14 h-1.5 bg-black/20 rounded-full mt-2 overflow-hidden border border-white/5">
+                          <div className="h-full bg-white rounded-full transition-all duration-1000" style={{ width: `${percentage}%` }}></div>
+                        </div>
+                      </div>
+                    </div>
+                    <CardTitle className="text-lg font-black text-white uppercase tracking-tighter mt-5 group-hover:tracking-normal transition-all truncate drop-shadow-sm">
+                      {item.state}
+                    </CardTitle>
+                  </CardHeader>
+
+                  <CardContent className="p-5 pt-3 flex items-end justify-between relative z-10">
+                    <div className="space-y-0.5">
+                      <span className="text-4xl font-black text-white tracking-widest leading-none block drop-shadow-md">
+                        {percentage}%
+                      </span>
+                      <p className="text-[10px] font-black text-white/60 uppercase tracking-widest">Market Share</p>
+                    </div>
+
+                    {/* Visual Signal Element */}
+                    <div className="flex items-end gap-1 h-10 px-2 py-1 rounded-lg bg-black/10 backdrop-blur-sm border border-white/5">
+                      {[0.4, 0.7, 0.5, 0.9, 0.6].map((h, i) => (
+                        <div
+                          key={i}
+                          className="w-1.5 bg-white rounded-full transition-all duration-700 group-hover:opacity-100"
+                          style={{
+                            height: `${h * 100}%`,
+                            opacity: 0.2 + (i * 0.15)
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </CardContent>
+
+                  {/* Premium Glass Effect Reflection */}
+                  <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/10 via-white/5 to-transparent pointer-events-none opacity-50"></div>
+
+                  {/* Subtle Grainy Overlay */}
+                  <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")' }}></div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
+
+        {/* Current Month Enquiry Report Section */}
+        <Card className="border-l-4 border-l-emerald-500 bg-white shadow-xl overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-emerald-50 to-transparent border-b border-emerald-100 p-4 md:p-6">
+            <div className="flex flex-col gap-4">
+              {/* Top Row: Title & Month Selector */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-emerald-100 rounded-xl shadow-sm">
+                    <Database className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg md:text-xl font-black text-slate-800 tracking-tight leading-tight">
+                      {selectedMonth === "All Months"
+                        ? "Overall Enquiry Report"
+                        : `${format(new Date(selectedMonth + "-01"), "MMMM yyyy")} Enquiry Report`}
+                    </CardTitle>
+                    <CardDescription className="text-[11px] md:text-xs text-emerald-700/70 font-bold uppercase tracking-wider">
+                      Aggregated enquiry volume by size and thickness
+                    </CardDescription>
+                  </div>
+                </div>
+
+                <div className="w-full sm:w-auto">
+                  <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                    <SelectTrigger className="w-full sm:w-[160px] h-9 border-emerald-200 text-emerald-700 bg-white shadow-sm text-[11px] font-bold uppercase tracking-wider hover:bg-emerald-50 transition-colors">
+                      <SelectValue placeholder="Select Month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="All Months">All Months</SelectItem>
+                      {(() => {
+                        const months = []
+                        const startDate = new Date(2025, 3, 1)
+                        const currentDate = new Date()
+                        for (let d = new Date(startDate); d <= currentDate; d.setMonth(d.getMonth() + 1)) {
+                          const year = d.getFullYear()
+                          const monthStr = (d.getMonth() + 1).toString().padStart(2, '0')
+                          const value = `${year}-${monthStr}`
+                          const label = d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                          months.push(<SelectItem key={value} value={value}>{label}</SelectItem>)
+                        }
+                        return months.reverse()
+                      })()}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Bottom Row: Badges & Stats */}
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <Badge className="bg-emerald-500 text-white border-none font-bold px-3 py-1.5 text-[10px] md:text-[11px] uppercase tracking-widest shadow-md">
+                  {enquiryReport.length} ITEMS
+                </Badge>
+
+                {enquiryReport.length > 0 && (
+                  <div className="flex items-center gap-3 bg-emerald-600 text-white px-4 py-1.5 rounded-full shadow-lg ml-0 sm:ml-auto">
+                    <span className="text-[9px] font-black uppercase tracking-[0.15em] opacity-80">Total Volume</span>
+                    <span className="text-sm md:text-base font-black font-mono">
+                      {enquiryReport.reduce((acc, curr) => acc + Number(curr.total), 0).toLocaleString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-0">
+            <div className="max-h-[650px] overflow-y-auto overflow-x-auto scrollbar-thin scrollbar-thumb-emerald-100 relative">
+              <Table>
+                <TableHeader className="sticky top-0 z-20 bg-slate-100/95 backdrop-blur-sm shadow-sm">
+                  <TableRow className="hover:bg-transparent border-b-2 border-emerald-100">
+                    <TableHead className="w-[60px] md:w-[80px] font-black text-slate-600 uppercase tracking-widest text-[11px] md:text-[13px] py-4 pl-6">S.No</TableHead>
+                    <TableHead className="font-black text-slate-600 uppercase tracking-widest text-[11px] md:text-[13px] py-4">Item Type</TableHead>
+                    <TableHead className="font-black text-slate-600 uppercase tracking-widest text-[11px] md:text-[13px] py-4">Size</TableHead>
+                    <TableHead className="font-black text-slate-600 uppercase tracking-widest text-[11px] md:text-[13px] py-4 text-center">Thickness</TableHead>
+                    <TableHead className="font-black text-slate-600 uppercase tracking-widest text-[11px] md:text-[13px] py-4 text-right pr-6">Quantity</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loadingEnquiry ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-48 text-center">
+                        <div className="flex flex-col items-center justify-center gap-3">
+                          <Loader2 className="h-10 w-10 text-emerald-500 animate-spin" />
+                          <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Fetching Report...</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : enquiryReport.length > 0 ? (
+                    enquiryReport.map((item, index) => {
+                      const gradients = [
+                        "linear-gradient(135deg, #00B4DB 0%, #0083B0 100%)",
+                        "linear-gradient(135deg, #4776E6 0%, #8E54E9 100%)"
+                      ];
+                      const rowGradient = gradients[index % gradients.length];
+
+                      return (
+                        <TableRow
+                          key={index}
+                          style={{ background: rowGradient }}
+                          className="border-b border-white/10 group transition-none"
+                        >
+                          <TableCell className="font-bold text-white/90 py-5 pl-6 text-xs">{index + 1}</TableCell>
+                          <TableCell className="py-5">
+                            <Badge variant="outline" className="font-black uppercase tracking-widest text-[11px] md:text-xs border-white/40 text-white bg-white/10 px-3 py-1">
+                              {item.item_type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-black text-white py-5 text-xs md:text-sm">{item.size}</TableCell>
+                          <TableCell className="text-center py-5">
+                            <span className="px-3 py-1.5 bg-white/95 border border-transparent rounded-lg font-mono font-bold text-slate-800 text-[11px] md:text-sm shadow-md inline-block">
+                              {item.thickness}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right py-5 pr-6">
+                            <span className="font-black text-base md:text-lg text-white font-mono tracking-tighter">
+                              {Number(item.total).toLocaleString()}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-48 text-center">
+                        <div className="flex flex-col items-center justify-center gap-3 py-10">
+                          <div className="p-4 bg-slate-50 rounded-full">
+                            <AlertCircle className="h-10 w-10 text-slate-300" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-black text-slate-400 uppercase tracking-widest">No Records Found</p>
+                            <p className="text-[10px] text-slate-300 font-bold uppercase mt-1">Try selecting a different month</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="w-full overflow-hidden border-none bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a] shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative group">
           {/* Decorative accent line */}
@@ -1275,222 +1819,9 @@ export function DashboardView() {
           </CardContent>
         </Card>
 
-
-        {/* Sale Performance State Wise Section */}
-        <div className="w-full mb-10">
-          <div className="flex items-center justify-between mb-8 px-1">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-200">
-                <Trophy className="w-6 h-6 text-white" />
-              </div>
-              <div className="space-y-0.5">
-                <h2 className="text-2xl font-black text-slate-800 tracking-tight">Sale Performance State Wise</h2>
-                <div className="flex items-center gap-2">
-                  <span className="flex w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Real-time Volume Analysis</p>
-                </div>
-              </div>
-            </div>
-            <div className="hidden sm:flex items-center gap-2 bg-slate-100 p-1 rounded-lg border border-slate-200">
-              <Badge variant="secondary" className="text-slate-600 font-bold text-[10px] bg-slate-100 hover:bg-slate-200 border-none">ALL STATES</Badge>
-              <Badge className="bg-white text-indigo-600 border border-slate-200 shadow-sm font-black text-[10px]">
-                {stateDistributionData.length} ACTIVE
-              </Badge>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-            {stateDistributionData.map((item, index) => {
-              const totalVolume = stateDistributionData.reduce((acc, curr) => acc + curr.count, 0);
-              const percentage = totalVolume > 0 ? ((item.count / totalVolume) * 100).toFixed(1) : "0";
-
-              const gradients = [
-                "from-indigo-600 via-indigo-700 to-indigo-800 shadow-indigo-200/50", // Indigo
-                "from-sky-500 via-sky-600 to-sky-700 shadow-sky-200/50", // Sky
-                "from-emerald-600 via-emerald-700 to-emerald-800 shadow-emerald-200/50", // Emerald
-                "from-amber-500 via-amber-600 to-amber-700 shadow-amber-200/50", // Amber
-                "from-rose-500 via-rose-600 to-rose-700 shadow-rose-200/50", // Red/Rose
-                "from-violet-600 via-violet-700 to-violet-800 shadow-violet-200/50", // Violet
-                "from-cyan-600 via-cyan-700 to-cyan-800 shadow-cyan-200/50", // Cyan
-                "from-fuchsia-600 via-fuchsia-700 to-fuchsia-800 shadow-fuchsia-200/50", // Pink/Fuchsia
-                "from-teal-600 via-teal-700 to-teal-800 shadow-teal-200/50", // Teal
-                "from-orange-500 via-orange-600 to-orange-700 shadow-orange-200/50", // Orange
-              ];
-              const gradient = gradients[index % gradients.length];
-
-              return (
-                <Card
-                  key={item.state}
-                  className={cn(
-                    "group relative border-none transition-all duration-500 shadow-lg hover:shadow-2xl hover:-translate-y-2 overflow-hidden flex flex-col justify-between min-h-[170px] bg-gradient-to-br",
-                    gradient
-                  )}
-                >
-                  {/* Decorative Elements */}
-                  <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
-                    <Trophy className="w-16 h-16 text-white rotate-12" />
-                  </div>
-
-                  <CardHeader className="p-5 pb-0 relative z-10">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center justify-center min-w-7 h-7 px-2 rounded-lg bg-white/20 backdrop-blur-md border border-white/20 group-hover:bg-white/30 transition-all duration-300">
-                        <span className="text-[10px] font-black text-white uppercase tracking-tighter">Rank #{index + 1}</span>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <div className="px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-md border border-white/20 flex items-center gap-1.5">
-                          <span className="text-[11px] font-black text-white font-mono">{item.count.toLocaleString()}</span>
-                          <span className="text-[8px] font-bold text-white/60 uppercase tracking-widest">Units</span>
-                        </div>
-                        <div className="w-14 h-1.5 bg-black/20 rounded-full mt-2 overflow-hidden border border-white/5">
-                          <div className="h-full bg-white rounded-full transition-all duration-1000" style={{ width: `${percentage}%` }}></div>
-                        </div>
-                      </div>
-                    </div>
-                    <CardTitle className="text-lg font-black text-white uppercase tracking-tighter mt-5 group-hover:tracking-normal transition-all truncate drop-shadow-sm">
-                      {item.state}
-                    </CardTitle>
-                  </CardHeader>
-
-                  <CardContent className="p-5 pt-3 flex items-end justify-between relative z-10">
-                    <div className="space-y-0.5">
-                      <span className="text-4xl font-black text-white tracking-widest leading-none block drop-shadow-md">
-                        {percentage}%
-                      </span>
-                      <p className="text-[10px] font-black text-white/60 uppercase tracking-widest">Market Share</p>
-                    </div>
-
-                    {/* Visual Signal Element */}
-                    <div className="flex items-end gap-1 h-10 px-2 py-1 rounded-lg bg-black/10 backdrop-blur-sm border border-white/5">
-                      {[0.4, 0.7, 0.5, 0.9, 0.6].map((h, i) => (
-                        <div
-                          key={i}
-                          className="w-1.5 bg-white rounded-full transition-all duration-700 group-hover:opacity-100"
-                          style={{
-                            height: `${h * 100}%`,
-                            opacity: 0.2 + (i * 0.15)
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </CardContent>
-
-                  {/* Premium Glass Effect Reflection */}
-                  <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/10 via-white/5 to-transparent pointer-events-none opacity-50"></div>
-
-                  {/* Subtle Grainy Overlay */}
-                  <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")' }}></div>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* <Card className="w-full overflow-hidden border-none bg-gradient-to-br from-[rgb(6,78,59)] via-[rgb(6,95,70)] to-[rgb(6,78,59)] shadow-2xl relative">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[rgb(52,211,153)] to-[rgb(45,212,191)] opacity-60"></div>
-          <CardHeader className="p-6 bg-white/5 backdrop-blur-md border-b border-white/10">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="p-2.5 bg-emerald-400/20 rounded-xl border border-emerald-400/30">
-                  <Database className="w-5 h-5 text-emerald-300" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-black text-white tracking-tight">Dispatch Audit Log</CardTitle>
-                  <CardDescription className="text-xs font-bold text-white/60 uppercase tracking-widest mt-1">
-                    Showing {filteredData?.length || 0} Records {hasActiveFilters ? "• Criteria Filtered" : "• Master View"}
-                  </CardDescription>
-                </div>
-              </div>
-              <Button variant="outline" className="bg-white/5 border-white/10 text-white text-[10px] font-black hover:bg-emerald-400/20 h-8 px-4 rounded-full transition-all border-emerald-500/20">
-                Export Detailed Audit
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto max-h-[550px] custom-scrollbar">
-              <Table>
-                <TableHeader className="sticky top-0 z-20 bg-[rgb(6,95,70)] backdrop-blur-xl border-b border-white/10">
-                  <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="text-[11px] font-black text-white uppercase py-4">No.</TableHead>
-                    <TableHead className="text-[11px] font-black text-white uppercase py-4 min-w-[200px]">Party Details</TableHead>
-                    <TableHead className="text-[11px] font-black text-white uppercase py-4">Item Analytics</TableHead>
-                    <TableHead className="text-[11px] font-black text-white uppercase py-4">In Transit</TableHead>
-                    <TableHead className="text-[11px] font-black text-white uppercase py-4">Out Stream</TableHead>
-                    <TableHead className="text-[11px] font-black text-white uppercase py-4 min-w-[150px]">Reference IDs</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {!filteredData || filteredData.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-24 text-white/40 font-black italic">
-                        No records match the current filter criteria
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredData.map((row, index) => (
-                      <TableRow
-                        key={`${row.wslipno || row.orderVrno || index}-${index}`}
-                        className="group/row border-b border-white/5 transition-all duration-300"
-                      >
-                        <TableCell className="py-4">
-                          <span className="text-[10px] font-black text-white/70">
-                            {(index + 1).toString().padStart(3, '0')}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-xs font-black text-white">
-                              {row.partyName || "Anonymous Customer"}
-                            </span>
-                            <span className="text-[10px] font-bold text-white/40 flex items-center gap-1">
-                              Partner Account
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="bg-white/5 border-white/10 text-[9px] text-emerald-200 font-black px-2 py-0">
-                              {row.itemName || "General Cargo"}
-                            </Badge>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <span className="text-[11px] font-bold text-white/70 font-mono">
-                            {row.indate ? new Date(row.indate).toLocaleDateString() : "-"}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-[11px] font-bold text-white font-mono">
-                              {row.outdate ? new Date(row.outdate).toLocaleDateString() : "-"}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-4">
-                          <div className="flex flex-wrap gap-1.5">
-                            <span className="text-[10px] font-black text-white/50 bg-white/5 border border-white/10 px-2 py-0.5 rounded leading-none">
-                              #O: {row.orderVrno || "N/A"}
-                            </span>
-                            <span className="text-[10px] font-black text-white/60 bg-white/5 border border-white/10 px-2 py-0.5 rounded leading-none">
-                              #INV: {row.invoiceNo || "N/A"}
-                            </span>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-            {filteredData && filteredData.length > 100 && (
-              <div className="p-4 bg-white/5 border-t border-white/10 text-center">
-                <span className="text-[11px] font-black text-white/50 uppercase tracking-widest">
-                  Performance Restriction: Showing first 100 of {filteredData.length} total nodes
-                </span>
-              </div>
-            )}
-          </CardContent>
-        </Card> */}
-      </div >
-    </div >
+      </div>
+    </div>
   )
 }
+
+

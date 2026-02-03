@@ -20,10 +20,11 @@ export const o2dAPI = {
     api.get(API_ENDPOINTS.O2D.PROCESS.TIMELINE, { params }),
 
   // Size Master
-  getSizeMaster: () => api.get(API_ENDPOINTS.O2D.SIZE_MASTER),
+  getSizeMaster: () => api.get(API_ENDPOINTS.O2D.SIZE_MASTER.BASE),
+  getCurrentMonthEnquiryReport: (month?: string) => api.get(API_ENDPOINTS.O2D.SIZE_MASTER.REPORT_CURRENT_MONTH, { params: { month } }),
 
   // Enquiry (sub-route of size-master)
-  createEnquiry: (data: any) => api.post(`${API_ENDPOINTS.O2D.SIZE_MASTER}/enquiry`, data),
+  createEnquiry: (data: any) => api.post(`${API_ENDPOINTS.O2D.SIZE_MASTER.BASE}/enquiry`, data),
 
   // Clients
   getClients: () => api.get(API_ENDPOINTS.O2D.CLIENT),
@@ -39,5 +40,10 @@ export const o2dAPI = {
   createFollowup: (data: any) => api.post(API_ENDPOINTS.O2D.FOLLOWUP, data),
   updateFollowup: (id: string, data: any) => api.put(`${API_ENDPOINTS.O2D.FOLLOWUP}/${id}`, data),
   deleteFollowup: (id: string) => api.delete(`${API_ENDPOINTS.O2D.FOLLOWUP}/${id}`),
+  getSalesPerformance: (params?: any) => api.get(`${API_ENDPOINTS.O2D.FOLLOWUP}/performance`, { params }),
+  getFollowupStats: (params?: any) => api.get(`${API_ENDPOINTS.O2D.FOLLOWUP}/stats`, { params }),
+
+  // Additional Client Stats
+  getClientCount: () => api.get(`${API_ENDPOINTS.O2D.CLIENT}/count`),
 };
 
