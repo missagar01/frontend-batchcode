@@ -10,6 +10,8 @@ export const o2dAPI = {
   // Dashboard
   getDashboardSummary: (params?: any) =>
     api.get(API_ENDPOINTS.O2D.DASHBOARD.SUMMARY, { params }),
+  getDeliveryStats: (params?: any) =>
+    api.get(API_ENDPOINTS.O2D.DASHBOARD.DELIVERY_STATS, { params }),
 
   // Orders
   getPendingOrders: (params?: any) => api.get(API_ENDPOINTS.O2D.ORDERS.PENDING, { params }),

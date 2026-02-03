@@ -13,6 +13,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Cell, Pie, PieChart, ResponsiveContainer, Legend, Tooltip } from "recharts"
 import { cn } from "../../lib/utils"
 import { o2dAPI } from "../../services/o2dAPI";
+import { Input } from "./ui/input"
+import { endOfMonth, startOfMonth, parseISO } from "date-fns"
+import { CalendarIcon } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import { Calendar } from "./ui/calendar"
 type DashboardRow = {
   indate?: string | null
   outdate?: string | null
@@ -57,7 +62,46 @@ type DashboardResponse = {
 
 // Using o2dAPI service instead of direct fetch
 
+function DatePicker({
+  date,
+  setDate,
+  label
+}: {
+  date: string;
+  setDate: (date: string) => void;
+  label: string
+}) {
+  const selectedDate = date ? new Date(date) : undefined;
 
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-medium text-slate-700">{label}</label>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant={"outline"}
+            className={cn(
+              "w-full justify-start text-left font-normal bg-white border-indigo-200 hover:bg-indigo-50/50 hover:border-indigo-300 transition-all",
+              !date && "text-muted-foreground"
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4 text-indigo-500" />
+            {date ? format(selectedDate!, "PPP") : <span>Pick a date</span>}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(d) => d && setDate(format(d, "yyyy-MM-dd"))}
+            initialFocus
+            className="rounded-md border-none"
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
 
 export function DashboardView() {
   const { user, loading: authLoading } = useAuth()
@@ -71,6 +115,15 @@ export function DashboardView() {
   const [selectedSales, setSelectedSales] = useState("All Salespersons")
   const [selectedState, setSelectedState] = useState("All States")
   const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), "yyyy-MM"))
+
+  // Custom Date Filters
+  const [startDate, setStartDate] = useState<string>(
+    format(startOfMonth(new Date()), "yyyy-MM-dd")
+  )
+  const [endDate, setEndDate] = useState<string>(
+    format(new Date(), "yyyy-MM-dd")
+  )
+
   const [enquiryReport, setEnquiryReport] = useState<any[]>([])
   const [loadingEnquiry, setLoadingEnquiry] = useState(false)
 
@@ -80,6 +133,7 @@ export function DashboardView() {
   const [totalCustomers, setTotalCustomers] = useState(0)
   const [followupStats, setFollowupStats] = useState({ totalFollowUps: 0, ordersBooked: 0 })
   const [salesPerformance, setSalesPerformance] = useState<any[]>([])
+  const [deliveryStats, setDeliveryStats] = useState<{ monthly: any; daily: any } | null>(null)
 
   const fetchEnquiryReport = async () => {
     setLoadingEnquiry(true)
@@ -108,43 +162,52 @@ export function DashboardView() {
 
     // 2. Fetch Sales/Followup Stats (Dependent on date range)
     try {
-      const params: any = {}
-
-      if (selectedMonth !== "All Months") {
-        const [year, month] = selectedMonth.split("-")
-        // Start date: 1st of the month
-        const fromDate = new Date(parseInt(year), parseInt(month) - 1, 1)
-        // End date: Last day of the month
-        const toDate = new Date(parseInt(year), parseInt(month), 0)
-
-        params.startDate = format(fromDate, "yyyy-MM-dd")
-        params.endDate = format(toDate, "yyyy-MM-dd")
-      } else {
-        // For "All Months", send a wide range. 
-        // Start of 2024 to Current Date seems appropriate based on user context.
-        params.startDate = '2024-01-01'
-        params.endDate = format(new Date(), "yyyy-MM-dd")
+      const params: any = {
+        startDate,
+        endDate
       }
 
-      // Fetch Followup Stats WITHOUT params to get matching Postman result (Total Lifetime Stats)
-      // Fetch Sales Performance WITH params to respect the date filter
-      const [statsRes, perfRes] = await Promise.all([
+      console.log("Fetching additional stats with params:", params);
+      const [statsRes, perfRes, deliveryRes] = await Promise.all([
         o2dAPI.getFollowupStats(), // No params = Global Total
-        o2dAPI.getSalesPerformance(params) // Respects filter
+        o2dAPI.getSalesPerformance(params), // Respects filter
+        o2dAPI.getDeliveryStats(params) // Respects filter
       ])
+
+      console.log("Delivery Stats Response:", deliveryRes.data);
 
       if (statsRes.data?.success) setFollowupStats(statsRes.data.data)
       if (perfRes.data?.success) setSalesPerformance(perfRes.data.data)
+      if (deliveryRes.data?.success) {
+        console.log("Setting delivery stats:", deliveryRes.data.data);
+        setDeliveryStats(deliveryRes.data.data);
+      } else {
+        console.warn("Delivery stats failed or empty:", deliveryRes.data);
+      }
 
     } catch (err) {
       console.error("Error fetching sales/followup stats:", err)
     }
   }
 
+  // Update dates when selectedMonth changes
   useEffect(() => {
-    // Fetch stats when component mounts or when selectedMonth changes
+    if (selectedMonth === "All Months") {
+      setStartDate("2024-01-01")
+      setEndDate(format(new Date(), "yyyy-MM-dd"))
+    } else if (selectedMonth !== "Custom Range") {
+      const [year, month] = selectedMonth.split("-")
+      const fromDate = new Date(parseInt(year), parseInt(month) - 1, 1)
+      const toDate = endOfMonth(fromDate)
+      setStartDate(format(fromDate, "yyyy-MM-dd"))
+      setEndDate(format(toDate, "yyyy-MM-dd"))
+    }
+  }, [selectedMonth])
+
+  useEffect(() => {
+    // Fetch stats when dates change
     fetchAdditionalStats()
-  }, [selectedMonth]) // Re-run when month filter changes
+  }, [startDate, endDate])
 
   const fetchDashboard = useCallback(async () => {
     setLoading(true)
@@ -156,7 +219,11 @@ export function DashboardView() {
       if (selectedItem !== "All Items") params.itemName = selectedItem
       if (selectedSales !== "All Salespersons") params.salesPerson = selectedSales
       if (selectedState !== "All States") params.stateName = selectedState
-      if (selectedMonth !== "All Months") {
+
+      if (selectedMonth === "All Months" || selectedMonth === "Custom Range") {
+        params.fromDate = startDate
+        params.toDate = endDate
+      } else {
         const [year, month] = selectedMonth.split("-")
         const fromDate = new Date(parseInt(year), parseInt(month) - 1, 1)
         let toDate = new Date(parseInt(year), parseInt(month), 0)
@@ -188,7 +255,7 @@ export function DashboardView() {
     } finally {
       setLoading(false)
     }
-  }, [selectedParty, selectedItem, selectedSales, selectedState, selectedMonth])
+  }, [selectedSales, selectedMonth, startDate, endDate])
 
   useEffect(() => {
     // Reset filters on mount to ensure a clean slate
@@ -217,21 +284,17 @@ export function DashboardView() {
       const salesName = row.salesPerson?.trim() || ""
       const stateName = (row.stateName || (row as Record<string, unknown>).state || (row as Record<string, unknown>).STATE || "").toString().trim()
 
-      if (selectedParty !== "All Parties" && partyName !== selectedParty) return false
-      if (selectedItem !== "All Items" && itemName !== selectedItem) return false
       if (selectedSales !== "All Salespersons" && salesName !== selectedSales) return false
-      if (selectedState !== "All States" && stateName !== selectedState) return false
 
       return true
     })
-  }, [data?.rows, selectedItem, selectedParty, selectedSales, selectedState])
+  }, [data?.rows, selectedSales])
 
   const hasActiveFilters =
-    selectedParty !== "All Parties" ||
-    selectedItem !== "All Items" ||
     selectedSales !== "All Salespersons" ||
-    selectedState !== "All States" ||
-    selectedMonth !== "All Months"
+    selectedMonth !== format(new Date(), "yyyy-MM") ||
+    startDate !== format(startOfMonth(new Date()), "yyyy-MM-dd") ||
+    endDate !== format(new Date(), "yyyy-MM-dd")
 
   const calculateFilteredMetrics = () => {
     const rows = filteredData || []
@@ -241,10 +304,9 @@ export function DashboardView() {
     const salesAvgList = summary.salesAvg || [];
 
     let targetItem = 'PIPE';
-    if (selectedItem !== 'All Items') {
-      if (selectedItem.toUpperCase().includes('STRIP')) targetItem = 'STRIPS';
-      else if (selectedItem.toUpperCase().includes('BILLET')) targetItem = 'BILLET';
-    }
+    // Item filtering is removed from UI, defaulting to PIPE average calculation
+    // but preserving the logic structure in case it's needed later.
+
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const saudaAvg = saudaAvgList.find((x: any) => x.ITEM === targetItem)?.AVERAGE || 0;
@@ -765,48 +827,121 @@ export function DashboardView() {
           </div>
         )}
 
-        {/* Month Filter Section */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white p-4 rounded-lg border shadow-sm">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700">Select Month:</span>
-          </div>
-          <div className="flex-1 sm:w-[250px]">
-            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-              <SelectTrigger className="border-indigo-200 focus:border-indigo-400 focus:ring-indigo-400">
-                <SelectValue placeholder="Select month" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All Months">All Months</SelectItem>
-                {(() => {
-                  const months = []
-                  const startDate = new Date(2025, 3, 1) // April 2025
-                  const currentDate = new Date()
+        {/* Filter Section moved to top */}
+        <Card className="border-l-4 border-l-indigo-500 bg-gradient-to-br from-indigo-50/30 to-white shadow-lg overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-indigo-50 to-transparent pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-indigo-700 text-lg">
+                  <Filter className="h-5 w-5 text-indigo-600" />
+                  Dashboard Filters
+                </CardTitle>
+              </div>
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedSales("All Salespersons")
+                    setSelectedMonth(format(new Date(), "yyyy-MM"))
+                    setStartDate(format(startOfMonth(new Date()), "yyyy-MM-dd"))
+                    setEndDate(format(new Date(), "yyyy-MM-dd"))
+                  }}
+                  className="ignore-pdf bg-red-50 text-red-600 hover:bg-red-100 border-red-200 h-8"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Reset All
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Salesperson Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-blue-700 flex items-center gap-2">
+                  <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
+                  Salesperson
+                </label>
+                <Select value={selectedSales} onValueChange={setSelectedSales}>
+                  <SelectTrigger className="bg-white border-blue-100 hover:border-blue-300 focus:ring-blue-400 transition-all">
+                    <SelectValue placeholder="Select salesperson" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All Salespersons">All Salespersons</SelectItem>
+                    {(data?.filters?.salesPersons || []).map((sales) => (
+                      <SelectItem key={sales} value={sales}>{sales}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                  for (let d = new Date(startDate); d <= currentDate; d.setMonth(d.getMonth() + 1)) {
-                    const year = d.getFullYear()
-                    const month = d.getMonth() + 1
-                    const monthStr = month.toString().padStart(2, '0')
-                    const value = `${year}-${monthStr}`
-                    const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-                    months.push(<SelectItem key={value} value={value}>{label}</SelectItem>)
-                  }
+              {/* Month Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-indigo-700 flex items-center gap-2">
+                  <div className="w-1 h-4 bg-indigo-500 rounded-full"></div>
+                  Select Month
+                </label>
+                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                  <SelectTrigger className="bg-white border-indigo-100 hover:border-indigo-300 focus:ring-indigo-400 transition-all">
+                    <SelectValue placeholder="Select month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All Months">All Months</SelectItem>
+                    <SelectItem value="Custom Range">Custom Range</SelectItem>
+                    {(() => {
+                      const months = []
+                      const startDate = new Date(2025, 3, 1) // April 2025
+                      const currentDate = new Date()
+                      for (let d = new Date(startDate); d <= currentDate; d.setMonth(d.getMonth() + 1)) {
+                        const val = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`
+                        const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                        months.push(<SelectItem key={val} value={val}>{label}</SelectItem>)
+                      }
+                      return months.reverse()
+                    })()}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                  return months.reverse() // Show most recent first
-                })()}
-              </SelectContent>
-            </Select>
-          </div>
-          {selectedMonth !== "All Months" && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedMonth("All Months")}
-              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-            >
-              Clear Month
-            </Button>
-          )}
-        </div>
+              {/* Date Pickers */}
+              <DatePicker
+                label="From Date"
+                date={startDate}
+                setDate={(val) => {
+                  setStartDate(val)
+                  setSelectedMonth("Custom Range")
+                }}
+              />
+              <DatePicker
+                label="To Date"
+                date={endDate}
+                setDate={(val) => {
+                  setEndDate(val)
+                  setSelectedMonth("Custom Range")
+                }}
+              />
+            </div>
+
+            {hasActiveFilters && (
+              <div className="mt-6 flex flex-wrap gap-2 pt-4 border-t border-indigo-50">
+                {selectedSales !== "All Salespersons" && (
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
+                    Sales: {selectedSales}
+                  </Badge>
+                )}
+                {selectedMonth !== "All Months" && selectedMonth !== "Custom Range" && (
+                  <Badge variant="secondary" className="bg-indigo-100 text-indigo-700 border-indigo-200">
+                    Month: {new Date(selectedMonth + "-01").toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  </Badge>
+                )}
+                <Badge variant="secondary" className="bg-slate-100 text-slate-700 border-slate-200">
+                  Range: {format(new Date(startDate), "MMM d")} - {format(new Date(endDate), "MMM d, yyyy")}
+                </Badge>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* All Sauda Average & Sales Average - Side by Side */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
@@ -922,32 +1057,71 @@ export function DashboardView() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Sauda Rate Composite Card */}
             <Card className="border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50/50 to-white shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-purple-50 to-transparent pb-4">
-                <CardTitle className="text-purple-800 font-bold">Sauda Rate (2026)</CardTitle>
-                <CardDescription className="text-purple-700/80">
-                  Daily average trend
-                </CardDescription>
-              </CardHeader>
               <CardContent className="p-4">
-                {/* Single Sauda Rate Card */}
-                <Card className="bg-gradient-to-br from-purple-500 via-indigo-500 to-blue-600 text-white border-none shadow-lg hover:shadow-xl transition-all duration-300">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
-                    <CardTitle className="text-sm font-bold text-purple-50">
-                      Sauda Rate (2026)
-                    </CardTitle>
-                    <Badge variant="secondary" className="bg-white/20 text-white border-white/20 backdrop-blur-sm text-xs">
-                      Trend
-                    </Badge>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-0">
-                    <div className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-                      ₹{formatMetricValue(displayMetrics.saudaRate2026)}
-                    </div>
-                    <p className="text-xs mt-1 font-medium text-purple-100">
-                      Daily Avg Trend
-                    </p>
-                  </CardContent>
-                </Card>
+                {/* Horizontal Grid for Sauda Rate & Delivery Scores */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Single Sauda Rate Card */}
+                  <Card className="bg-gradient-to-br from-purple-500 via-indigo-500 to-blue-600 text-white border-none shadow-lg hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
+                      <CardTitle className="text-sm font-bold text-purple-50">
+                        Sauda Rate (2026)
+                      </CardTitle>
+                      <Badge variant="secondary" className="bg-white/20 text-white border-white/20 backdrop-blur-sm text-xs">
+                        Trend
+                      </Badge>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                      <div className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+                        ₹{formatMetricValue(displayMetrics.saudaRate2026)}
+                      </div>
+                      <p className="text-xs mt-1 font-medium text-purple-100">
+                        Daily Avg Trend
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Monthly Delivery Score Card */}
+                  <Card className="bg-gradient-to-br from-pink-500 via-rose-500 to-red-500 text-white border-none shadow-lg hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
+                      <CardTitle className="text-sm font-bold text-pink-50">
+                        Monthly Late
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                      <div className="text-4xl font-bold tracking-tight text-white mt-2">
+                        {deliveryStats?.monthly?.score ?? '0%'}
+                      </div>
+                      <p className="text-xs mt-1 font-medium text-pink-100">
+                        Late Percentage
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Daily Delivery Score Card */}
+                  <Card className="bg-gradient-to-br from-indigo-500 via-violet-500 to-purple-500 text-white border-none shadow-lg hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
+                      <div className="space-y-1">
+                        <CardTitle className="text-sm font-bold text-indigo-50">
+                          Daily Late
+                        </CardTitle>
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/10 w-fit">
+                          <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
+                          <span className="text-[10px] text-indigo-100 font-bold tracking-wider uppercase">
+                            {deliveryStats?.daily?.date ? deliveryStats.daily.date : 'Today'}
+                          </span>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                      <div className="text-4xl font-bold tracking-tight text-white mt-1">
+                        {deliveryStats?.daily?.score ?? '0%'}
+                      </div>
+                      <p className="text-xs mt-1 font-medium text-indigo-100/80">
+                        {deliveryStats?.daily?.period?.includes('Latest') ? 'Latest Data' : 'Daily Late Percentage'}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
               </CardContent>
             </Card>
 
@@ -1117,147 +1291,6 @@ export function DashboardView() {
             </Card>
           </div>
         </div>
-
-
-
-        <Card className="border-l-4 border-l-indigo-500 bg-gradient-to-br from-indigo-50/30 to-white">
-          <CardHeader className="bg-gradient-to-r from-indigo-50 to-transparent">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2 text-indigo-700">
-                  <Filter className="h-4 w-4 text-indigo-600" />
-                  Filters
-                </CardTitle>
-              </div>
-              {hasActiveFilters && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedParty("All Parties")
-                    setSelectedItem("All Items")
-                    setSelectedSales("All Salespersons")
-                    setSelectedState("All States")
-                    setSelectedMonth("All Months")
-                  }}
-                  className="ignore-pdf bg-red-50 text-red-600 hover:bg-red-100 border-red-200"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Clear All
-                </Button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-blue-700">Salesperson</label>
-                <Select value={selectedSales} onValueChange={setSelectedSales}>
-                  <SelectTrigger className="border-blue-200 focus:border-blue-400 focus:ring-blue-400">
-                    <SelectValue placeholder="Select salesperson" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All Salespersons">All Salespersons</SelectItem>
-                    {(data?.filters?.salesPersons || []).map((sales) => (
-                      <SelectItem key={sales} value={sales}>
-                        {sales}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-green-700">Party</label>
-                <Select value={selectedParty} onValueChange={setSelectedParty}>
-                  <SelectTrigger className="border-green-200 focus:border-green-400 focus:ring-green-400">
-                    <SelectValue placeholder="Select party" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All Parties">All Parties</SelectItem>
-                    {(data?.filters?.parties || []).map((party) => (
-                      <SelectItem key={party} value={party}>
-                        {party}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-purple-700">Item</label>
-                <Select value={selectedItem} onValueChange={setSelectedItem}>
-                  <SelectTrigger className="border-purple-200 focus:border-purple-400 focus:ring-purple-400">
-                    <SelectValue placeholder="Select item" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All Items">All Items</SelectItem>
-                    {(data?.filters?.items || []).map((item) => (
-                      <SelectItem key={item} value={item}>
-                        {item}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-orange-700">State</label>
-                <Select value={selectedState} onValueChange={setSelectedState}>
-                  <SelectTrigger className="border-orange-200 focus:border-orange-400 focus:ring-orange-400">
-                    <SelectValue placeholder="Select state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="All States">All States</SelectItem>
-                    {stateOptions.map((state) => (
-                      <SelectItem key={state} value={state}>
-                        {state}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-
-            </div>
-
-            {hasActiveFilters && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {selectedParty !== "All Parties" && (
-                  <Badge variant="secondary" className="flex items-center gap-1 bg-green-100 text-green-700 border-green-200">
-                    Party: {selectedParty}
-                    <X className="h-3 w-3 cursor-pointer ignore-pdf" onClick={() => setSelectedParty("All Parties")} />
-                  </Badge>
-                )}
-                {selectedItem !== "All Items" && (
-                  <Badge variant="secondary" className="flex items-center gap-1 bg-purple-100 text-purple-700 border-purple-200">
-                    Item: {selectedItem}
-                    <X className="h-3 w-3 cursor-pointer ignore-pdf" onClick={() => setSelectedItem("All Items")} />
-                  </Badge>
-                )}
-                {selectedState !== "All States" && (
-                  <Badge variant="secondary" className="flex items-center gap-1 bg-orange-100 text-orange-700 border-orange-200">
-                    State: {selectedState}
-                    <X className="h-3 w-3 cursor-pointer ignore-pdf" onClick={() => setSelectedState("All States")} />
-                  </Badge>
-                )}
-                {selectedSales !== "All Salespersons" && (
-                  <Badge variant="secondary" className="flex items-center gap-1 bg-blue-100 text-blue-700 border-blue-200">
-                    Sales: {selectedSales}
-                    <X className="h-3 w-3 cursor-pointer ignore-pdf" onClick={() => setSelectedSales("All Salespersons")} />
-                  </Badge>
-                )}
-                {selectedMonth !== "All Months" && (
-                  <Badge variant="secondary" className="flex items-center gap-1 bg-indigo-100 text-indigo-700 border-indigo-200">
-                    Month: {new Date(selectedMonth + "-01").toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                    <X className="h-3 w-3 cursor-pointer ignore-pdf" onClick={() => setSelectedMonth("All Months")} />
-                  </Badge>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
 
         {/* Sale Performance State Wise Section */}
         <div className="w-full mb-10">

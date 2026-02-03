@@ -163,6 +163,7 @@ export const API_ENDPOINTS = {
     DASHBOARD: {
       SUMMARY: '/api/o2d/dashboard/summary',
       METRICS: '/api/o2d/dashboard/metrics',
+      DELIVERY_STATS: '/api/o2d/delivery/stats',
     },
     GATE_ENTRY: {
       PENDING: '/api/o2d/gate-entry/pending',
