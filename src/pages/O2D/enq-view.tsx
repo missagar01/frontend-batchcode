@@ -3,7 +3,6 @@ import {
     Loader2,
     Plus,
     Trash2,
-    Calendar,
     User,
     Package,
     Save,
@@ -16,10 +15,13 @@ import {
     Maximize,
     Box
 } from "lucide-react";
+import { format } from "date-fns";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Calendar as CalendarComponent } from "./ui/calendar";
+import { Button } from "./ui/button";
+import { CalendarIcon } from "lucide-react";
 import { o2dAPI } from "../../services/o2dAPI";
 import { cn } from "../../lib/utils";
-import flatpickr from "flatpickr";
-import "flatpickr/dist/flatpickr.css";
 
 interface SizeMasterData {
     id: number;
@@ -39,8 +41,6 @@ interface EnquiryItem {
 const EnquiryView = () => {
     const [loading, setLoading] = useState(false);
     const [sizeMasterData, setSizeMasterData] = useState<SizeMasterData[]>([]);
-    const datePickerRef = useRef<HTMLInputElement>(null);
-
     // Form state
     const [date, setDate] = useState<string>("");
     const [customer, setCustomer] = useState<string>("");
@@ -56,10 +56,7 @@ const EnquiryView = () => {
 
     const [itemTypes, setItemTypes] = useState<string[]>([]);
 
-    // Date handling updated to standard HTML5 date input for better reliability and to fix double-box issue
-    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setDate(e.target.value);
-    };
+    const selectedDate = date ? new Date(date) : undefined;
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -199,17 +196,48 @@ const EnquiryView = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 pb-10 border-b border-slate-100">
                             <div className="space-y-2.5">
                                 <label className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
-                                    <Calendar className="w-3.5 h-3.5 text-blue-500" /> Enquiry Date <span className="text-rose-500">*</span>
+                                    <CalendarIcon className="w-3.5 h-3.5 text-blue-500" /> Enquiry Date <span className="text-rose-500">*</span>
                                 </label>
                                 <div className="relative">
-                                    <input
-                                        type="date"
-                                        value={date}
-                                        onChange={handleDateChange}
-                                        onClick={(e) => (e.target as any).showPicker?.()}
-                                        className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all outline-none font-semibold text-slate-700 shadow-sm cursor-pointer"
-                                        required
-                                    />
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant={"outline"}
+                                                className={cn(
+                                                    "w-full justify-start text-left font-semibold px-5 py-6 bg-slate-50 border-slate-200 rounded-xl hover:bg-white hover:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all outline-none text-slate-700 shadow-sm h-auto",
+                                                    !date && "text-slate-400"
+                                                )}
+                                            >
+                                                <CalendarIcon className="mr-3 h-4 w-4 text-blue-500" />
+                                                {date ? format(selectedDate!, "dd/MM/yyyy") : <span className="text-slate-400 font-semibold">Select Enquiry Date</span>}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0 border border-slate-200 shadow-2xl rounded-2xl overflow-hidden z-[10001] bg-white opacity-100" align="start">
+                                            <CalendarComponent
+                                                mode="single"
+                                                selected={selectedDate}
+                                                onSelect={(d) => d && setDate(format(d, "yyyy-MM-dd"))}
+                                                initialFocus
+                                                className="bg-white"
+                                            />
+                                            <div className="flex items-center justify-between p-3 border-t border-slate-50 bg-slate-50/50">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { setDate(""); }}
+                                                    className="text-xs font-bold text-rose-500 hover:text-rose-600 px-3 py-1.5 rounded-lg hover:bg-rose-50 transition-colors"
+                                                >
+                                                    Clear
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { setDate(format(new Date(), "yyyy-MM-dd")); }}
+                                                    className="text-xs font-bold text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                                                >
+                                                    Today
+                                                </button>
+                                            </div>
+                                        </PopoverContent>
+                                    </Popover>
                                 </div>
                             </div>
                             <div className="space-y-2.5">

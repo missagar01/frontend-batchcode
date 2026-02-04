@@ -584,12 +584,12 @@ const Settings = () => {
       {/* Modal for Create/Edit Form */}
       {showModal && (
         <div
-          className="fixed inset-0 z-50 overflow-y-auto pointer-events-none"
+          className="fixed inset-0 z-[1100] overflow-y-auto pointer-events-none"
           aria-labelledby="modal-title"
           role="dialog"
           aria-modal="true"
         >
-          <div className="flex items-start justify-center min-h-screen pt-8 sm:pt-12 md:pt-16 px-4 pb-8 text-center pointer-events-none">
+          <div className="flex items-start justify-center min-h-screen pt-[80px] lg:pt-16 px-4 pb-8 text-center pointer-events-none">
             {/* Modal panel - no background overlay, dashboard visible behind */}
             <div
               className="relative inline-block align-top bg-white rounded-xl text-left overflow-hidden shadow-2xl transform transition-all w-full sm:max-w-5xl mx-4 mt-8 sm:mt-12 pointer-events-auto border-2 border-slate-300"
@@ -623,8 +623,8 @@ const Settings = () => {
                   </div>
                 )}
 
-                <div className="max-h-[65vh] overflow-y-auto pr-2 mt-4">
-                  <form className="grid gap-4 grid-cols-1" onSubmit={handleSubmit}>
+                <div className="max-h-[70vh] overflow-y-auto pr-2 mt-4">
+                  <form className="grid gap-x-6 gap-y-4 grid-cols-1 md:grid-cols-2" onSubmit={handleSubmit}>
                     <div className="flex flex-col gap-1">
                       <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                         Username
@@ -797,7 +797,7 @@ const Settings = () => {
                         className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
                       />
                     </div>
-                    <div className="flex items-end justify-end gap-2">
+                    <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 md:col-span-2">
                       {formMode === "edit" && (
                         <button
                           type="button"

@@ -167,22 +167,16 @@ export function DashboardView() {
         endDate
       }
 
-      console.log("Fetching additional stats with params:", params);
       const [statsRes, perfRes, deliveryRes] = await Promise.all([
         o2dAPI.getFollowupStats(), // No params = Global Total
         o2dAPI.getSalesPerformance(params), // Respects filter
         o2dAPI.getDeliveryStats(params) // Respects filter
       ])
 
-      console.log("Delivery Stats Response:", deliveryRes.data);
-
       if (statsRes.data?.success) setFollowupStats(statsRes.data.data)
       if (perfRes.data?.success) setSalesPerformance(perfRes.data.data)
       if (deliveryRes.data?.success) {
-        console.log("Setting delivery stats:", deliveryRes.data.data);
         setDeliveryStats(deliveryRes.data.data);
-      } else {
-        console.warn("Delivery stats failed or empty:", deliveryRes.data);
       }
 
     } catch (err) {

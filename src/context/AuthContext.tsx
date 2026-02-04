@@ -172,11 +172,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const pageAccess = normalizeValue(apiUser.page_access || payload.data?.page_access || decoded?.page_access);
       const systemAccess = normalizeValue(apiUser.system_access || payload.data?.system_access || decoded?.system_access);
 
-      console.log('--- Login Debug Info ---');
-      console.log('API User:', apiUser);
-      console.log('Decoded Token:', decoded);
-      console.log('Extracted Access:', { userAccess, pageAccess, systemAccess });
-
       const accessArray = userAccess ? userAccess.split(',').map((a: string) => a.trim()) : null;
 
       const userData: User = {
@@ -195,7 +190,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         access: accessArray || [],
       };
 
-      console.log('Final User Data for LocalStorage:', userData);
       setToken(authToken);
       setUser(userData);
       sessionStorage.setItem('token', authToken);

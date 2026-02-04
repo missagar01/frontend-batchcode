@@ -226,7 +226,7 @@ const AppSidebar: FC = () => {
 
             const commonStyles = {
               backgroundColor: btnColor,
-              boxShadow: isMainActive ? `0 6px 12px -3px ${btnColor}80` : 'none',
+              boxShadow: isMainActive ? `0 8px 20px -6px ${btnColor}aa` : '0 2px 4px -1px rgb(0 0 0 / 0.06)',
             };
 
             return (
@@ -294,17 +294,18 @@ const AppSidebar: FC = () => {
   return (
     <>
       <aside
-        className={`fixed inset-y-0 left-0 flex flex-col bg-white text-gray-800 transition-all duration-300 ease-in-out z-[1000] border-r border-gray-100 shadow-2xl
-          h-[100dvh]
-          ${isExpanded || isMobileOpen || isHovered ? "w-[290px]" : "w-[90px]"}
-          ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+        className={`fixed left-0 flex flex-col bg-white text-gray-800 transition-all duration-300 ease-in-out z-[1000] border-r border-gray-100 shadow-2xl
+          ${isMobileOpen
+            ? "top-[72px] h-[calc(100dvh-72px)] w-[280px] translate-x-0"
+            : "top-0 h-[100dvh] -translate-x-full lg:translate-x-0"}
+          ${!isMobileOpen ? (isExpanded || isHovered ? "lg:w-[290px]" : "lg:w-[90px]") : ""}
         `}
         onMouseEnter={() => !isExpanded && setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Brand Header */}
         <div
-          className={`shrink-0 h-[75px] flex items-center shadow-sm relative z-10 transition-all duration-300
+          className={`shrink-0 h-[72px] hidden lg:flex items-center shadow-sm relative z-10 transition-all duration-300
             ${(!isExpanded && !isHovered && !isMobileOpen) ? "justify-center px-0 bg-white" : "justify-center px-0 bg-[#EE1C23]"}`}
         >
           <Link to="/" onClick={handleLinkClick} className="flex items-center w-full h-full overflow-hidden group">
@@ -332,19 +333,19 @@ const AppSidebar: FC = () => {
         </div>
 
         {/* Logout Section */}
-        <div className="mt-auto shrink-0 pb-4 pt-4 px-5 border-t border-gray-100 bg-white">
+        <div className="mt-auto shrink-0 pb-6 pt-4 px-5 border-t border-gray-100 bg-white/80 backdrop-blur-md">
           <button
             onClick={logout}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold transition-all duration-300 rounded-xl
+            className={`w-full flex items-center gap-3 px-4 py-3.5 text-sm font-bold transition-all duration-300 rounded-xl
               ${isExpanded || isHovered || isMobileOpen
-                ? "bg-red-600 text-white shadow-lg shadow-red-600/20 border border-red-500/20 hover:bg-red-700"
+                ? "bg-gradient-to-r from-red-600 to-rose-500 text-white shadow-lg shadow-red-200 border border-red-400/20 hover:scale-[1.02] hover:shadow-red-300 active:scale-95"
                 : "text-gray-400 hover:bg-red-50 hover:text-red-600 justify-center"
               }`}
             title="Logout"
           >
             <LogOut className="h-5 w-5 flex-shrink-0" />
             {(isExpanded || isHovered || isMobileOpen) && (
-              <span className="truncate">Sign Out</span>
+              <span className="truncate tracking-wide">SIGN OUT</span>
             )}
           </button>
         </div>
