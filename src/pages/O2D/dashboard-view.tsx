@@ -400,7 +400,7 @@ export function DashboardView() {
 
   const formatMetricValue = (value?: number | string | null) => {
     if (typeof value === "number") {
-      return value.toLocaleString("en-IN")
+      return value.toString()
     }
     if (typeof value === "string" && value.trim().length > 0) {
       return value
@@ -1442,7 +1442,7 @@ export function DashboardView() {
                             {item.ITEM}
                           </p>
                           <div className="text-2xl font-black text-white">
-                            ₹{item.AVERAGE?.toLocaleString() || '0'}
+                            ₹{item.AVERAGE || '0'}
                           </div>
                           <p className="text-[9px] text-white/60 font-medium mt-0.5">
                             Average Rate
@@ -1537,7 +1537,7 @@ export function DashboardView() {
                             {item.ITEM}
                           </p>
                           <div className="text-2xl font-black text-white">
-                            ₹{item.AVERAGE?.toLocaleString() || '0'}
+                            ₹{item.AVERAGE || '0'}
                           </div>
                           <p className="text-[9px] text-white/60 font-medium mt-0.5">
                             Sales Average
@@ -2109,14 +2109,14 @@ export function DashboardView() {
                     <TableHead className="font-black text-slate-600 uppercase tracking-widest text-[11px] md:text-[13px] py-4">Item Type</TableHead>
                     <TableHead className="font-black text-slate-600 uppercase tracking-widest text-[11px] md:text-[13px] py-4">Size</TableHead>
                     <TableHead className="font-black text-slate-600 uppercase tracking-widest text-[11px] md:text-[13px] py-4 text-center">Thickness</TableHead>
-                    <TableHead className="font-black text-slate-600 uppercase tracking-widest text-[11px] md:text-[13px] py-4">Executive</TableHead>
+
                     <TableHead className="font-black text-slate-600 uppercase tracking-widest text-[11px] md:text-[13px] py-4 text-right pr-6">Quantity</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loadingEnquiry ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-48 text-center">
+                      <TableCell colSpan={5} className="h-48 text-center">
                         <div className="flex flex-col items-center justify-center gap-3">
                           <Loader2 className="h-10 w-10 text-emerald-500 animate-spin" />
                           <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Fetching Report...</span>
@@ -2149,11 +2149,7 @@ export function DashboardView() {
                               {item.thickness}
                             </span>
                           </TableCell>
-                          <TableCell className="py-5">
-                            <span className="font-bold text-white text-xs md:text-sm">
-                              {item.sales_executive || "-"}
-                            </span>
-                          </TableCell>
+
                           <TableCell className="text-right py-5 pr-6">
                             <span className="font-black text-base md:text-lg text-white font-mono tracking-tighter">
                               {Number(item.total).toLocaleString()}
@@ -2164,7 +2160,7 @@ export function DashboardView() {
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-48 text-center">
+                      <TableCell colSpan={5} className="h-48 text-center">
                         <div className="flex flex-col items-center justify-center gap-3 py-10">
                           <div className="p-4 bg-slate-50 rounded-full">
                             <AlertCircle className="h-10 w-10 text-slate-300" />
