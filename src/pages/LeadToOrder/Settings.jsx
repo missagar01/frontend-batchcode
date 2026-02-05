@@ -416,7 +416,7 @@ const Settings = () => {
               {filteredUsers.length} of {users.length} user{users.length === 1 ? "" : "s"} protected by Role: Admin only.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div className="relative flex-1 sm:flex-initial sm:w-64">
               <input
                 type="text"
@@ -445,140 +445,219 @@ const Settings = () => {
                 </button>
               )}
             </div>
-            <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600 w-fit">
+            <span className="inline-flex items-center justify-center rounded-full bg-slate-100 px-3 py-2 sm:py-1 text-xs font-semibold uppercase tracking-wide text-slate-600 w-full sm:w-fit text-center">
               {loading ? "Refreshing..." : "Up to date"}
             </span>
           </div>
         </div>
 
-        <div className="mt-4 sm:mt-5 -mx-4 sm:mx-0">
-          <div className="overflow-x-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
-            <div className="inline-block min-w-full align-middle">
-              <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
-                <table className="min-w-full text-left text-xs sm:text-sm text-slate-600">
-                  <thead className="sticky top-0 z-10 bg-white border-b-2 border-slate-300 shadow-sm">
-                    <tr className="text-[10px] sm:text-xs uppercase tracking-wide text-slate-600">
-                      <th className="px-2 sm:px-3 py-3 font-bold bg-white whitespace-nowrap min-w-[120px]">Username</th>
-                      <th className="px-2 sm:px-3 py-3 font-bold bg-white hidden sm:table-cell whitespace-nowrap min-w-[80px]">Role</th>
-                      <th className="px-2 sm:px-3 py-3 font-bold bg-white hidden md:table-cell whitespace-nowrap min-w-[120px]">Password</th>
-                      <th className="px-2 sm:px-3 py-3 font-bold bg-white whitespace-nowrap min-w-[100px]">Status</th>
-                      <th className="px-2 sm:px-3 py-3 font-bold bg-white hidden md:table-cell whitespace-nowrap min-w-[150px]">Access</th>
-                      <th className="px-2 sm:px-3 py-3 font-bold bg-white hidden lg:table-cell whitespace-nowrap min-w-[200px]">Page / System</th>
-                      <th className="px-2 sm:px-3 py-3 font-bold bg-white hidden xl:table-cell whitespace-nowrap min-w-[120px]">Created</th>
-                      <th className="px-2 sm:px-3 py-3 font-bold bg-white text-right whitespace-nowrap min-w-[100px]">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {loading ? (
-                      <tr>
-                        <td colSpan="8" className="px-2 sm:px-3 py-6 text-center text-xs uppercase text-slate-400">
-                          Loading users...
-                        </td>
-                      </tr>
-                    ) : filteredUsers.length === 0 ? (
-                      <tr>
-                        <td colSpan="8" className="px-2 sm:px-3 py-6 text-center text-xs text-slate-400">
-                          {searchQuery ? `No users found matching "${searchQuery}"` : "No users found."}
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredUsers.map((userEntry) => (
-                        <tr key={userEntry.id} className="border-t border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer">
-                          <td className="px-2 sm:px-3 py-3 font-semibold text-slate-900 whitespace-nowrap">
-                            <div className="flex flex-col">
-                              <span className="truncate max-w-[120px]">{userEntry.user_name}</span>
-                              <span className="text-[10px] text-slate-500 sm:hidden">{userEntry.role || "user"}</span>
-                            </div>
-                          </td>
-                          <td className="px-2 sm:px-3 py-3 uppercase text-xs tracking-wide text-slate-500 hidden sm:table-cell whitespace-nowrap">
-                            {userEntry.role || "user"}
-                          </td>
-                          <td className="px-2 sm:px-3 py-3 hidden md:table-cell whitespace-nowrap">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-mono text-slate-700 min-w-[80px]">
-                                {visiblePasswords[userEntry.id]
-                                  ? (userEntry.password || "No password set")
-                                  : "••••••••"}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  togglePasswordVisibility(userEntry.id);
-                                }}
-                                className="text-slate-400 hover:text-slate-600 transition flex-shrink-0"
-                                aria-label={visiblePasswords[userEntry.id] ? "Hide password" : "Show password"}
-                                title={visiblePasswords[userEntry.id] ? "Hide password" : "Show password"}
-                              >
-                                {visiblePasswords[userEntry.id] ? (
-                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                                  </svg>
-                                ) : (
-                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                  </svg>
-                                )}
-                              </button>
-                            </div>
-                          </td>
-                          <td className="px-2 sm:px-3 py-3 whitespace-nowrap">
-                            <span
-                              className={`inline-flex rounded-full px-2 py-0.5 text-[10px] sm:text-xs font-semibold ${userEntry.status === "active"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-amber-100 text-amber-700"
-                                }`}
-                            >
-                              {userEntry.status || "active"}
-                            </span>
-                          </td>
-                          <td className="px-2 sm:px-3 py-3 text-xs hidden md:table-cell whitespace-nowrap">
-                            <div className="truncate max-w-[150px]">{userEntry.user_access || "—"}</div>
-                            <div className="text-[10px] text-slate-400 truncate max-w-[150px]">{userEntry.department || ""}</div>
-                          </td>
-                          <td className="px-2 sm:px-3 py-3 text-xs leading-tight hidden lg:table-cell whitespace-nowrap">
-                            <div className="truncate max-w-[200px]">{userEntry.page_access || "No page access"}</div>
-                            <div className="truncate text-[10px] text-slate-400 max-w-[200px]">{userEntry.system_access || "No system access"}</div>
-                          </td>
-                          <td className="px-2 sm:px-3 py-3 text-[10px] sm:text-xs text-slate-400 hidden xl:table-cell whitespace-nowrap">
-                            {userEntry.created_at
-                              ? new Date(userEntry.created_at).toLocaleDateString()
-                              : "—"}
-                          </td>
-                          <td className="px-2 sm:px-3 py-3 text-right whitespace-nowrap">
-                            <div className="flex items-center justify-end gap-1 sm:gap-2">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEdit(userEntry);
-                                }}
-                                className="rounded-lg border border-slate-200 bg-white p-1.5 sm:p-2 text-slate-500 transition hover:border-slate-300 hover:text-slate-900 hover:bg-slate-50 flex-shrink-0"
-                                aria-label="Edit user"
-                              >
-                                <PencilIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(userEntry.id);
-                                }}
-                                className="rounded-lg border border-slate-200 bg-white p-1.5 sm:p-2 text-slate-500 transition hover:border-red-300 hover:text-red-600 hover:bg-red-50 flex-shrink-0"
-                                aria-label="Delete user"
-                              >
-                                <TrashBinIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+        {/* Mobile Card View (Visible on small screens) */}
+        <div className="grid grid-cols-1 gap-4 sm:hidden mt-4">
+          {loading ? (
+            <div className="text-center py-10 text-slate-500 bg-slate-50 rounded-lg border border-dashed border-slate-200">Processing users...</div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="text-center py-10 text-slate-500 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+              {searchQuery ? `No users found matching "${searchQuery}"` : "No users found."}
             </div>
+          ) : (
+            filteredUsers.map((userEntry) => (
+              <div key={userEntry.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-lg">{userEntry.user_name}</h3>
+                    <span className="inline-flex mt-1 items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 uppercase tracking-wide">
+                      {userEntry.role || "user"}
+                    </span>
+                  </div>
+                  <span
+                    className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${userEntry.status === "active"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-amber-100 text-amber-700"
+                      }`}
+                  >
+                    {userEntry.status || "active"}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-sm border-t border-slate-100 pt-3">
+                  <div className="col-span-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Department</p>
+                    <p className="font-medium text-slate-700 mt-0.5">{userEntry.department || "—"}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Password</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <code className="bg-slate-50 px-2 py-1.5 rounded text-xs font-mono text-slate-700 border border-slate-100">
+                        {visiblePasswords[userEntry.id]
+                          ? (userEntry.password || "No password set")
+                          : "••••••••"}
+                      </code>
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility(userEntry.id)}
+                        className="p-1.5 rounded-md hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition"
+                      >
+                        {visiblePasswords[userEntry.id] ? (
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                          </svg>
+                        ) : (
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Access</p>
+                    <p className="font-medium text-slate-700 text-xs mt-0.5 truncate">{userEntry.system_access || "—"}</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-3 border-t border-slate-100">
+                  <button
+                    onClick={() => handleEdit(userEntry)}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 transition active:scale-95"
+                  >
+                    <PencilIcon className="w-4 h-4" /> Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(userEntry.id)}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border border-red-200 bg-red-50 text-red-600 font-semibold text-sm hover:bg-red-100 hover:border-red-300 transition active:scale-95"
+                  >
+                    <TrashBinIcon className="w-4 h-4" /> Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table View (Visible on larger screens) */}
+        <div className="hidden sm:block mt-5 rounded-xl border border-slate-200 overflow-hidden bg-slate-50/50">
+          <div className="overflow-auto max-h-[calc(100vh-320px)] custom-scrollbar">
+            <table className="min-w-full text-left text-xs sm:text-sm text-slate-600">
+              <thead className="sticky top-0 z-10 bg-white border-b border-slate-200 shadow-sm">
+                <tr className="text-[10px] sm:text-xs uppercase tracking-wide text-slate-500">
+                  <th className="px-3 py-3 font-extrabold whitespace-nowrap min-w-[120px]">Username</th>
+                  <th className="px-3 py-3 font-extrabold whitespace-nowrap hidden sm:table-cell min-w-[80px]">Role</th>
+                  <th className="px-3 py-3 font-extrabold whitespace-nowrap hidden md:table-cell min-w-[120px]">Password</th>
+                  <th className="px-3 py-3 font-extrabold whitespace-nowrap min-w-[100px]">Status</th>
+                  <th className="px-3 py-3 font-extrabold whitespace-nowrap hidden md:table-cell min-w-[150px]">Access</th>
+                  <th className="px-3 py-3 font-extrabold whitespace-nowrap hidden lg:table-cell min-w-[200px]">Page / System</th>
+                  <th className="px-3 py-3 font-extrabold whitespace-nowrap hidden xl:table-cell min-w-[120px]">Created</th>
+                  <th className="px-3 py-3 font-extrabold whitespace-nowrap text-right min-w-[100px]">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-slate-100">
+                {loading ? (
+                  <tr>
+                    <td colSpan="8" className="px-3 py-10 text-center text-xs uppercase text-slate-400">
+                      Loading users...
+                    </td>
+                  </tr>
+                ) : filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan="8" className="px-3 py-10 text-center text-xs text-slate-400">
+                      {searchQuery ? `No users found matching "${searchQuery}"` : "No users found."}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredUsers.map((userEntry) => (
+                    <tr key={userEntry.id} className="hover:bg-blue-50/30 transition-colors group">
+                      <td className="px-3 py-3 font-semibold text-slate-900 whitespace-nowrap">
+                        <div className="flex flex-col">
+                          <span className="truncate max-w-[120px]">{userEntry.user_name}</span>
+                          <span className="text-[10px] text-slate-400 sm:hidden uppercase tracking-wider">{userEntry.role || "user"}</span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 uppercase text-xs tracking-wide text-slate-500 hidden sm:table-cell whitespace-nowrap">
+                        <span className="bg-slate-100 px-2 py-0.5 rounded text-[10px] font-bold">
+                          {userEntry.role || "user"}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 hidden md:table-cell whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono text-slate-600 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 min-w-[80px] text-center">
+                            {visiblePasswords[userEntry.id]
+                              ? (userEntry.password || "No password")
+                              : "••••••••"}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              togglePasswordVisibility(userEntry.id);
+                            }}
+                            className="text-slate-400 hover:text-blue-500 transition flex-shrink-0"
+                          >
+                            {visiblePasswords[userEntry.id] ? (
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                              </svg>
+                            ) : (
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <span
+                          className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${userEntry.status === "active"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-amber-100 text-amber-700"
+                            }`}
+                        >
+                          {userEntry.status || "active"}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-xs hidden md:table-cell whitespace-nowrap">
+                        <div className="truncate max-w-[150px] font-medium text-slate-700">{userEntry.user_access || "—"}</div>
+                        <div className="text-[10px] text-slate-400 truncate max-w-[150px]">{userEntry.department || ""}</div>
+                      </td>
+                      <td className="px-3 py-3 text-xs leading-tight hidden lg:table-cell whitespace-nowrap">
+                        <div className="truncate max-w-[200px] font-medium text-slate-600">{userEntry.page_access || "—"}</div>
+                        <div className="truncate text-[10px] text-slate-400 max-w-[200px]">{userEntry.system_access || "—"}</div>
+                      </td>
+                      <td className="px-3 py-3 text-[10px] sm:text-xs text-slate-400 hidden xl:table-cell whitespace-nowrap font-medium">
+                        {userEntry.created_at
+                          ? new Date(userEntry.created_at).toLocaleDateString()
+                          : "—"}
+                      </td>
+                      <td className="px-3 py-3 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(userEntry);
+                            }}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition border border-transparent hover:border-blue-100"
+                          >
+                            <PencilIcon className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(userEntry.id);
+                            }}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition border border-transparent hover:border-red-100"
+                          >
+                            <TrashBinIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </section>

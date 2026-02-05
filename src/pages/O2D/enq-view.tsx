@@ -67,9 +67,10 @@ const EnquiryView = () => {
     const isAdmin = user && user.role === 'admin';
 
     // Auto-populate sales executive with logged-in user's name (only for non-admin)
+    // Auto-populate sales executive with logged-in user's name (only for non-admin)
     useEffect(() => {
-        if (user && user.username && !isAdmin) {
-            setSalesExecutive(user.username);
+        if (user && !isAdmin) {
+            setSalesExecutive(user.user_name || user.username || "");
         }
     }, [user, isAdmin]);
 
@@ -145,7 +146,7 @@ const EnquiryView = () => {
         setDate("");
         setCustomer("");
         // Re-populate sales executive with logged-in user's name after reset
-        setSalesExecutive(user && user.username ? user.username : "");
+        setSalesExecutive(user && !isAdmin ? (user.user_name || user.username || "") : "");
         setItems([{ id: Math.random().toString(36).substr(2, 9), itemType: "", size: "", thickness: "", quantity: "" }]);
         setMessage({ type: null, text: '' });
     };
