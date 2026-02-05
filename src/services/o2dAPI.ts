@@ -6,12 +6,15 @@ export const o2dAPI = {
     api.post(API_ENDPOINTS.O2D.AUTH.LOGIN, { username, password }),
   getUsers: () => api.get(API_ENDPOINTS.O2D.AUTH.USERS),
   getPermissions: () => api.get(API_ENDPOINTS.O2D.AUTH.PERMISSIONS),
+  getCrmUsers: () => api.get('/api/auth/crm-users'),
 
   // Dashboard
   getDashboardSummary: (params?: any) =>
     api.get(API_ENDPOINTS.O2D.DASHBOARD.SUMMARY, { params }),
   getDeliveryStats: (params?: any) =>
     api.get(API_ENDPOINTS.O2D.DASHBOARD.DELIVERY_STATS, { params }),
+  getSalespersonDeliveryStats: (params?: any) =>
+    api.get(`${API_ENDPOINTS.O2D.DASHBOARD.DELIVERY_STATS}/salesperson`, { params }),
 
   // Orders
   getPendingOrders: (params?: any) => api.get(API_ENDPOINTS.O2D.ORDERS.PENDING, { params }),
@@ -27,6 +30,7 @@ export const o2dAPI = {
 
   // Enquiry (sub-route of size-master)
   createEnquiry: (data: any) => api.post(`${API_ENDPOINTS.O2D.SIZE_MASTER.BASE}/enquiry`, data),
+  getAllEnquiries: () => api.get(`${API_ENDPOINTS.O2D.SIZE_MASTER.BASE}/enquiries/all`),
 
   // Clients
   getClients: () => api.get(API_ENDPOINTS.O2D.CLIENT),

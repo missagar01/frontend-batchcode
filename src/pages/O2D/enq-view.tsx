@@ -15,6 +15,7 @@ import {
     Maximize,
     Box
 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { Calendar as CalendarComponent } from "./ui/calendar";
@@ -39,11 +40,15 @@ interface EnquiryItem {
 }
 
 const EnquiryView = () => {
+    const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [sizeMasterData, setSizeMasterData] = useState<SizeMasterData[]>([]);
+    const [crmUsers, setCrmUsers] = useState<any[]>([]);
+
     // Form state
     const [date, setDate] = useState<string>("");
     const [customer, setCustomer] = useState<string>("");
+    const [salesExecutive, setSalesExecutive] = useState<string>("");
     const [items, setItems] = useState<EnquiryItem[]>([
         { id: Math.random().toString(36).substr(2, 9), itemType: "", size: "", thickness: "", quantity: "" }
     ]);
@@ -57,6 +62,33 @@ const EnquiryView = () => {
     const [itemTypes, setItemTypes] = useState<string[]>([]);
 
     const selectedDate = date ? new Date(date) : undefined;
+
+    // Check if user is admin
+    const isAdmin = user && user.role === 'admin';
+
+    // Auto-populate sales executive with logged-in user's name (only for non-admin)
+    useEffect(() => {
+        if (user && user.username && !isAdmin) {
+            setSalesExecutive(user.username);
+        }
+    }, [user, isAdmin]);
+
+    // Fetch CRM users if admin
+    useEffect(() => {
+        const fetchCrmUsers = async () => {
+            if (isAdmin) {
+                try {
+                    const response = await o2dAPI.getCrmUsers();
+                    if (response.data?.success) {
+                        setCrmUsers(response.data.data);
+                    }
+                } catch (error) {
+                    console.error("Error fetching CRM users:", error);
+                }
+            }
+        };
+        fetchCrmUsers();
+    }, [isAdmin]);
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -112,6 +144,8 @@ const EnquiryView = () => {
     const handleReset = () => {
         setDate("");
         setCustomer("");
+        // Re-populate sales executive with logged-in user's name after reset
+        setSalesExecutive(user && user.username ? user.username : "");
         setItems([{ id: Math.random().toString(36).substr(2, 9), itemType: "", size: "", thickness: "", quantity: "" }]);
         setMessage({ type: null, text: '' });
     };
@@ -135,6 +169,7 @@ const EnquiryView = () => {
             thickness: item.thickness.replace(' mm', '').trim(),
             enquiry_date: date,
             customer: customer,
+            sales_executive: salesExecutive,
             quantity: item.quantity && item.quantity.trim() !== "" ? parseFloat(item.quantity) : null
         }));
 
@@ -193,7 +228,7 @@ const EnquiryView = () => {
                         )}
 
                         {/* Top Identification Section (Date & Customer) */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 pb-10 border-b border-slate-100">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-10 border-b border-slate-100">
                             <div className="space-y-2.5">
                                 <label className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
                                     <CalendarIcon className="w-3.5 h-3.5 text-blue-500" /> Enquiry Date <span className="text-rose-500">*</span>
@@ -252,6 +287,46 @@ const EnquiryView = () => {
                                         placeholder="Enter Customer Name"
                                         required
                                     />
+                                </div>
+                            </div>
+                            <div className="space-y-2.5">
+                                <label className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">
+                                    <User className="w-3.5 h-3.5 text-blue-500" /> Sales Executive
+                                    {!isAdmin && user && user.username && (
+                                        <span className="text-[9px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
+                                            Auto-filled
+                                        </span>
+                                    )}
+                                </label>
+                                <div className="relative group">
+                                    {isAdmin ? (
+                                        // Admin: Dropdown with CRM users
+                                        <>
+                                            <select
+                                                value={salesExecutive}
+                                                onChange={(e) => setSalesExecutive(e.target.value)}
+                                                className="w-full appearance-none px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all outline-none font-semibold text-slate-700 shadow-sm"
+                                                required
+                                            >
+                                                <option value="">Select CRM Executive</option>
+                                                {crmUsers.map((crmUser) => (
+                                                    <option key={crmUser.id} value={crmUser.user_name}>
+                                                        {crmUser.user_name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <ChevronDown className="absolute right-3 top-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
+                                        </>
+                                    ) : (
+                                        // Regular user: Read-only input with their name
+                                        <input
+                                            value={salesExecutive}
+                                            onChange={(e) => setSalesExecutive(e.target.value)}
+                                            readOnly
+                                            className="w-full px-5 py-3.5 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/5 transition-all outline-none font-semibold shadow-sm bg-blue-50/50 border-blue-200 text-blue-700 cursor-not-allowed"
+                                            placeholder="Enter Executive Name"
+                                        />
+                                    )}
                                 </div>
                             </div>
                         </div>

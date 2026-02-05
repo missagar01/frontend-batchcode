@@ -32,6 +32,7 @@ import { DashboardView as O2DDashboard } from "./pages/O2D/dashboard-view";
 import { OrdersView as O2DOrders } from "./pages/O2D/order-view";
 import { PendingVehicles as O2DProcess } from "./pages/O2D/pendding-vehicle";
 import EnquiryView from "./pages/O2D/enq-view";
+import EnqList from "./pages/O2D/enq-list";
 
 
 import CustomersPage from "./pages/O2D/CustomersPage";
@@ -90,6 +91,7 @@ export default function App() {
             <Route path="/o2d/orders" element={<RouteGuard><O2DOrders /></RouteGuard>} />
             <Route path="/o2d/process" element={<RouteGuard><O2DProcess /></RouteGuard>} />
             <Route path="/o2d/enquiry" element={<RouteGuard><EnquiryView /></RouteGuard>} />
+            <Route path="/o2d/enquiry-list" element={<RouteGuard><EnqList /></RouteGuard>} />
             <Route path="/o2d/customers" element={<RouteGuard><CustomersPage /></RouteGuard>} />
             <Route path="/o2d/follow-ups" element={<RouteGuard><FollowUpsPage /></RouteGuard>} />
           </Route>

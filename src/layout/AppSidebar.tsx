@@ -33,6 +33,7 @@ const o2dItem: NavItem = {
   subItems: [
     { name: "Orders", path: "/o2d/orders", pro: false },
     { name: "Enquiry", path: "/o2d/enquiry", pro: false },
+    { name: "Enquiry List", path: "/o2d/enquiry-list", pro: false },
     { name: "Pending Vehicles", path: "/o2d/process", pro: false },
     { name: "Customers", path: "/o2d/customers", pro: false },
     { name: "Follow Ups", path: "/o2d/follow-ups", pro: false },

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react"
-import { AlertCircle, Filter, Loader2, RefreshCw, X, Trophy, Database } from "lucide-react"
+import { AlertCircle, Filter, Loader2, RefreshCw, X, Trophy, Database, User, Percent } from "lucide-react"
 import { format } from "date-fns"
 import { useAuth } from "../../context/AuthContext"
 import { Badge } from "./ui/badge"
@@ -33,16 +33,19 @@ type DashboardRow = {
 }
 
 type DashboardSummary = {
-  monthlyWorkingParty?: number
-  monthlyPartyAverage?: string
+  monthlyStats?: Array<{ SALES_PERSON: string; MONTHLY_WORKING_PARTY: number; MONTHLY_PARTY_AVERAGE: string }>
+  monthlyWorkingParty?: number // Keep optional for safety
+  monthlyPartyAverage?: string // Keep optional for safety
+  pendingStats?: Array<{ SALES_PERSON: string; TOTAL: number; CONVERSION_RATIO: string }>
   pendingOrdersTotal?: number
   conversionRatio?: string
-  saudaAvg?: Array<{ ITEM: string; AVERAGE: number }>
-  allSaudaAvg?: Array<{ ITEM: string; AVERAGE: number }>
-  salesAvg?: Array<{ ITEM: string; AVERAGE: number }>
-  saudaRate2026?: number
+  gdStats?: Array<{ SALES_PERSON: string; MONTHLY_GD: number; DAILY_GD: number; MONTHLY_QTY: number; DAILY_QTY: number }>
   monthlyGd?: number
   dailyGd?: number
+  saudaAvg?: Array<{ ITEM: string; AVERAGE: number }>
+  allSaudaAvg?: Array<{ SALES_PERSON: string; ITEM: string; AVERAGE: number }>
+  salesAvg?: Array<{ SALES_PERSON: string; ITEM: string; AVERAGE: number }>
+  saudaRate2026?: number
 }
 
 type DashboardFilters = {
@@ -133,7 +136,9 @@ export function DashboardView() {
   const [totalCustomers, setTotalCustomers] = useState(0)
   const [followupStats, setFollowupStats] = useState({ totalFollowUps: 0, ordersBooked: 0 })
   const [salesPerformance, setSalesPerformance] = useState<any[]>([])
+  const [dailySalesPerformance, setDailySalesPerformance] = useState<any[]>([]) // New state for daily stats
   const [deliveryStats, setDeliveryStats] = useState<{ monthly: any; daily: any } | null>(null)
+  const [salespersonDeliveryStats, setSalespersonDeliveryStats] = useState<Record<string, any>>({})
 
   const fetchEnquiryReport = async () => {
     setLoadingEnquiry(true)
@@ -160,23 +165,42 @@ export function DashboardView() {
       console.error("Error fetching client count:", err)
     }
 
-    // 2. Fetch Sales/Followup Stats (Dependent on date range)
+    // 2. Fetch Sales/Followup Stats (Dependent on date range and salesperson)
     try {
       const params: any = {
         startDate,
         endDate
       }
 
-      const [statsRes, perfRes, deliveryRes] = await Promise.all([
+      // Daily params (Today only)
+      const today = format(new Date(), "yyyy-MM-dd");
+      const dailyParams: any = {
+        startDate: today,
+        endDate: today
+      };
+
+      // Add salesPerson filter if selected
+      if (selectedSales !== "All Salespersons") {
+        params.salesPerson = selectedSales
+        dailyParams.salesPerson = selectedSales;
+      }
+
+      const [statsRes, perfRes, dailyPerfRes, deliveryRes, salespersonStatsRes] = await Promise.all([
         o2dAPI.getFollowupStats(), // No params = Global Total
-        o2dAPI.getSalesPerformance(params), // Respects filter
-        o2dAPI.getDeliveryStats(params) // Respects filter
+        o2dAPI.getSalesPerformance(params), // Respects filter (Selected Month)
+        o2dAPI.getSalesPerformance(dailyParams), // Today's Stats
+        o2dAPI.getDeliveryStats(params), // Respects filter (now includes salesPerson)
+        o2dAPI.getSalespersonDeliveryStats({ startDate, endDate }) // Get all salesperson stats
       ])
 
       if (statsRes.data?.success) setFollowupStats(statsRes.data.data)
       if (perfRes.data?.success) setSalesPerformance(perfRes.data.data)
+      if (dailyPerfRes.data?.success) setDailySalesPerformance(dailyPerfRes.data.data)
       if (deliveryRes.data?.success) {
         setDeliveryStats(deliveryRes.data.data);
+      }
+      if (salespersonStatsRes.data?.success) {
+        setSalespersonDeliveryStats(salespersonStatsRes.data.data);
       }
 
     } catch (err) {
@@ -199,9 +223,9 @@ export function DashboardView() {
   }, [selectedMonth])
 
   useEffect(() => {
-    // Fetch stats when dates change
+    // Fetch stats when dates or salesperson filter change
     fetchAdditionalStats()
-  }, [startDate, endDate])
+  }, [startDate, endDate, selectedSales])
 
   const fetchDashboard = useCallback(async () => {
     setLoading(true)
@@ -307,16 +331,60 @@ export function DashboardView() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const salesAvg = salesAvgList.find((x: any) => x.ITEM === targetItem)?.AVERAGE || 0;
 
+    // Calculate Dynamic Working Party Stats
+    const monthlyStats = summary.monthlyStats || [];
+    const relevantStats = selectedSales !== "All Salespersons"
+      ? monthlyStats.filter((s: any) => s.SALES_PERSON === selectedSales)
+      : monthlyStats;
+
+    const calculatedWorkingParty = relevantStats.reduce((sum: number, stat: any) => sum + (stat.MONTHLY_WORKING_PARTY || 0), 0);
+    const calculatedPartyAverage = Math.round((calculatedWorkingParty / 900) * 100) + '%';
+
+    // Calculate Dynamic Pending Order Stats
+    const pendingStats = summary.pendingStats || [];
+    const relevantPendingStats = selectedSales !== "All Salespersons"
+      ? pendingStats.filter((s: any) => s.SALES_PERSON === selectedSales)
+      : pendingStats;
+
+    const calculatedPendingTotal = relevantPendingStats.reduce((sum: number, stat: any) => sum + (stat.TOTAL || 0), 0);
+    const calculatedConversionRatio = Math.round((calculatedPendingTotal / 900) * 100) + '%';
+
+    // Calculate Dynamic GD Stats
+    const gdStats = summary.gdStats || [];
+    const relevantGdStats = selectedSales !== "All Salespersons"
+      ? gdStats.filter((s: any) => s.SALES_PERSON === selectedSales)
+      : gdStats;
+
+    let totalMonthlySummary = 0;
+    let totalMonthlyQty = 0;
+    let totalDailySummary = 0;
+    let totalDailyQty = 0;
+
+    relevantGdStats.forEach((s: any) => {
+      const monQty = s.MONTHLY_QTY || 0;
+      const dayQty = s.DAILY_QTY || 0;
+
+      // GD = Summary / Qty  => Summary = GD * Qty
+      totalMonthlySummary += (s.MONTHLY_GD || 0) * monQty;
+      totalMonthlyQty += monQty;
+
+      totalDailySummary += (s.DAILY_GD || 0) * dayQty;
+      totalDailyQty += dayQty;
+    });
+
+    const calculatedMonthlyGd = totalMonthlyQty ? Math.round(totalMonthlySummary / totalMonthlyQty) : 0;
+    const calculatedDailyGd = totalDailyQty ? Math.round(totalDailySummary / totalDailyQty) : 0;
+
     return {
-      monthlyWorkingParty: summary.monthlyWorkingParty ?? 0,
-      monthlyPartyAverage: summary.monthlyPartyAverage ?? "0%",
-      pendingOrdersTotal: summary.pendingOrdersTotal ?? 0,
-      conversionRatio: summary.conversionRatio ?? "0%",
+      monthlyWorkingParty: calculatedWorkingParty,
+      monthlyPartyAverage: calculatedPartyAverage,
+      pendingOrdersTotal: calculatedPendingTotal,
+      conversionRatio: calculatedConversionRatio,
       saudaAvg,
       salesAvg,
       saudaRate2026: summary.saudaRate2026 ?? 0,
-      monthlyGd: summary.monthlyGd ?? 0,
-      dailyGd: summary.dailyGd ?? 0,
+      monthlyGd: calculatedMonthlyGd,
+      dailyGd: calculatedDailyGd,
       activeItemName: targetItem === 'STRIPS' ? 'Strips' : targetItem === 'BILLET' ? 'Billet' : 'Pipe',
       wbIn: 0,
       wbOut: 0,
@@ -852,7 +920,7 @@ export function DashboardView() {
           <CardContent className="p-4 sm:p-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Salesperson Filter */}
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <label className="text-sm font-semibold text-blue-700 flex items-center gap-2">
                   <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
                   Salesperson
@@ -868,10 +936,10 @@ export function DashboardView() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
 
               {/* Month Filter */}
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <label className="text-sm font-semibold text-indigo-700 flex items-center gap-2">
                   <div className="w-1 h-4 bg-indigo-500 rounded-full"></div>
                   Select Month
@@ -896,7 +964,7 @@ export function DashboardView() {
                     })()}
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
 
               {/* Date Pickers */}
               <DatePicker
@@ -934,6 +1002,8 @@ export function DashboardView() {
                 </Badge>
               </div>
             )}
+
+
           </CardContent>
         </Card>
 
@@ -1051,6 +1121,12 @@ export function DashboardView() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Sauda Rate Composite Card */}
             <Card className="border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50/50 to-white shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-transparent pb-4">
+                <CardTitle className="text-purple-800 font-bold">Sauda Rate And Late Delivery  Percent</CardTitle>
+                <CardDescription className="text-purple-700/80">
+                  Current month party And delivery Percent
+                </CardDescription>
+              </CardHeader>
               <CardContent className="p-4">
                 {/* Horizontal Grid for Sauda Rate & Delivery Scores */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1286,6 +1362,567 @@ export function DashboardView() {
           </div>
         </div>
 
+        {/* All Sauda Section - Salesperson-wise Sauda Averages */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight">All Sauda Average</h2>
+              <p className="text-sm text-slate-500 font-medium">Sauda Average by Sales Executive & Item Type</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            {(() => {
+              const summary: DashboardSummary = data?.summary || {};
+              const saudaAvgList = summary.allSaudaAvg || [];
+
+              // Group by salesperson
+              const salespersonData: Record<string, Array<{ ITEM: string; AVERAGE: number }>> = {};
+              saudaAvgList.forEach((entry: any) => {
+                const person = entry.SALES_PERSON || 'Unknown';
+                if (!salespersonData[person]) {
+                  salespersonData[person] = [];
+                }
+                salespersonData[person].push({
+                  ITEM: entry.ITEM,
+                  AVERAGE: entry.AVERAGE
+                });
+              });
+
+              const salespersons = Object.keys(salespersonData).sort();
+              const gradients = [
+                'from-blue-500 via-blue-600 to-indigo-600',
+                'from-purple-500 via-purple-600 to-pink-600',
+                'from-green-500 via-emerald-600 to-teal-600',
+                'from-orange-500 via-amber-600 to-yellow-600',
+                'from-rose-500 via-pink-600 to-fuchsia-600',
+                'from-cyan-500 via-cyan-600 to-sky-600',
+                'from-violet-500 via-violet-600 to-purple-600',
+                'from-lime-500 via-lime-600 to-green-600',
+                'from-red-500 via-red-600 to-rose-600',
+                'from-indigo-500 via-indigo-600 to-blue-600',
+                'from-teal-500 via-teal-600 to-cyan-600',
+                'from-yellow-500 via-yellow-600 to-amber-600',
+                'from-pink-500 via-pink-600 to-rose-600',
+                'from-emerald-500 via-emerald-600 to-green-600',
+                'from-fuchsia-500 via-fuchsia-600 to-pink-600',
+              ];
+
+              if (salespersons.length === 0) {
+                return (
+                  <div className="col-span-full text-center py-12 text-slate-500">
+                    <p className="text-sm font-semibold">No sauda data available</p>
+                  </div>
+                );
+              }
+
+              return salespersons.map((person, index) => {
+                const items = salespersonData[person];
+
+                return (
+                  <Card
+                    key={person}
+                    className={cn(
+                      "bg-gradient-to-br text-white border-none shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300",
+                      gradients[index % gradients.length]
+                    )}
+                  >
+                    <CardHeader className="p-4 pb-2">
+                      <CardTitle className="text-sm font-bold text-white/90 uppercase tracking-wide">
+                        {person}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-2 space-y-2">
+                      {items.map((item) => (
+                        <div
+                          key={item.ITEM}
+                          className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20"
+                        >
+                          <p className="text-[10px] text-white/70 font-bold uppercase tracking-wider mb-1">
+                            {item.ITEM}
+                          </p>
+                          <div className="text-2xl font-black text-white">
+                            ₹{item.AVERAGE?.toLocaleString() || '0'}
+                          </div>
+                          <p className="text-[9px] text-white/60 font-medium mt-0.5">
+                            Average Rate
+                          </p>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                );
+              });
+            })()}
+          </div>
+        </div>
+
+        {/* Current Month Sales Average Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight">Current Month Sales Average</h2>
+              <p className="text-sm text-slate-500 font-medium">Sales average rates for Pipe, Billet, and Strip by Sales Executive</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            {(() => {
+              const summary: DashboardSummary = data?.summary || {};
+              const salesAvgList = summary.salesAvg || [];
+
+              // Group by salesperson
+              const salespersonData: Record<string, Array<{ ITEM: string; AVERAGE: number }>> = {};
+              salesAvgList.forEach((entry: any) => {
+                const person = entry.SALES_PERSON || 'Unknown';
+                if (!salespersonData[person]) {
+                  salespersonData[person] = [];
+                }
+                salespersonData[person].push({
+                  ITEM: entry.ITEM,
+                  AVERAGE: entry.AVERAGE
+                });
+              });
+
+              const salespersons = Object.keys(salespersonData).sort();
+              const gradients = [
+                'from-slate-500 via-slate-600 to-gray-600',
+                'from-amber-500 via-amber-600 to-orange-600',
+                'from-sky-500 via-sky-600 to-blue-600',
+                'from-fuchsia-500 via-fuchsia-600 to-purple-600',
+                'from-emerald-500 via-emerald-600 to-teal-600',
+                'from-red-500 via-red-600 to-pink-600',
+                'from-indigo-500 via-indigo-600 to-violet-600',
+                'from-lime-500 via-lime-600 to-emerald-600',
+                'from-pink-500 via-pink-600 to-fuchsia-600',
+                'from-cyan-500 via-cyan-600 to-teal-600',
+                'from-yellow-500 via-yellow-600 to-orange-600',
+                'from-purple-500 via-purple-600 to-indigo-600',
+                'from-teal-500 via-teal-600 to-green-600',
+                'from-rose-500 via-rose-600 to-red-600',
+                'from-violet-500 via-violet-600 to-purple-600',
+              ];
+
+              if (salespersons.length === 0) {
+                return (
+                  <div className="col-span-full text-center py-12 text-slate-500">
+                    <p className="text-sm font-semibold">No sales data available</p>
+                  </div>
+                );
+              }
+
+              return salespersons.map((person, index) => {
+                const items = salespersonData[person];
+
+                return (
+                  <Card
+                    key={person}
+                    className={cn(
+                      "bg-gradient-to-br text-white border-none shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300",
+                      gradients[index % gradients.length]
+                    )}
+                  >
+                    <CardHeader className="p-4 pb-2">
+                      <CardTitle className="text-sm font-bold text-white/90 uppercase tracking-wide">
+                        {person}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-2 space-y-2">
+                      {items.map((item) => (
+                        <div
+                          key={item.ITEM}
+                          className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20"
+                        >
+                          <p className="text-[10px] text-white/70 font-bold uppercase tracking-wider mb-1">
+                            {item.ITEM}
+                          </p>
+                          <div className="text-2xl font-black text-white">
+                            ₹{item.AVERAGE?.toLocaleString() || '0'}
+                          </div>
+                          <p className="text-[9px] text-white/60 font-medium mt-0.5">
+                            Sales Average
+                          </p>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                );
+              });
+            })()}
+          </div>
+        </div>
+
+        {/* Monthly Working Party Metrics Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight">Monthly Working Party Metrics</h2>
+              <p className="text-sm text-slate-500 font-medium">Active Parties and Participation Average by Sales Executive</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            {(() => {
+              const summary: DashboardSummary = data?.summary || {};
+              // Fallback to empty array if undefined
+              const monthlyStats = summary.monthlyStats || [];
+
+              // Filter and Sort by sales person name
+              const filteredStats = selectedSales !== "All Salespersons"
+                ? monthlyStats.filter((s: any) => s.SALES_PERSON === selectedSales)
+                : monthlyStats;
+
+              const sortedStats = [...filteredStats].sort((a, b) =>
+                (a.SALES_PERSON || '').localeCompare(b.SALES_PERSON || '')
+              );
+
+              // Unique gradients (15 unique defined earlier) without repeats
+              const gradients = [
+                'from-emerald-600 via-teal-600 to-cyan-600',
+                'from-orange-500 via-amber-500 to-yellow-500',
+                'from-purple-600 via-violet-600 to-indigo-600',
+                'from-blue-600 via-cyan-600 to-sky-600',
+                'from-rose-600 via-pink-600 to-fuchsia-600',
+                'from-lime-600 via-green-600 to-emerald-600',
+                'from-indigo-600 via-blue-600 to-azure-600',
+                'from-red-600 via-orange-600 to-amber-600',
+                'from-cyan-600 via-blue-600 to-indigo-600',
+                'from-teal-600 via-emerald-600 to-green-600',
+                'from-violet-600 via-purple-600 to-fuchsia-600',
+                'from-fuchsia-600 via-pink-600 to-rose-600',
+                'from-sky-600 via-blue-600 to-indigo-600',
+                'from-amber-600 via-orange-600 to-red-600',
+                'from-slate-600 via-gray-600 to-zinc-600',
+              ];
+
+              if (sortedStats.length === 0) {
+                return (
+                  <div className="col-span-full text-center py-12 text-slate-500">
+                    <p className="text-sm font-semibold">No working party data available</p>
+                  </div>
+                );
+              }
+
+              return sortedStats.map((stat, index) => {
+                const person = stat.SALES_PERSON || 'Unknown';
+                return (
+                  <Card
+                    key={person}
+                    className={cn(
+                      "bg-gradient-to-br text-white border-none shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300",
+                      gradients[index % gradients.length]
+                    )}
+                  >
+                    <CardHeader className="p-4 pb-2">
+                      <CardTitle className="text-sm font-bold text-white/90 uppercase tracking-wide">
+                        {person}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-2 space-y-2">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                        <div className="flex justify-between items-end mb-1">
+                          <p className="text-[10px] text-white/70 font-bold uppercase tracking-wider">
+                            Working Parties
+                          </p>
+                          <User className="w-3 h-3 text-white/60" />
+                        </div>
+                        <div className="text-3xl font-black text-white">
+                          {stat.MONTHLY_WORKING_PARTY || 0}
+                        </div>
+                      </div>
+
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                        <div className="flex justify-between items-end mb-1">
+                          <p className="text-[10px] text-white/70 font-bold uppercase tracking-wider">
+                            Participation
+                          </p>
+                          <Percent className="w-3 h-3 text-white/60" />
+                        </div>
+                        <div className="text-3xl font-black text-white">
+                          {stat.MONTHLY_PARTY_AVERAGE || '0%'}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              });
+            })()}
+          </div>
+        </div>
+
+        {/* Pending Order Metrics Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight">Pending Order Metrics</h2>
+              <p className="text-sm text-slate-500 font-medium">Pending Parties and Conversion Ratio by Sales Executive</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            {(() => {
+              const summary: DashboardSummary = data?.summary || {};
+              const pendingStats = summary.pendingStats || [];
+
+              // Filter and Sort by sales person name
+              const filteredStats = selectedSales !== "All Salespersons"
+                ? pendingStats.filter((s: any) => s.SALES_PERSON === selectedSales)
+                : pendingStats;
+
+              const sortedStats = [...filteredStats].sort((a, b) =>
+                (a.SALES_PERSON || '').localeCompare(b.SALES_PERSON || '')
+              );
+
+              // Unique gradients (15 unique defined earlier)
+              const gradients = [
+                'from-teal-600 via-emerald-600 to-green-600',
+                'from-pink-500 via-rose-500 to-red-500',
+                'from-indigo-600 via-blue-600 to-cyan-600',
+                'from-amber-500 via-orange-500 to-red-500',
+                'from-violet-600 via-purple-600 to-fuchsia-600',
+                'from-cyan-600 via-teal-600 to-emerald-600',
+                'from-rose-600 via-fuchsia-600 to-purple-600',
+                'from-lime-600 via-green-600 to-teal-600',
+                'from-blue-600 via-indigo-600 to-violet-600',
+                'from-orange-600 via-amber-600 to-yellow-600',
+                'from-emerald-600 via-green-600 to-lime-600',
+                'from-fuchsia-600 via-purple-600 to-indigo-600',
+                'from-sky-600 via-blue-600 to-indigo-600',
+                'from-red-600 via-rose-600 to-pink-600',
+                'from-slate-600 via-zinc-600 to-neutral-600',
+              ];
+
+              if (sortedStats.length === 0) {
+                return (
+                  <div className="col-span-full text-center py-12 text-slate-500">
+                    <p className="text-sm font-semibold">No pending order data available</p>
+                  </div>
+                );
+              }
+
+              return sortedStats.map((stat, index) => {
+                const person = stat.SALES_PERSON || 'Unknown';
+                return (
+                  <Card
+                    key={person}
+                    className={cn(
+                      "bg-gradient-to-br text-white border-none shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300",
+                      gradients[index % gradients.length]
+                    )}
+                  >
+                    <CardHeader className="p-4 pb-2">
+                      <CardTitle className="text-sm font-bold text-white/90 uppercase tracking-wide">
+                        {person}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-2 space-y-2">
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                        <div className="flex justify-between items-end mb-1">
+                          <p className="text-[10px] text-white/70 font-bold uppercase tracking-wider">
+                            Pending Parties
+                          </p>
+                          <AlertCircle className="w-3 h-3 text-white/60" />
+                        </div>
+                        <div className="text-3xl font-black text-white">
+                          {stat.TOTAL || 0}
+                        </div>
+                      </div>
+
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                        <div className="flex justify-between items-end mb-1">
+                          <p className="text-[10px] text-white/70 font-bold uppercase tracking-wider">
+                            Conversion Ratio
+                          </p>
+                          <Percent className="w-3 h-3 text-white/60" />
+                        </div>
+                        <div className="text-3xl font-black text-white">
+                          {stat.CONVERSION_RATIO || '0%'}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              });
+            })()}
+          </div>
+        </div>
+
+        {/* Gauge Difference Metrics Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight">Gauge Difference Metrics</h2>
+              <p className="text-sm text-slate-500 font-medium">Monthly and Daily Gauge Difference by Sales Person wise</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            {(() => {
+              const summary: DashboardSummary = data?.summary || {};
+              const gdStats = summary.gdStats || [];
+
+              // Filter and Sort by sales person name
+              const filteredStats = selectedSales !== "All Salespersons"
+                ? gdStats.filter((s: any) => s.SALES_PERSON === selectedSales)
+                : gdStats;
+
+              const sortedStats = [...filteredStats].sort((a, b) =>
+                (a.SALES_PERSON || '').localeCompare(b.SALES_PERSON || '')
+              );
+
+              // Unique gradients
+              const gradients = [
+                'from-emerald-600 via-green-600 to-lime-600',
+                'from-orange-600 via-amber-600 to-yellow-600',
+                'from-cyan-600 via-blue-600 to-indigo-600',
+                'from-rose-600 via-red-600 to-orange-600',
+                'from-violet-600 via-purple-600 to-fuchsia-600',
+                'from-teal-600 via-emerald-600 to-green-600',
+                'from-pink-600 via-rose-600 to-red-600',
+                'from-indigo-600 via-blue-600 to-sky-600',
+                'from-fuchsia-600 via-pink-600 to-rose-600',
+                'from-yellow-600 via-amber-600 to-orange-600',
+                'from-lime-600 via-green-600 to-emerald-600',
+                'from-blue-600 via-cyan-600 to-teal-600',
+                'from-red-600 via-orange-600 to-amber-600',
+                'from-purple-600 via-indigo-600 to-blue-600',
+                'from-slate-600 via-gray-600 to-zinc-600',
+              ];
+
+              if (sortedStats.length === 0) {
+                return (
+                  <div className="col-span-full text-center py-12 text-slate-500">
+                    <p className="text-sm font-semibold">No gauge difference data available</p>
+                  </div>
+                );
+              }
+
+              return sortedStats.map((stat, index) => {
+                const person = stat.SALES_PERSON || 'Unknown';
+                const monthlyGd = stat.MONTHLY_GD || 0;
+                const dailyGd = stat.DAILY_GD || 0;
+
+                return (
+                  <Card
+                    key={person}
+                    className={cn(
+                      "bg-gradient-to-br text-white border-none shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300",
+                      gradients[index % gradients.length]
+                    )}
+                  >
+                    <CardHeader className="p-4 pb-2">
+                      <CardTitle className="text-sm font-bold text-white/90 uppercase tracking-wide">
+                        {person}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-2 space-y-2">
+                      {/* Monthly GD */}
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                        <div className="flex justify-between items-end mb-1">
+                          <p className="text-[10px] text-white/70 font-bold uppercase tracking-wider">
+                            Monthly GD
+                          </p>
+                          <div className="text-[10px] text-white/60">₹</div>
+                        </div>
+                        <div className="text-3xl font-black text-white">
+                          ₹{monthlyGd.toLocaleString("en-IN")}
+                        </div>
+                      </div>
+
+                      {/* Daily GD */}
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                        <div className="flex justify-between items-end mb-1">
+                          <p className="text-[10px] text-white/70 font-bold uppercase tracking-wider">
+                            Daily GD
+                          </p>
+                          <div className="text-[10px] text-white/60">₹</div>
+                        </div>
+                        <div className="text-3xl font-black text-white">
+                          ₹{dailyGd.toLocaleString("en-IN")}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              });
+            })()}
+          </div>
+        </div>
+
+        {/* Sale Performance Section (Monthly/Daily Late Percentage) */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight">Sale Performance</h2>
+              <p className="text-sm text-slate-500 font-medium">Monthly and Daily Late Delivery Percentages</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            {(() => {
+              const salespersons = ['AMIT PANDY', 'ANIL MISHRA', 'RAHUL SHARMA', 'TRIPATI RANA', 'SHEETAL PATEL'];
+              const gradients = [
+                'from-blue-600 via-blue-700 to-indigo-700',
+                'from-purple-600 via-purple-700 to-pink-700',
+                'from-green-600 via-emerald-700 to-teal-700',
+                'from-orange-600 via-amber-700 to-yellow-700',
+                'from-rose-600 via-pink-700 to-fuchsia-700'
+              ];
+
+              return salespersons.map((person, index) => {
+                // Get real data from backend salespersonDeliveryStats
+                const stats = salespersonDeliveryStats[person] || {
+                  monthly: { score: '0%', total: 0, late: 0 },
+                  daily: { score: '0%', total: 0, late: 0, date: 'No Data' }
+                };
+
+                return (
+                  <Card
+                    key={person}
+                    className={cn(
+                      "bg-gradient-to-br text-white border-none shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300",
+                      gradients[index]
+                    )}
+                  >
+                    <CardHeader className="p-4 pb-2">
+                      <CardTitle className="text-sm font-bold text-white/90 uppercase tracking-wide">
+                        {person}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-2 space-y-3">
+                      {/* Monthly Late */}
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                        <p className="text-[10px] text-white/70 font-bold uppercase tracking-wider mb-1">
+                          Monthly Late
+                        </p>
+                        <div className="text-3xl font-black text-white">
+                          {stats.monthly.score}
+                        </div>
+                        <p className="text-[9px] text-white/60 font-medium mt-0.5">
+                          {stats.monthly.late} of {stats.monthly.total} deliveries
+                        </p>
+                      </div>
+
+                      {/* Daily Late */}
+                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+                        <p className="text-[10px] text-white/70 font-bold uppercase tracking-wider mb-1">
+                          Daily Late
+                        </p>
+                        <div className="text-3xl font-black text-white">
+                          {stats.daily.score}
+                        </div>
+                        <p className="text-[9px] text-white/60 font-medium mt-0.5">
+                          {stats.daily.late} of {stats.daily.total} deliveries
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              });
+            })()}
+          </div>
+        </div>
+
         {/* Sale Performance State Wise Section */}
         <div className="w-full mb-10">
           <div className="flex items-center justify-between mb-8 px-1">
@@ -1472,13 +2109,14 @@ export function DashboardView() {
                     <TableHead className="font-black text-slate-600 uppercase tracking-widest text-[11px] md:text-[13px] py-4">Item Type</TableHead>
                     <TableHead className="font-black text-slate-600 uppercase tracking-widest text-[11px] md:text-[13px] py-4">Size</TableHead>
                     <TableHead className="font-black text-slate-600 uppercase tracking-widest text-[11px] md:text-[13px] py-4 text-center">Thickness</TableHead>
+                    <TableHead className="font-black text-slate-600 uppercase tracking-widest text-[11px] md:text-[13px] py-4">Executive</TableHead>
                     <TableHead className="font-black text-slate-600 uppercase tracking-widest text-[11px] md:text-[13px] py-4 text-right pr-6">Quantity</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loadingEnquiry ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-48 text-center">
+                      <TableCell colSpan={6} className="h-48 text-center">
                         <div className="flex flex-col items-center justify-center gap-3">
                           <Loader2 className="h-10 w-10 text-emerald-500 animate-spin" />
                           <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Fetching Report...</span>
@@ -1511,6 +2149,11 @@ export function DashboardView() {
                               {item.thickness}
                             </span>
                           </TableCell>
+                          <TableCell className="py-5">
+                            <span className="font-bold text-white text-xs md:text-sm">
+                              {item.sales_executive || "-"}
+                            </span>
+                          </TableCell>
                           <TableCell className="text-right py-5 pr-6">
                             <span className="font-black text-base md:text-lg text-white font-mono tracking-tighter">
                               {Number(item.total).toLocaleString()}
@@ -1521,7 +2164,7 @@ export function DashboardView() {
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-48 text-center">
+                      <TableCell colSpan={6} className="h-48 text-center">
                         <div className="flex flex-col items-center justify-center gap-3 py-10">
                           <div className="p-4 bg-slate-50 rounded-full">
                             <AlertCircle className="h-10 w-10 text-slate-300" />
@@ -1614,7 +2257,7 @@ export function DashboardView() {
                       <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-200">
                         <Filter className="w-5 h-5 text-white" />
                       </div>
-                      <CardTitle className="text-xl font-black text-slate-800 tracking-tight">Sales Performance Report</CardTitle>
+                      <CardTitle className="text-xl font-black text-slate-800 tracking-tight">Monthly MeCA Score</CardTitle>
                     </div>
                     <div>
                       <Select value={selectedMonth} onValueChange={setSelectedMonth}>
@@ -1694,6 +2337,97 @@ export function DashboardView() {
                                     <span className={`${isTotalRow ? 'text-blue-700' : 'text-slate-700'} font-bold`}>{row.conversionRatio}%</span>
                                     {!isTotalRow && <div className="w-12 h-1 bg-slate-200 rounded-full mt-1 overflow-hidden">
                                       <div className="h-full bg-green-500 rounded-full" style={{ width: `${Math.min(parseFloat(row.conversionRatio), 100)}%` }}></div>
+                                    </div>}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 text-center font-mono text-slate-700">
+                                  {row.totalRsSale ? Number(row.totalRsSale).toLocaleString() : '0'}
+                                </td>
+                                <td className="px-6 py-4 text-center font-mono">
+                                  <span className={`${parseFloat(row.avgRsSale) > 50 ? 'text-emerald-600 font-bold' : 'text-slate-600'}`}>
+                                    {row.avgRsSale}
+                                  </span>
+                                </td>
+                              </tr>
+                            )
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Daily Sales Performance Report Section */}
+            <div className='w-full mt-8'>
+              <Card className="border-none shadow-lg overflow-hidden bg-white">
+                <CardHeader className="bg-white border-b border-slate-100 py-6">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-600 rounded-lg shadow-lg shadow-emerald-200">
+                        <Filter className="w-5 h-5 text-white" />
+                      </div>
+                      <CardTitle className="text-xl font-black text-slate-800 tracking-tight">Daily MeCA Score</CardTitle>
+                    </div>
+                    <div className="bg-slate-100 px-4 py-2 rounded-lg font-bold text-slate-600 text-sm">
+                      {format(new Date(), "dd MMMM yyyy")}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead className="text-xs text-white uppercase bg-emerald-600 sticky top-0 z-10">
+                        <tr>
+                          <th scope="col" className="px-6 py-4 font-bold tracking-wider">Sales Person</th>
+                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">No of Callings</th>
+                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Order Clients</th>
+                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Conversion Ratio</th>
+                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Total Rs Sale</th>
+                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Average Rs Sale</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {dailySalesPerformance.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-8 text-center text-slate-400 font-medium">
+                              <div className="flex flex-col items-center justify-center p-4">
+                                <div className="text-lg">No data available for today</div>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          dailySalesPerformance.map((row, idx) => {
+                            const isTotalRow = row.salesPerson === 'Total';
+
+                            const rowClass = isTotalRow
+                              ? "bg-emerald-50 font-bold border-t-2 border-emerald-100" // Light emerald summary row
+                              : idx % 2 === 0 ? "bg-white" : "bg-slate-50/50";
+
+                            // Generate avatar initials
+                            const initials = row.salesPerson !== 'Total'
+                              ? row.salesPerson.split(' ').map((n: any) => n[0]).join('').substring(0, 2).toUpperCase()
+                              : 'Σ';
+
+                            // Determine avatar color
+                            const avatarColor = idx % 3 === 0 ? "bg-emerald-500" : idx % 3 === 1 ? "bg-teal-500" : "bg-green-500";
+
+                            return (
+                              <tr key={idx} className={`${rowClass} hover:bg-emerald-50/80 transition-colors`}>
+                                <td className="px-6 py-4 font-medium flex items-center gap-3">
+                                  <div className={`w-8 h-8 rounded-full ${isTotalRow ? 'bg-emerald-600' : avatarColor} flex items-center justify-center text-white text-xs font-bold shadow-sm`}>
+                                    {initials}
+                                  </div>
+                                  {row.salesPerson}
+                                </td>
+                                <td className="px-6 py-4 text-center">{row.noOfCallings}</td>
+                                <td className="px-6 py-4 text-center">{row.orderClients}</td>
+                                <td className="px-6 py-4 text-center">
+                                  <div className="flex flex-col items-center">
+                                    <span className={`${isTotalRow ? 'text-emerald-700' : 'text-slate-700'} font-bold`}>{row.conversionRatio}%</span>
+                                    {!isTotalRow && <div className="w-12 h-1 bg-slate-200 rounded-full mt-1 overflow-hidden">
+                                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(parseFloat(row.conversionRatio), 100)}%` }}></div>
                                     </div>}
                                   </div>
                                 </td>
