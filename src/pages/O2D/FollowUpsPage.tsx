@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Search, Calendar, Clock, User as UserIcon, LayoutGrid, List } from 'lucide-react';
 import { o2dAPI } from "../../services/o2dAPI";
 import { useAuth } from "../../context/AuthContext";
+import FollowUpModal from './FollowUpModal';
 
 interface FollowUp {
     id: number;
@@ -40,6 +41,22 @@ const FollowUpsPage: React.FC = () => {
     const [followups, setFollowups] = useState<FollowUp[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedFollowup, setSelectedFollowup] = useState<FollowUp | null>(null);
+
+    const handleCalendarClick = (followup: FollowUp) => {
+        setSelectedFollowup(followup);
+        setIsModalOpen(true);
+    };
+
+    const handleModalClose = () => {
+        setIsModalOpen(false);
+        setSelectedFollowup(null);
+    };
+
+    const handleModalSuccess = () => {
+        fetchFollowups();
+    };
 
     const fetchFollowups = async () => {
         setLoading(true);
@@ -148,9 +165,13 @@ const FollowUpsPage: React.FC = () => {
                                             <tr key={f.id || index} className="group hover:bg-blue-50/40 transition-all duration-200">
                                                 <td className="p-5 md:p-6">
                                                     <div className="flex items-center gap-3 text-gray-700 font-bold text-sm">
-                                                        <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-white transition-colors">
+                                                        <button
+                                                            onClick={() => handleCalendarClick(f)}
+                                                            className="p-2 bg-gray-100 rounded-lg group-hover:bg-white transition-all hover:bg-blue-100 hover:scale-110 cursor-pointer active:scale-95"
+                                                            title="Open Follow-up Modal"
+                                                        >
                                                             <Calendar className="w-4 h-4 text-blue-500" />
-                                                        </div>
+                                                        </button>
                                                         {formatDate(f.date)}
                                                     </div>
                                                 </td>
@@ -219,6 +240,14 @@ const FollowUpsPage: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Follow-up Modal */}
+            <FollowUpModal
+                isOpen={isModalOpen}
+                onClose={handleModalClose}
+                customer={selectedFollowup ? { "Client Name": selectedFollowup.customerName, name: selectedFollowup.customerName } : null}
+                onSuccess={handleModalSuccess}
+            />
         </div>
     );
 };

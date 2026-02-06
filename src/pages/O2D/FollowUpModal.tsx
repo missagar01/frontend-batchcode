@@ -14,24 +14,24 @@ const FollowUpModal: React.FC<FollowUpModalProps> = ({ isOpen, onClose, customer
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
-        order_booked: 'false', // string 'true'/'false' for radio handling
+        order_booked: 'true', // string 'true'/'false' for radio handling - default to Yes Booked
         order_quantity: '',
         order_date: new Date().toISOString().split('T')[0],
         next_calling_date: '',
-        status: 'Next Call Scheduled' // Default status
+        status: 'Order Booked' // Default status
     });
 
     const [waitingForResponse, setWaitingForResponse] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
-            // Reset form on open
+            // Reset form on open - default to Yes Booked
             setFormData({
-                order_booked: 'false',
+                order_booked: 'true',
                 order_quantity: '',
                 order_date: new Date().toISOString().split('T')[0],
                 next_calling_date: '',
-                status: 'Next Call Scheduled'
+                status: 'Order Booked'
             });
             setWaitingForResponse(false);
         }
