@@ -92,13 +92,13 @@ function DatePicker({
             {date ? format(selectedDate!, "PPP") : <span>Pick a date</span>}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className="w-auto p-0 bg-white border border-slate-200 shadow-lg rounded-lg" align="start">
           <Calendar
             mode="single"
             selected={selectedDate}
             onSelect={(d) => d && setDate(format(d, "yyyy-MM-dd"))}
             initialFocus
-            className="rounded-md border-none"
+            className="rounded-md border-none bg-white"
           />
         </PopoverContent>
       </Popover>
@@ -338,7 +338,7 @@ export function DashboardView() {
       : monthlyStats;
 
     const calculatedWorkingParty = relevantStats.reduce((sum: number, stat: any) => sum + (stat.MONTHLY_WORKING_PARTY || 0), 0);
-    const calculatedPartyAverage = Math.round((calculatedWorkingParty / 900) * 100) + '%';
+    const calculatedPartyAverage = ((calculatedWorkingParty / 900) * 100).toFixed(2) + '%';
 
     // Calculate Dynamic Pending Order Stats
     const pendingStats = summary.pendingStats || [];
@@ -346,8 +346,9 @@ export function DashboardView() {
       ? pendingStats.filter((s: any) => s.SALES_PERSON === selectedSales)
       : pendingStats;
 
+
     const calculatedPendingTotal = relevantPendingStats.reduce((sum: number, stat: any) => sum + (stat.TOTAL || 0), 0);
-    const calculatedConversionRatio = Math.round((calculatedPendingTotal / 900) * 100) + '%';
+    const calculatedConversionRatio = ((calculatedPendingTotal / 900) * 100).toFixed(2) + '%';
 
     // Calculate Dynamic GD Stats
     const gdStats = summary.gdStats || [];
@@ -859,7 +860,7 @@ export function DashboardView() {
   return (
     <div className="relative space-y-4 sm:space-y-8 p-2 sm:p-4 lg:p-8 bg-slate-50/50 min-h-screen" ref={dashboardRef}>
       {loading && data && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
           <div className="flex flex-col items-center justify-center space-y-4 bg-white rounded-lg shadow-2xl p-8">
             <Loader2 className="h-12 w-12 text-blue-600 animate-spin" />
             <p className="text-lg font-semibold text-gray-700">Loading...</p>
