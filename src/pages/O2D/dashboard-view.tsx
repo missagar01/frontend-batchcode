@@ -2304,50 +2304,119 @@ export function DashboardView() {
                             </td>
                           </tr>
                         ) : (
-                          salesPerformance.map((row, idx) => {
-                            const isTotalRow = row.salesPerson === 'Total';
+                          <>
+                            {salesPerformance.filter(row => row.salesPerson !== 'Total').map((row, idx) => {
 
-                            const rowClass = isTotalRow
-                              ? "bg-blue-50 font-bold border-t-2 border-blue-100" // Light blue summary row
-                              : idx % 2 === 0 ? "bg-white" : "bg-slate-50/50";
+                              const rowClass = idx % 2 === 0 ? "bg-white" : "bg-slate-50/50";
 
-                            // Generate avatar initials
-                            const initials = row.salesPerson !== 'Total'
-                              ? row.salesPerson.split(' ').map((n: any) => n[0]).join('').substring(0, 2).toUpperCase()
-                              : 'Σ';
+                              // Generate avatar initials
+                              const initials = row.salesPerson.split(' ').map((n: any) => n[0]).join('').substring(0, 2).toUpperCase();
 
-                            // Determine avatar color
-                            const avatarColor = idx % 3 === 0 ? "bg-blue-500" : idx % 3 === 1 ? "bg-purple-500" : "bg-indigo-500";
+                              // Determine avatar color
+                              const avatarColor = idx % 3 === 0 ? "bg-blue-500" : idx % 3 === 1 ? "bg-purple-500" : "bg-indigo-500";
 
-                            return (
-                              <tr key={idx} className={`${rowClass} hover:bg-blue-50/80 transition-colors`}>
-                                <td className="px-6 py-4 font-medium flex items-center gap-3">
-                                  <div className={`w-8 h-8 rounded-full ${isTotalRow ? 'bg-blue-600' : avatarColor} flex items-center justify-center text-white text-xs font-bold shadow-sm`}>
-                                    {initials}
-                                  </div>
-                                  {row.salesPerson}
-                                </td>
-                                <td className="px-6 py-4 text-center">{row.noOfCallings}</td>
-                                <td className="px-6 py-4 text-center">{row.orderClients}</td>
-                                <td className="px-6 py-4 text-center">
-                                  <div className="flex flex-col items-center">
-                                    <span className={`${isTotalRow ? 'text-blue-700' : 'text-slate-700'} font-bold`}>{row.conversionRatio}%</span>
-                                    {!isTotalRow && <div className="w-12 h-1 bg-slate-200 rounded-full mt-1 overflow-hidden">
-                                      <div className="h-full bg-green-500 rounded-full" style={{ width: `${Math.min(parseFloat(row.conversionRatio), 100)}%` }}></div>
-                                    </div>}
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 text-center font-mono text-slate-700">
-                                  {row.totalRsSale ? Number(row.totalRsSale).toLocaleString() : '0'}
-                                </td>
-                                <td className="px-6 py-4 text-center font-mono">
-                                  <span className={`${parseFloat(row.avgRsSale) > 50 ? 'text-emerald-600 font-bold' : 'text-slate-600'}`}>
-                                    {row.avgRsSale}
-                                  </span>
-                                </td>
-                              </tr>
-                            )
-                          })
+                              return (
+                                <tr key={idx} className={`${rowClass} hover:bg-blue-50/80 transition-colors`}>
+                                  <td className="px-6 py-4 font-medium flex items-center gap-3">
+                                    <div className={`w-8 h-8 rounded-full ${avatarColor} flex items-center justify-center text-white text-xs font-bold shadow-sm`}>
+                                      {initials}
+                                    </div>
+                                    {row.salesPerson}
+                                  </td>
+                                  <td className="px-6 py-4 text-center">{row.noOfCallings}</td>
+                                  <td className="px-6 py-4 text-center">{row.orderClients}</td>
+                                  <td className="px-6 py-4 text-center">
+                                    <div className="flex flex-col items-center">
+                                      <span className="text-slate-700 font-bold">{row.conversionRatio}%</span>
+                                      <div className="w-12 h-1 bg-slate-200 rounded-full mt-1 overflow-hidden">
+                                        <div className="h-full bg-green-500 rounded-full" style={{ width: `${Math.min(parseFloat(row.conversionRatio), 100)}%` }}></div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4 text-center font-mono text-slate-700">
+                                    {row.totalRsSale ? Number(row.totalRsSale).toLocaleString() : '0'}
+                                  </td>
+                                  <td className="px-6 py-4 text-center font-mono">
+                                    <span className={`${parseFloat(row.avgRsSale) > 50 ? 'text-emerald-600 font-bold' : 'text-slate-600'}`}>
+                                      {row.avgRsSale}
+                                    </span>
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                            {/* Total Row */}
+                            {(() => {
+                              // Filter out the Total row for total calculation
+                              const dataRows = salesPerformance.filter(row => row.salesPerson !== 'Total');
+                              if (dataRows.length === 0) return null;
+
+                              const totalCallings = dataRows.reduce((sum, row) => sum + Number(row.noOfCallings || 0), 0);
+                              const totalOrderClients = dataRows.reduce((sum, row) => sum + Number(row.orderClients || 0), 0);
+                              const totalConversionRatio = totalCallings > 0 ? ((totalOrderClients / totalCallings) * 100).toFixed(2) : '0.00';
+                              const totalTotalRsSale = dataRows.reduce((sum, row) => sum + Number(row.totalRsSale || 0), 0);
+                              const sumAvgRsSale = dataRows.reduce((sum, row) => sum + parseFloat(row.avgRsSale || '0'), 0).toFixed(2);
+
+                              return (
+                                <tr className="bg-blue-50 font-bold border-t-2 border-blue-200 hover:bg-blue-100/80 transition-colors">
+                                  <td className="px-6 py-4 font-medium flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                                      Σ
+                                    </div>
+                                    <span className="text-blue-700">TOTAL</span>
+                                  </td>
+                                  <td className="px-6 py-4 text-center text-blue-700 font-bold">{totalCallings}</td>
+                                  <td className="px-6 py-4 text-center text-blue-700 font-bold">{totalOrderClients}</td>
+                                  <td className="px-6 py-4 text-center">
+                                    <div className="flex flex-col items-center">
+                                      <span className="text-blue-700 font-bold">{totalConversionRatio}%</span>
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4 text-center font-mono text-blue-700 font-bold">
+                                    {Number(totalTotalRsSale).toLocaleString()}
+                                  </td>
+                                  <td className="px-6 py-4 text-center font-mono">
+                                    <span className="text-blue-700 font-bold">{sumAvgRsSale}</span>
+                                  </td>
+                                </tr>
+                              );
+                            })()}
+                            {/* Average Row */}
+                            {(() => {
+                              // Filter out the Total row for average calculation
+                              const dataRows = salesPerformance.filter(row => row.salesPerson !== 'Total');
+                              if (dataRows.length === 0) return null;
+
+                              const avgCallings = (dataRows.reduce((sum, row) => sum + Number(row.noOfCallings || 0), 0) / dataRows.length).toFixed(1);
+                              const avgOrderClients = (dataRows.reduce((sum, row) => sum + Number(row.orderClients || 0), 0) / dataRows.length).toFixed(1);
+                              const avgConversionRatio = (dataRows.reduce((sum, row) => sum + parseFloat(row.conversionRatio || '0'), 0) / dataRows.length).toFixed(2);
+                              const avgTotalRsSale = (dataRows.reduce((sum, row) => sum + Number(row.totalRsSale || 0), 0) / dataRows.length).toFixed(0);
+                              const avgAvgRsSale = (dataRows.reduce((sum, row) => sum + parseFloat(row.avgRsSale || '0'), 0) / dataRows.length).toFixed(2);
+
+                              return (
+                                <tr className="bg-purple-50 font-bold border-t-2 border-purple-200 hover:bg-purple-100/80 transition-colors">
+                                  <td className="px-6 py-4 font-medium flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                                      ø
+                                    </div>
+                                    <span className="text-purple-700">AVERAGE</span>
+                                  </td>
+                                  <td className="px-6 py-4 text-center text-purple-700">{avgCallings}</td>
+                                  <td className="px-6 py-4 text-center text-purple-700">{avgOrderClients}</td>
+                                  <td className="px-6 py-4 text-center">
+                                    <div className="flex flex-col items-center">
+                                      <span className="text-purple-700 font-bold">{avgConversionRatio}%</span>
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4 text-center font-mono text-purple-700">
+                                    {Number(avgTotalRsSale).toLocaleString()}
+                                  </td>
+                                  <td className="px-6 py-4 text-center font-mono">
+                                    <span className="text-purple-700 font-bold">{avgAvgRsSale}</span>
+                                  </td>
+                                </tr>
+                              );
+                            })()}
+                          </>
                         )}
                       </tbody>
                     </table>
@@ -2395,17 +2464,12 @@ export function DashboardView() {
                             </td>
                           </tr>
                         ) : (
-                          dailySalesPerformance.map((row, idx) => {
-                            const isTotalRow = row.salesPerson === 'Total';
+                          dailySalesPerformance.filter(row => row.salesPerson !== 'Total').map((row, idx) => {
 
-                            const rowClass = isTotalRow
-                              ? "bg-emerald-50 font-bold border-t-2 border-emerald-100" // Light emerald summary row
-                              : idx % 2 === 0 ? "bg-white" : "bg-slate-50/50";
+                            const rowClass = idx % 2 === 0 ? "bg-white" : "bg-slate-50/50";
 
                             // Generate avatar initials
-                            const initials = row.salesPerson !== 'Total'
-                              ? row.salesPerson.split(' ').map((n: any) => n[0]).join('').substring(0, 2).toUpperCase()
-                              : 'Σ';
+                            const initials = row.salesPerson.split(' ').map((n: any) => n[0]).join('').substring(0, 2).toUpperCase();
 
                             // Determine avatar color
                             const avatarColor = idx % 3 === 0 ? "bg-emerald-500" : idx % 3 === 1 ? "bg-teal-500" : "bg-green-500";
@@ -2413,7 +2477,7 @@ export function DashboardView() {
                             return (
                               <tr key={idx} className={`${rowClass} hover:bg-emerald-50/80 transition-colors`}>
                                 <td className="px-6 py-4 font-medium flex items-center gap-3">
-                                  <div className={`w-8 h-8 rounded-full ${isTotalRow ? 'bg-emerald-600' : avatarColor} flex items-center justify-center text-white text-xs font-bold shadow-sm`}>
+                                  <div className={`w-8 h-8 rounded-full ${avatarColor} flex items-center justify-center text-white text-xs font-bold shadow-sm`}>
                                     {initials}
                                   </div>
                                   {row.salesPerson}
@@ -2422,10 +2486,10 @@ export function DashboardView() {
                                 <td className="px-6 py-4 text-center">{row.orderClients}</td>
                                 <td className="px-6 py-4 text-center">
                                   <div className="flex flex-col items-center">
-                                    <span className={`${isTotalRow ? 'text-emerald-700' : 'text-slate-700'} font-bold`}>{row.conversionRatio}%</span>
-                                    {!isTotalRow && <div className="w-12 h-1 bg-slate-200 rounded-full mt-1 overflow-hidden">
+                                    <span className="text-slate-700 font-bold">{row.conversionRatio}%</span>
+                                    <div className="w-12 h-1 bg-slate-200 rounded-full mt-1 overflow-hidden">
                                       <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(parseFloat(row.conversionRatio), 100)}%` }}></div>
-                                    </div>}
+                                    </div>
                                   </div>
                                 </td>
                                 <td className="px-6 py-4 text-center font-mono text-slate-700">
@@ -2440,6 +2504,42 @@ export function DashboardView() {
                             )
                           })
                         )}
+                        {/* Total Row */}
+                        {dailySalesPerformance.length > 0 && (() => {
+                          // Filter out the Total row for total calculation
+                          const dataRows = dailySalesPerformance.filter(row => row.salesPerson !== 'Total');
+                          if (dataRows.length === 0) return null;
+
+                          const totalCallings = dataRows.reduce((sum, row) => sum + Number(row.noOfCallings || 0), 0);
+                          const totalOrderClients = dataRows.reduce((sum, row) => sum + Number(row.orderClients || 0), 0);
+                          const totalConversionRatio = totalCallings > 0 ? ((totalOrderClients / totalCallings) * 100).toFixed(2) : '0.00';
+                          const totalTotalRsSale = dataRows.reduce((sum, row) => sum + Number(row.totalRsSale || 0), 0);
+                          const sumAvgRsSale = dataRows.reduce((sum, row) => sum + parseFloat(row.avgRsSale || '0'), 0).toFixed(2);
+
+                          return (
+                            <tr className="bg-emerald-50 font-bold border-t-2 border-emerald-200 hover:bg-emerald-100/80 transition-colors">
+                              <td className="px-6 py-4 font-medium flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                                  Σ
+                                </div>
+                                <span className="text-emerald-700">TOTAL</span>
+                              </td>
+                              <td className="px-6 py-4 text-center text-emerald-700 font-bold">{totalCallings}</td>
+                              <td className="px-6 py-4 text-center text-emerald-700 font-bold">{totalOrderClients}</td>
+                              <td className="px-6 py-4 text-center">
+                                <div className="flex flex-col items-center">
+                                  <span className="text-emerald-700 font-bold">{totalConversionRatio}%</span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 text-center font-mono text-emerald-700 font-bold">
+                                {Number(totalTotalRsSale).toLocaleString()}
+                              </td>
+                              <td className="px-6 py-4 text-center font-mono">
+                                <span className="text-emerald-700 font-bold">{sumAvgRsSale}</span>
+                              </td>
+                            </tr>
+                          );
+                        })()}
                       </tbody>
                     </table>
                   </div>
