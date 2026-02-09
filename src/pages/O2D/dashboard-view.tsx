@@ -2386,11 +2386,15 @@ export function DashboardView() {
                               const dataRows = salesPerformance.filter(row => row.salesPerson !== 'Total');
                               if (dataRows.length === 0) return null;
 
-                              const avgCallings = (dataRows.reduce((sum, row) => sum + Number(row.noOfCallings || 0), 0) / dataRows.length).toFixed(1);
-                              const avgOrderClients = (dataRows.reduce((sum, row) => sum + Number(row.orderClients || 0), 0) / dataRows.length).toFixed(1);
+                              const avgCallingsValue = dataRows.reduce((sum, row) => sum + Number(row.noOfCallings || 0), 0) / dataRows.length;
+                              const avgOrderClientsValue = dataRows.reduce((sum, row) => sum + Number(row.orderClients || 0), 0) / dataRows.length;
+                              const avgCallings = avgCallingsValue.toFixed(1);
+                              const avgOrderClients = avgOrderClientsValue.toFixed(1);
                               const avgConversionRatio = (dataRows.reduce((sum, row) => sum + parseFloat(row.conversionRatio || '0'), 0) / dataRows.length).toFixed(2);
-                              const avgTotalRsSale = (dataRows.reduce((sum, row) => sum + Number(row.totalRsSale || 0), 0) / dataRows.length).toFixed(0);
-                              const avgAvgRsSale = (dataRows.reduce((sum, row) => sum + parseFloat(row.avgRsSale || '0'), 0) / dataRows.length).toFixed(2);
+                              const avgTotalRsSaleValue = dataRows.reduce((sum, row) => sum + Number(row.totalRsSale || 0), 0) / dataRows.length;
+                              const avgTotalRsSale = avgTotalRsSaleValue.toFixed(0);
+                              // Average Rs Sale = Average Total Rs Sale / Average Order Clients
+                              const avgAvgRsSale = avgOrderClientsValue > 0 ? (avgTotalRsSaleValue / avgOrderClientsValue).toFixed(2) : '0.00';
 
                               return (
                                 <tr className="bg-purple-50 font-bold border-t-2 border-purple-200 hover:bg-purple-100/80 transition-colors">
@@ -2421,6 +2425,93 @@ export function DashboardView() {
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Summary Statistics Tables - Excel Format */}
+                  {salesPerformance.length > 0 && (() => {
+                    const dataRows = salesPerformance.filter(row => row.salesPerson !== 'Total');
+                    if (dataRows.length === 0) return null;
+
+                    // Calculate statistics
+                    const totalCallings = dataRows.reduce((sum, row) => sum + Number(row.noOfCallings || 0), 0);
+
+                    // Get number of days in selected month (or current month if "All Months")
+                    let daysInMonth = 30; // default
+                    if (selectedMonth !== "All Months") {
+                      const [year, month] = selectedMonth.split('-').map(Number);
+                      daysInMonth = new Date(year, month, 0).getDate();
+                    }
+
+                    const avgCallPerDayValue = totalCallings / daysInMonth;
+                    const avgCallPerDay = avgCallPerDayValue.toFixed(2);
+                    // Average Call Per Person = Average Call Per Day / Number of Sales Persons
+                    const avgCallPerPerson = (avgCallPerDayValue / dataRows.length).toFixed(2);
+
+                    return (
+                      <div className="mt-6 space-y-4 px-6 pb-6">
+                        {/* Average Call Per Day & Average Call Per Person Table - Green */}
+                        <div className="overflow-x-auto">
+                          <table className="w-full max-w-md text-sm">
+                            <tbody>
+                              <tr className="bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 transition-colors">
+                                <td className="px-6 py-3 font-bold text-white border border-green-600 rounded-l-lg">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white text-xs font-bold">
+                                      📊
+                                    </div>
+                                    Average Call Per Day
+                                  </div>
+                                </td>
+                                <td className="px-6 py-3 font-black text-white text-right border border-green-600 rounded-r-lg text-lg font-mono">
+                                  {avgCallPerDay}
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                          <table className="w-full max-w-md text-sm">
+                            <tbody>
+                              <tr className="bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 transition-colors">
+                                <td className="px-6 py-3 font-bold text-white border border-green-600 rounded-l-lg">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white text-xs font-bold">
+                                      👥
+                                    </div>
+                                    Average Call Per Person
+                                  </div>
+                                </td>
+                                <td className="px-6 py-3 font-black text-white text-right border border-green-600 rounded-r-lg text-lg font-mono">
+                                  {avgCallPerPerson}
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Total No of Calling Table - Yellow */}
+                        <div className="overflow-x-auto mt-4">
+                          <table className="w-full max-w-md text-sm">
+                            <tbody>
+                              <tr className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 transition-colors shadow-lg">
+                                <td className="px-6 py-4 font-bold text-slate-800 border-2 border-pink-500 rounded-l-lg">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded-full bg-slate-800/20 flex items-center justify-center text-slate-800 text-xs font-bold">
+                                      📞
+                                    </div>
+                                    Total No of Calling
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 font-black text-slate-800 text-right border-2 border-pink-500 rounded-r-lg text-xl font-mono">
+                                  {totalCallings.toLocaleString()}
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
             </div>
