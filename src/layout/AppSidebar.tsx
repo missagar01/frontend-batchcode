@@ -201,7 +201,7 @@ const AppSidebar: FC = () => {
     return (
       <div className="mb-4">
         <div className="px-6 py-1 mb-1">
-          <span className="lg:text-[12px] md:text-[10px] text-[8px] font-black uppercase tracking-[0.25em] text-gray-500 opacity-80">{title}</span>
+          <span className="xl:text-[12px] lg:text-[10px] text-[8px] font-black uppercase tracking-[0.25em] text-gray-500 opacity-80">{title}</span>
         </div>
         <ul className="space-y-1 px-3">
           {items.map((nav) => {
@@ -215,12 +215,12 @@ const AppSidebar: FC = () => {
                   {nav.icon}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className="flex-1 truncate tracking-tight uppercase lg:text-[16px] md:text-[14px] text-[10px] font-black">{nav.name}</span>
+                  <span className="flex-1 truncate tracking-tight uppercase xl:text-[16px] lg:text-[14px] text-[10px] font-black">{nav.name}</span>
                 )}
               </>
             );
 
-            const commonClasses = `flex items-center gap-3 px-4 py-3 rounded-xl lg:text-[16px] md:text-[14px] text-[12px] font-black transition-all duration-200 text-white
+            const commonClasses = `flex items-center gap-3 px-4 py-3 rounded-xl xl:text-[16px] lg:text-[14px] text-[12px] font-black transition-all duration-200 text-white
               ${isMainActive
                 ? 'shadow-lg ring-2 ring-white/60 scale-[1.02] translate-x-0.5'
                 : nav.path ? 'hover:brightness-105 hover:shadow-md' : 'cursor-default'}`;
@@ -257,7 +257,7 @@ const AppSidebar: FC = () => {
                           <Link
                             to={subItem.path}
                             onClick={handleLinkClick}
-                            className={`flex items-center justify-between px-4 py-2 rounded-xl lg:text-[16px] md:text-[14px] text-[12px] font-black transition-all duration-200 text-white
+                            className={`flex items-center justify-between px-4 py-2 rounded-xl xl:text-[16px] lg:text-[14px] text-[12px] font-black transition-all duration-200 text-white
                               ${isSubActive
                                 ? 'ring-2 ring-white/50 shadow-md scale-[1.01]'
                                 : 'opacity-90 hover:opacity-100 hover:brightness-105'}`}
@@ -274,7 +274,7 @@ const AppSidebar: FC = () => {
                               {subItem.name}
                             </span>
                             {(subItem.new || subItem.pro) && (
-                              <span className={`lg:text-[8px] md:text-[7px] text-[6px] px-1.5 py-0.5 rounded-full uppercase font-black ${isSubActive ? 'bg-white text-black' : 'bg-white/20 text-white'}`}>
+                              <span className={`xl:text-[8px] lg:text-[7px] text-[6px] px-1.5 py-0.5 rounded-full uppercase font-black ${isSubActive ? 'bg-white text-black' : 'bg-white/20 text-white'}`}>
                                 {subItem.new ? 'NEW' : 'PRO'}
                               </span>
                             )}
@@ -298,15 +298,15 @@ const AppSidebar: FC = () => {
         className={`fixed left-0 flex flex-col bg-white text-gray-800 transition-all duration-300 ease-in-out z-[1000] border-r border-gray-100 shadow-2xl
           ${isMobileOpen
             ? "top-[72px] h-[calc(100dvh-72px)] w-[280px] translate-x-0"
-            : "top-0 h-[100dvh] -translate-x-full lg:translate-x-0"}
-          ${!isMobileOpen ? (isExpanded || isHovered ? "lg:w-[290px]" : "lg:w-[90px]") : ""}
+            : "top-0 h-[100dvh] -translate-x-full xl:translate-x-0"}
+          ${!isMobileOpen ? (isExpanded || isHovered ? "xl:w-[290px]" : "xl:w-[90px]") : ""}
         `}
         onMouseEnter={() => !isExpanded && setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Brand Header */}
         <div
-          className={`shrink-0 h-[72px] hidden lg:flex items-center shadow-sm relative z-10 transition-all duration-300
+          className={`shrink-0 h-[72px] hidden xl:flex items-center shadow-sm relative z-10 transition-all duration-300
             ${(!isExpanded && !isHovered && !isMobileOpen) ? "justify-center px-0 bg-white" : "justify-center px-0 bg-[#EE1C23]"}`}
         >
           <Link to="/" onClick={handleLinkClick} className="flex items-center w-full h-full overflow-hidden group">

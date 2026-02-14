@@ -401,7 +401,7 @@ export function DashboardView() {
 
   const formatMetricValue = (value?: number | string | null) => {
     if (typeof value === "number") {
-      return value.toString()
+      return value.toLocaleString("en-IN")
     }
     if (typeof value === "string" && value.trim().length > 0) {
       return value
@@ -409,103 +409,7 @@ export function DashboardView() {
     return "0"
   }
 
-  const summaryCards = [
-    {
-      id: "saudaRate2026",
-      title: "Sauda Rate (2026)",
-      // Purple to Indigo gradient
-      className: "bg-gradient-to-br from-purple-500 via-indigo-500 to-blue-600 text-white border-none",
-      titleClassName: "text-purple-50",
-      valueClassName: "text-white",
-      descriptionClassName: "text-purple-100",
-      badgeClassName: "bg-white/20 text-white border-white/20 backdrop-blur-sm",
-      value: `₹${formatMetricValue(displayMetrics.saudaRate2026)}`,
-      description: "Daily Avg Trend",
-      badgeText: "Trend",
-    },
-    {
-      id: "monthlyGd",
-      title: "Monthly GD",
-      // Bright Green gradient
-      className: "bg-gradient-to-br from-green-400 via-green-500 to-green-600 text-white border-none",
-      titleClassName: "text-green-50",
-      valueClassName: "text-white",
-      descriptionClassName: "text-green-100",
-      badgeClassName: "bg-white/20 text-white border-white/20 backdrop-blur-sm",
-      value: `₹${formatMetricValue(displayMetrics.monthlyGd)}`,
-      description: "Gross Dispatch (Month)",
-      badgeText: "GD",
-    },
-    {
-      id: "dailyGd",
-      title: "Daily GD",
-      // Orange to Amber gradient
-      className: "bg-gradient-to-br from-orange-400 via-orange-500 to-amber-500 text-white border-none",
-      titleClassName: "text-orange-50",
-      valueClassName: "text-white",
-      descriptionClassName: "text-orange-100",
-      badgeClassName: "bg-white/20 text-white border-white/20 backdrop-blur-sm",
-      value: `₹${formatMetricValue(displayMetrics.dailyGd)}`,
-      description: "Gross Dispatch (Today)",
-      badgeText: "GD",
-    },
-    {
-      id: "monthlyWorkingParty",
-      title: "Monthly Working Party",
-      // Cyan to Teal gradient
-      className: "bg-gradient-to-br from-cyan-400 via-cyan-500 to-teal-500 text-white border-none",
-      titleClassName: "text-cyan-50",
-      valueClassName: "text-white",
-      descriptionClassName: "text-cyan-100",
-      badgeClassName: "bg-white/20 text-white border-white/20 backdrop-blur-sm",
-      value: formatMetricValue(displayMetrics.monthlyWorkingParty),
-      description: "Active parties (Month)",
-      badgeText: "Current Month",
-    },
-    {
-      id: "monthlyPartyAverage",
-      title: "Monthly Party Average",
-      // Emerald gradient
-      className: "bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600 text-white border-none",
-      titleClassName: "text-emerald-50",
-      valueClassName: "text-white",
-      descriptionClassName: "text-emerald-100",
-      badgeClassName: "bg-white/20 text-white border-white/20 backdrop-blur-sm",
-      value: displayMetrics.monthlyPartyAverage,
-      description: "% of 900 Users",
-      badgeText: "Utilization",
-    },
 
-
-    {
-      id: "pendingOrdersTotal",
-      title: "Parties Pending Order",
-      // Sea Green gradient
-      className: "bg-gradient-to-br from-teal-500 via-emerald-600 to-green-700 text-white border-none",
-      titleClassName: "text-teal-50",
-      valueClassName: "text-white",
-      descriptionClassName: "text-teal-100",
-      badgeClassName: "bg-white/20 text-white border-white/20 backdrop-blur-sm",
-      value: formatMetricValue(displayMetrics.pendingOrdersTotal),
-      description: "Parties with pending orders",
-      badgeText: "Pending",
-    },
-    {
-      id: "conversionRatio",
-      title: "Conversion Ratio",
-      // Pink to Rose gradient
-      className: "bg-gradient-to-br from-pink-400 via-pink-500 to-rose-600 text-white border-none",
-      titleClassName: "text-pink-50",
-      valueClassName: "text-white",
-      descriptionClassName: "text-pink-100",
-      badgeClassName: "bg-white/20 text-white border-white/20 backdrop-blur-sm",
-      value: displayMetrics.conversionRatio,
-      description: "Pending % (of 900)",
-      badgeText: "Ratio",
-    },
-
-
-  ]
 
   // Get all three item averages for the composite card
   const getItemAverages = () => {
@@ -1861,7 +1765,7 @@ export function DashboardView() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {(() => {
-              const salespersons = ['AMIT PANDY', 'ANIL MISHRA', 'RAHUL SHARMA', 'TRIPATI RANA', 'SHEETAL PATEL'];
+              const salespersons = Object.keys(salespersonDeliveryStats).sort();
               const gradients = [
                 'from-blue-600 via-blue-700 to-indigo-700',
                 'from-purple-600 via-purple-700 to-pink-700',
@@ -2283,14 +2187,14 @@ export function DashboardView() {
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
-                      <thead className="text-xs text-white uppercase bg-blue-600 sticky top-0 z-10">
+                      <thead className="text-[10px] sm:text-xs text-white uppercase bg-blue-600 sticky top-0 z-10">
                         <tr>
-                          <th scope="col" className="px-6 py-4 font-bold tracking-wider">Sales Person</th>
-                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">No of Callings</th>
-                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Order Clients</th>
-                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Conversion Ratio</th>
-                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Total Rs Sale</th>
-                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Average Rs Sale</th>
+                          <th scope="col" className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 font-bold tracking-wider">Sales Person</th>
+                          <th scope="col" className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 font-bold tracking-wider text-center">No of Callings</th>
+                          <th scope="col" className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 font-bold tracking-wider text-center">Order Clients</th>
+                          <th scope="col" className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 font-bold tracking-wider text-center whitespace-nowrap">Conv. Ratio</th>
+                          <th scope="col" className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 font-bold tracking-wider text-center whitespace-nowrap">Total Sale</th>
+                          <th scope="col" className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 font-bold tracking-wider text-center whitespace-nowrap">Avg Sale</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -2316,27 +2220,27 @@ export function DashboardView() {
                               const avatarColor = idx % 3 === 0 ? "bg-blue-500" : idx % 3 === 1 ? "bg-purple-500" : "bg-indigo-500";
 
                               return (
-                                <tr key={idx} className={`${rowClass} hover:bg-blue-50/80 transition-colors`}>
-                                  <td className="px-6 py-4 font-medium flex items-center gap-3">
-                                    <div className={`w-8 h-8 rounded-full ${avatarColor} flex items-center justify-center text-white text-xs font-bold shadow-sm`}>
+                                <tr key={idx} className={`${rowClass} hover:bg-blue-50/80 transition-colors text-[11px] sm:text-sm`}>
+                                  <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 font-medium flex items-center gap-2 sm:gap-3">
+                                    <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full ${avatarColor} flex items-center justify-center text-white text-[10px] sm:text-xs font-bold shadow-sm shrink-0`}>
                                       {initials}
                                     </div>
-                                    {row.salesPerson}
+                                    <span className="truncate max-w-[80px] sm:max-w-none">{row.salesPerson}</span>
                                   </td>
-                                  <td className="px-6 py-4 text-center">{row.noOfCallings}</td>
-                                  <td className="px-6 py-4 text-center">{row.orderClients}</td>
-                                  <td className="px-6 py-4 text-center">
+                                  <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 text-center">{row.noOfCallings}</td>
+                                  <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 text-center">{row.orderClients}</td>
+                                  <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 text-center">
                                     <div className="flex flex-col items-center">
                                       <span className="text-slate-700 font-bold">{row.conversionRatio}%</span>
-                                      <div className="w-12 h-1 bg-slate-200 rounded-full mt-1 overflow-hidden">
+                                      <div className="hidden sm:block w-12 h-1 bg-slate-200 rounded-full mt-1 overflow-hidden">
                                         <div className="h-full bg-green-500 rounded-full" style={{ width: `${Math.min(parseFloat(row.conversionRatio), 100)}%` }}></div>
                                       </div>
                                     </div>
                                   </td>
-                                  <td className="px-6 py-4 text-center font-mono text-slate-700">
+                                  <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 text-center font-mono text-slate-700">
                                     {row.totalRsSale ? Number(row.totalRsSale).toLocaleString() : '0'}
                                   </td>
-                                  <td className="px-6 py-4 text-center font-mono">
+                                  <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 text-center font-mono">
                                     <span className={`${parseFloat(row.avgRsSale) > 50 ? 'text-emerald-600 font-bold' : 'text-slate-600'}`}>
                                       {row.avgRsSale}
                                     </span>
@@ -2344,42 +2248,7 @@ export function DashboardView() {
                                 </tr>
                               )
                             })}
-                            {/* Total Row */}
-                            {(() => {
-                              // Filter out the Total row for total calculation
-                              const dataRows = salesPerformance.filter(row => row.salesPerson !== 'Total');
-                              if (dataRows.length === 0) return null;
 
-                              const totalCallings = dataRows.reduce((sum, row) => sum + Number(row.noOfCallings || 0), 0);
-                              const totalOrderClients = dataRows.reduce((sum, row) => sum + Number(row.orderClients || 0), 0);
-                              const totalConversionRatio = totalCallings > 0 ? ((totalOrderClients / totalCallings) * 100).toFixed(2) : '0.00';
-                              const totalTotalRsSale = dataRows.reduce((sum, row) => sum + Number(row.totalRsSale || 0), 0);
-                              const sumAvgRsSale = dataRows.reduce((sum, row) => sum + parseFloat(row.avgRsSale || '0'), 0).toFixed(2);
-
-                              return (
-                                <tr className="bg-blue-50 font-bold border-t-2 border-blue-200 hover:bg-blue-100/80 transition-colors">
-                                  <td className="px-6 py-4 font-medium flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                                      Σ
-                                    </div>
-                                    <span className="text-blue-700">TOTAL</span>
-                                  </td>
-                                  <td className="px-6 py-4 text-center text-blue-700 font-bold">{totalCallings}</td>
-                                  <td className="px-6 py-4 text-center text-blue-700 font-bold">{totalOrderClients}</td>
-                                  <td className="px-6 py-4 text-center">
-                                    <div className="flex flex-col items-center">
-                                      <span className="text-blue-700 font-bold">{totalConversionRatio}%</span>
-                                    </div>
-                                  </td>
-                                  <td className="px-6 py-4 text-center font-mono text-blue-700 font-bold">
-                                    {Number(totalTotalRsSale).toLocaleString()}
-                                  </td>
-                                  <td className="px-6 py-4 text-center font-mono">
-                                    <span className="text-blue-700 font-bold">{sumAvgRsSale}</span>
-                                  </td>
-                                </tr>
-                              );
-                            })()}
                             {/* Average Row */}
                             {(() => {
                               // Filter out the Total row for average calculation
@@ -2449,19 +2318,19 @@ export function DashboardView() {
                     return (
                       <div className="mt-6 space-y-4 px-6 pb-6">
                         {/* Average Call Per Day & Average Call Per Person Table - Green */}
-                        <div className="overflow-x-auto">
-                          <table className="w-full max-w-md text-sm">
+                        <div className="overflow-x-auto px-2 sm:px-0">
+                          <table className="w-full max-w-sm sm:max-w-md text-[11px] sm:text-xs md:text-sm">
                             <tbody>
                               <tr className="bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 transition-colors">
-                                <td className="px-6 py-3 font-bold text-white border border-green-600 rounded-l-lg">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white text-xs font-bold">
+                                <td className="px-3 sm:px-6 py-2 sm:py-3 font-bold text-white border border-green-600 rounded-l-lg">
+                                  <div className="flex items-center gap-1.5 sm:gap-2">
+                                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/20 flex items-center justify-center text-white text-[10px] sm:text-xs font-bold">
                                       📊
                                     </div>
-                                    Average Call Per Day
+                                    Avg Call / Day
                                   </div>
                                 </td>
-                                <td className="px-6 py-3 font-black text-white text-right border border-green-600 rounded-r-lg text-lg font-mono">
+                                <td className="px-3 sm:px-6 py-2 sm:py-3 font-black text-white text-right border border-green-600 rounded-r-lg text-sm sm:text-lg font-mono">
                                   {avgCallPerDay}
                                 </td>
                               </tr>
@@ -2469,19 +2338,19 @@ export function DashboardView() {
                           </table>
                         </div>
 
-                        <div className="overflow-x-auto">
-                          <table className="w-full max-w-md text-sm">
+                        <div className="overflow-x-auto px-2 sm:px-0">
+                          <table className="w-full max-w-sm sm:max-w-md text-[11px] sm:text-xs md:text-sm">
                             <tbody>
                               <tr className="bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 transition-colors">
-                                <td className="px-6 py-3 font-bold text-white border border-green-600 rounded-l-lg">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white text-xs font-bold">
+                                <td className="px-3 sm:px-6 py-2 sm:py-3 font-bold text-white border border-green-600 rounded-l-lg">
+                                  <div className="flex items-center gap-1.5 sm:gap-2">
+                                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white/20 flex items-center justify-center text-white text-[10px] sm:text-xs font-bold">
                                       👥
                                     </div>
-                                    Average Call Per Person
+                                    Avg Call / Person
                                   </div>
                                 </td>
-                                <td className="px-6 py-3 font-black text-white text-right border border-green-600 rounded-r-lg text-lg font-mono">
+                                <td className="px-3 sm:px-6 py-2 sm:py-3 font-black text-white text-right border border-green-600 rounded-r-lg text-sm sm:text-lg font-mono">
                                   {avgCallPerPerson}
                                 </td>
                               </tr>
@@ -2489,20 +2358,19 @@ export function DashboardView() {
                           </table>
                         </div>
 
-                        {/* Total No of Calling Table - Yellow */}
-                        <div className="overflow-x-auto mt-4">
-                          <table className="w-full max-w-md text-sm">
+                        <div className="overflow-x-auto mt-4 px-2 sm:px-0">
+                          <table className="w-full max-w-sm sm:max-w-md text-[11px] sm:text-xs md:text-sm">
                             <tbody>
                               <tr className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 transition-colors shadow-lg">
-                                <td className="px-6 py-4 font-bold text-slate-800 border-2 border-pink-500 rounded-l-lg">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-6 h-6 rounded-full bg-slate-800/20 flex items-center justify-center text-slate-800 text-xs font-bold">
+                                <td className="px-3 sm:px-6 py-3 sm:py-4 font-bold text-slate-800 border-2 border-yellow-600 rounded-l-lg">
+                                  <div className="flex items-center gap-1.5 sm:gap-2">
+                                    <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-slate-800/20 flex items-center justify-center text-slate-800 text-[10px] sm:text-xs font-bold">
                                       📞
                                     </div>
-                                    Total No of Calling
+                                    <span className="whitespace-nowrap">Total Calling</span>
                                   </div>
                                 </td>
-                                <td className="px-6 py-4 font-black text-slate-800 text-right border-2 border-pink-500 rounded-r-lg text-xl font-mono">
+                                <td className="px-3 sm:px-6 py-3 sm:py-4 font-black text-slate-800 text-right border-2 border-yellow-600 rounded-r-lg text-base sm:text-xl font-mono">
                                   {totalCallings.toLocaleString()}
                                 </td>
                               </tr>
@@ -2535,14 +2403,14 @@ export function DashboardView() {
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
-                      <thead className="text-xs text-white uppercase bg-emerald-600 sticky top-0 z-10">
+                      <thead className="text-[10px] sm:text-xs text-white uppercase bg-emerald-600 sticky top-0 z-10">
                         <tr>
-                          <th scope="col" className="px-6 py-4 font-bold tracking-wider">Sales Person</th>
-                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">No of Callings</th>
-                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Order Clients</th>
-                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Conversion Ratio</th>
-                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Total Rs Sale</th>
-                          <th scope="col" className="px-6 py-4 font-bold tracking-wider text-center">Average Rs Sale</th>
+                          <th scope="col" className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 font-bold tracking-wider">Sales Person</th>
+                          <th scope="col" className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 font-bold tracking-wider text-center">No of Callings</th>
+                          <th scope="col" className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 font-bold tracking-wider text-center">Order Clients</th>
+                          <th scope="col" className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 font-bold tracking-wider text-center whitespace-nowrap">Conv. Ratio</th>
+                          <th scope="col" className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 font-bold tracking-wider text-center whitespace-nowrap">Total Sale</th>
+                          <th scope="col" className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 font-bold tracking-wider text-center whitespace-nowrap">Avg Sale</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -2566,27 +2434,27 @@ export function DashboardView() {
                             const avatarColor = idx % 3 === 0 ? "bg-emerald-500" : idx % 3 === 1 ? "bg-teal-500" : "bg-green-500";
 
                             return (
-                              <tr key={idx} className={`${rowClass} hover:bg-emerald-50/80 transition-colors`}>
-                                <td className="px-6 py-4 font-medium flex items-center gap-3">
-                                  <div className={`w-8 h-8 rounded-full ${avatarColor} flex items-center justify-center text-white text-xs font-bold shadow-sm`}>
+                              <tr key={idx} className={`${rowClass} hover:bg-emerald-50/80 transition-colors text-[11px] sm:text-sm`}>
+                                <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 font-medium flex items-center gap-2 sm:gap-3">
+                                  <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full ${avatarColor} flex items-center justify-center text-white text-[10px] sm:text-xs font-bold shadow-sm shrink-0`}>
                                     {initials}
                                   </div>
-                                  {row.salesPerson}
+                                  <span className="truncate max-w-[80px] sm:max-w-none">{row.salesPerson}</span>
                                 </td>
-                                <td className="px-6 py-4 text-center">{row.noOfCallings}</td>
-                                <td className="px-6 py-4 text-center">{row.orderClients}</td>
-                                <td className="px-6 py-4 text-center">
+                                <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 text-center">{row.noOfCallings}</td>
+                                <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 text-center">{row.orderClients}</td>
+                                <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 text-center">
                                   <div className="flex flex-col items-center">
                                     <span className="text-slate-700 font-bold">{row.conversionRatio}%</span>
-                                    <div className="w-12 h-1 bg-slate-200 rounded-full mt-1 overflow-hidden">
+                                    <div className="hidden sm:block w-12 h-1 bg-slate-200 rounded-full mt-1 overflow-hidden">
                                       <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(parseFloat(row.conversionRatio), 100)}%` }}></div>
                                     </div>
                                   </div>
                                 </td>
-                                <td className="px-6 py-4 text-center font-mono text-slate-700">
+                                <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 text-center font-mono text-slate-700">
                                   {row.totalRsSale ? Number(row.totalRsSale).toLocaleString() : '0'}
                                 </td>
-                                <td className="px-6 py-4 text-center font-mono">
+                                <td className="px-2 sm:px-4 md:px-6 py-2 sm:py-4 text-center font-mono">
                                   <span className={`${parseFloat(row.avgRsSale) > 50 ? 'text-emerald-600 font-bold' : 'text-slate-600'}`}>
                                     {row.avgRsSale}
                                   </span>
