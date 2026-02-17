@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { Menu, X, Search, Bell, LogOut } from "lucide-react";
 import { useSidebar } from "../context/SidebarContext";
-import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
 import logo from "../assert/Logo.jpeg";
 import { useAuth } from "../context/AuthContext";
@@ -147,7 +146,6 @@ const AppHeader: React.FC = () => {
                 </button>
               </form>
               <div className="flex items-center gap-3">
-                <NotificationDropdown />
                 <UserDropdown />
               </div>
             </div>
@@ -162,16 +160,6 @@ const AppHeader: React.FC = () => {
                 <p className="text-sm font-bold text-slate-900 capitalize">{user?.username || 'User'}</p>
                 <p className="text-[11px] text-slate-500 truncate">{user?.email_id || user?.user_name || 'No email provided'}</p>
               </div>
-              <Link
-                to="/profile"
-                className="flex items-center gap-3 w-full px-3 py-2.5 text-sm font-medium text-slate-700 rounded-xl hover:bg-slate-50 transition-colors"
-                onClick={() => setApplicationMenuOpen(false)}
-              >
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-                  <Search className="w-4 h-4" />
-                </div>
-                Go to Profile
-              </Link>
               <button
                 onClick={() => {
                   logout(); // Call logout directly

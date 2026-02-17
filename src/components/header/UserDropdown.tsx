@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router";
 import { useAuth } from "../../context/AuthContext";
 
 export default function UserDropdown() {
@@ -71,13 +70,6 @@ export default function UserDropdown() {
             {user?.email_id || user?.role || "No email"}
           </p>
           <div className="space-y-2">
-            <Link
-              to="/profile"
-              className="block w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-left text-xs font-medium hover:bg-gray-100 dark:bg-white/5 dark:border-gray-800 dark:hover:bg-white/10"
-              onClick={() => setIsOpen(false)}
-            >
-              Go to profile
-            </Link>
             <button
               onClick={handleLogout}
               className="w-full rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-left text-xs font-medium text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30"
