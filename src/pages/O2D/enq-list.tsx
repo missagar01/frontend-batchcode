@@ -163,7 +163,13 @@ const EnqList = () => {
                                         type="date"
                                         value={startDate}
                                         onChange={(e) => setStartDate(e.target.value)}
-                                        onClick={(e) => (e.target as HTMLInputElement).showPicker()}
+                                        onClick={(e) => {
+                                            try {
+                                                (e.target as HTMLInputElement).showPicker();
+                                            } catch (err) {
+                                                console.debug("Date picker not supported directly via click", err);
+                                            }
+                                        }}
                                         className="w-full sm:w-40 pl-9 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer relative z-10"
                                     />
                                     <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors z-20 pointer-events-none" />
@@ -175,7 +181,13 @@ const EnqList = () => {
                                         type="date"
                                         value={endDate}
                                         onChange={(e) => setEndDate(e.target.value)}
-                                        onClick={(e) => (e.target as HTMLInputElement).showPicker()}
+                                        onClick={(e) => {
+                                            try {
+                                                (e.target as HTMLInputElement).showPicker();
+                                            } catch (err) {
+                                                console.debug("Date picker not supported directly via click", err);
+                                            }
+                                        }}
                                         className="w-full sm:w-40 pl-9 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer relative z-10"
                                     />
                                     <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors z-20 pointer-events-none" />
