@@ -121,6 +121,24 @@ const EnqList = () => {
         setEndDate("");
     };
 
+    // Virtual Pagination Logic
+    const [visibleCount, setVisibleCount] = useState(100);
+
+    const visibleEnquiries = useMemo(() => {
+        return filteredEnquiries.slice(0, visibleCount);
+    }, [filteredEnquiries, visibleCount]);
+
+    useEffect(() => {
+        setVisibleCount(100);
+    }, [startDate, endDate]);
+
+    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+        if (scrollHeight - scrollTop <= clientHeight + 100) {
+            setVisibleCount(prev => Math.min(prev + 50, filteredEnquiries.length));
+        }
+    };
+
     return (
         <div className="min-h-screen bg-slate-50/50 p-4 md:p-6 lg:p-8">
             <div className="max-w-[1600px] mx-auto space-y-6">
@@ -226,16 +244,16 @@ const EnqList = () => {
                 )}
 
                 {/* Content Area */}
-                <div className="bg-transparent lg:bg-white rounded-2xl shadow-none lg:shadow-sm lg:border border-slate-200 overflow-hidden">
+                <div className="bg-transparent lg:bg-white rounded-2xl shadow-none lg:shadow-sm lg:border border-slate-200 overflow-hidden flex flex-col h-[calc(100vh-280px)]">
                     {loading ? (
-                        <div className="flex items-center justify-center py-20 bg-white rounded-2xl border border-slate-200 lg:border-0">
+                        <div className="flex items-center justify-center py-20 bg-white rounded-2xl border border-slate-200 lg:border-0 h-full">
                             <div className="text-center space-y-3">
                                 <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto" />
                                 <p className="text-slate-600 font-medium">Loading enquiries...</p>
                             </div>
                         </div>
                     ) : filteredEnquiries.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 px-4 bg-white rounded-2xl border border-slate-200 lg:border-0">
+                        <div className="flex flex-col items-center justify-center py-20 px-4 bg-white rounded-2xl border border-slate-200 lg:border-0 h-full">
                             <FileText className="w-16 h-16 text-slate-300 mb-4" />
                             <h3 className="text-lg font-semibold text-slate-900 mb-2">No Enquiries Found</h3>
                             <p className="text-slate-500 text-center">
@@ -245,10 +263,13 @@ const EnqList = () => {
                             </p>
                         </div>
                     ) : (
-                        <>
+                        <div
+                            className="flex-1 overflow-y-auto px-1 custom-scrollbar"
+                            onScroll={handleScroll}
+                        >
                             {/* Mobile/Tablet Card View (Visible < 1024px) */}
-                            <div className="lg:hidden space-y-4">
-                                {filteredEnquiries.map((enquiry) => (
+                            <div className="lg:hidden space-y-4 pb-4">
+                                {visibleEnquiries.map((enquiry) => (
                                     <div key={enquiry.id} className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-3">
                                         <div className="flex items-start justify-between">
                                             <div className="flex items-center gap-2">
@@ -306,110 +327,108 @@ const EnqList = () => {
                             </div>
 
                             {/* Desktop Table View (Visible >= 1024px) */}
-                            <div className="hidden lg:block overflow-x-auto max-h-[70vh] overflow-y-auto custom-scrollbar">
-                                <div className="relative">
-                                    <table className="w-full border-collapse text-left">
-                                        <thead className="sticky top-0 z-10 bg-gradient-to-r from-slate-50 to-slate-100 shadow-sm">
-                                            <tr>
-                                                <th className="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b-2 border-slate-200 whitespace-nowrap">
-                                                    #ID
-                                                </th>
-                                                <th className="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b-2 border-slate-200 whitespace-nowrap">
+                            <div className="hidden lg:block relative">
+                                <table className="w-full border-collapse text-left">
+                                    <thead className="sticky top-0 z-10 bg-gradient-to-r from-slate-50 to-slate-100 shadow-sm">
+                                        <tr>
+                                            <th className="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b-2 border-slate-200 whitespace-nowrap">
+                                                #ID
+                                            </th>
+                                            <th className="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b-2 border-slate-200 whitespace-nowrap">
+                                                <div className="flex items-center gap-2">
+                                                    <Calendar className="w-4 h-4 text-blue-500" />
+                                                    Enquiry Date
+                                                </div>
+                                            </th>
+                                            <th className="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b-2 border-slate-200 whitespace-nowrap">
+                                                <div className="flex items-center gap-2">
+                                                    <User className="w-4 h-4 text-emerald-500" />
+                                                    Customer
+                                                </div>
+                                            </th>
+                                            <th className="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b-2 border-slate-200 whitespace-nowrap">
+                                                <div className="flex items-center gap-2">
+                                                    <Package className="w-4 h-4 text-purple-500" />
+                                                    Item Type
+                                                </div>
+                                            </th>
+                                            <th className="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b-2 border-slate-200 whitespace-nowrap">
+                                                Size
+                                            </th>
+                                            <th className="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b-2 border-slate-200 whitespace-nowrap">
+                                                Thickness (mm)
+                                            </th>
+                                            <th className="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b-2 border-slate-200 whitespace-nowrap">
+                                                Quantity (MT)
+                                            </th>
+                                            <th className="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b-2 border-slate-200 whitespace-nowrap">
+                                                Sales Executive
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-slate-100">
+                                        {visibleEnquiries.map((enquiry, index) => (
+                                            <tr
+                                                key={enquiry.id}
+                                                className="hover:bg-blue-50/50 transition-colors group"
+                                            >
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 text-slate-700 font-bold text-sm group-hover:bg-blue-100 group-hover:text-blue-700 transition-colors">
+                                                        {index + 1}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex items-center gap-2">
-                                                        <Calendar className="w-4 h-4 text-blue-500" />
-                                                        Enquiry Date
-                                                    </div>
-                                                </th>
-                                                <th className="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b-2 border-slate-200 whitespace-nowrap">
-                                                    <div className="flex items-center gap-2">
-                                                        <User className="w-4 h-4 text-emerald-500" />
-                                                        Customer
-                                                    </div>
-                                                </th>
-                                                <th className="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b-2 border-slate-200 whitespace-nowrap">
-                                                    <div className="flex items-center gap-2">
-                                                        <Package className="w-4 h-4 text-purple-500" />
-                                                        Item Type
-                                                    </div>
-                                                </th>
-                                                <th className="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b-2 border-slate-200 whitespace-nowrap">
-                                                    Size
-                                                </th>
-                                                <th className="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b-2 border-slate-200 whitespace-nowrap">
-                                                    Thickness (mm)
-                                                </th>
-                                                <th className="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b-2 border-slate-200 whitespace-nowrap">
-                                                    Quantity (MT)
-                                                </th>
-                                                <th className="px-6 py-4 text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b-2 border-slate-200 whitespace-nowrap">
-                                                    Sales Executive
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-slate-100">
-                                            {filteredEnquiries.map((enquiry, index) => (
-                                                <tr
-                                                    key={enquiry.id}
-                                                    className="hover:bg-blue-50/50 transition-colors group"
-                                                >
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 text-slate-700 font-bold text-sm group-hover:bg-blue-100 group-hover:text-blue-700 transition-colors">
-                                                            {index + 1}
+                                                        <span className="text-sm font-semibold text-slate-900">
+                                                            {formatDate(enquiry.enquiry_date)}
                                                         </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-sm font-semibold text-slate-900">
-                                                                {formatDate(enquiry.enquiry_date)}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="text-sm font-semibold text-slate-900 max-w-xs truncate" title={enquiry.customer}>
-                                                            {enquiry.customer}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700">
-                                                            {enquiry.item_type}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="text-sm font-semibold text-slate-900 max-w-xs truncate" title={enquiry.customer}>
+                                                        {enquiry.customer}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700">
+                                                        {enquiry.item_type}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className="text-sm font-semibold text-slate-700">
+                                                        {enquiry.size}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span className="inline-flex items-center px-3 py-1 rounded-lg bg-slate-100 text-slate-700 text-sm font-bold">
+                                                        {enquiry.thickness} mm
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    {enquiry.quantity ? (
+                                                        <span className="inline-flex items-center px-3 py-1 rounded-lg bg-emerald-100 text-emerald-700 text-sm font-bold">
+                                                            {enquiry.quantity} MT
                                                         </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                    ) : (
+                                                        <span className="text-slate-400 text-sm italic">N/A</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                                                            {enquiry.sales_executive?.charAt(0)?.toUpperCase() || 'N'}
+                                                        </div>
                                                         <span className="text-sm font-semibold text-slate-700">
-                                                            {enquiry.size}
+                                                            {enquiry.sales_executive || 'N/A'}
                                                         </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className="inline-flex items-center px-3 py-1 rounded-lg bg-slate-100 text-slate-700 text-sm font-bold">
-                                                            {enquiry.thickness} mm
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        {enquiry.quantity ? (
-                                                            <span className="inline-flex items-center px-3 py-1 rounded-lg bg-emerald-100 text-emerald-700 text-sm font-bold">
-                                                                {enquiry.quantity} MT
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-slate-400 text-sm italic">N/A</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
-                                                                {enquiry.sales_executive?.charAt(0)?.toUpperCase() || 'N'}
-                                                            </div>
-                                                            <span className="text-sm font-semibold text-slate-700">
-                                                                {enquiry.sales_executive || 'N/A'}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
-                        </>
+                        </div>
                     )}
                 </div>
             </div>

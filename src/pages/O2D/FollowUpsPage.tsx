@@ -366,7 +366,7 @@ const FollowUpsPage: React.FC = () => {
         try {
             const response = await o2dAPI.getFollowups();
             const allFollowups = response.data?.data || [];
-            console.log(allFollowups)
+            // console.log(allFollowups)
             const enrichedFollowups: FollowUp[] = allFollowups.map((f: any) => {
                 const actualOrder = parseFloat(f.actual_order) || 0;
                 const isBooked = actualOrder > 0;
@@ -417,6 +417,24 @@ const FollowUpsPage: React.FC = () => {
         return result;
     }, [search, followups, user]);
 
+    const [visibleCount, setVisibleCount] = useState(100);
+
+    // Reset visible count when search changes
+    useEffect(() => {
+        setVisibleCount(100);
+    }, [search, user]);
+
+    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+        if (scrollHeight - scrollTop <= clientHeight + 100) {
+            setVisibleCount(prev => Math.min(prev + 50, filteredFollowups.length));
+        }
+    };
+
+    const visibleFollowups = useMemo(() => {
+        return filteredFollowups.slice(0, visibleCount);
+    }, [filteredFollowups, visibleCount]);
+
     return (
         <div className="flex flex-col h-[calc(100vh-120px)] space-y-4 md:space-y-6">
             {/* Header Section - Sticky on top */}
@@ -450,7 +468,10 @@ const FollowUpsPage: React.FC = () => {
             ) : (
                 <div className="flex-1 min-h-0">
                     <div className="bg-white border border-gray-100 rounded-3xl shadow-2xl shadow-gray-200/50 overflow-hidden h-full flex flex-col">
-                        <div className="overflow-auto flex-1 scrollbar-hide">
+                        <div
+                            className="overflow-auto flex-1 scrollbar-hide"
+                            onScroll={handleScroll}
+                        >
                             <table className="w-full text-left border-separate border-spacing-0 min-w-[800px] md:min-w-full">
                                 <thead className="z-20">
                                     <tr className="uppercase text-[10px] md:text-xs font-black tracking-widest">
@@ -464,8 +485,8 @@ const FollowUpsPage: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
-                                    {filteredFollowups.length > 0 ? (
-                                        filteredFollowups.map((f, index) => (
+                                    {visibleFollowups.length > 0 ? (
+                                        visibleFollowups.map((f, index) => (
                                             <tr key={f.id || index} className="group hover:bg-blue-50/40 transition-all duration-200">
                                                 <td className="p-5 md:p-6 text-center">
                                                     <button
