@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import { Save, ArrowLeft, CheckCircle, AlertCircle, X, Eye, Edit, Trash2, Search } from "lucide-react"
 // @ts-ignore - JSX component
-import { batchcodeAPI } from "../../services/batchcodeAPI";
+import * as batchcodeAPI from "../../api/batchcodeApi";
 
 function LaddleFormPage() {
 

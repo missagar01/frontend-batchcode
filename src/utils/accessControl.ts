@@ -8,12 +8,6 @@ export type UserAccess = {
 
 export const PAGE_NAME_TO_ROUTE_MAP: Record<string, string> = {
     "Dashboard": "/",
-    "Orders": "/o2d/orders",
-    "Pending Vehicles": "/o2d/process",
-    "Complaint Details": "/o2d/complaint-details",
-    "Permissions": "/o2d/permissions",
-    "Enquiry": "/o2d/enquiry",
-    "Enquiry List": "/o2d/enquiry-list",
     "Hot Coil": "/batchcode/hot-coil",
     "QC Lab": "/batchcode/qc-lab",
     "SMS Register": "/batchcode/sms-register",
@@ -21,12 +15,6 @@ export const PAGE_NAME_TO_ROUTE_MAP: Record<string, string> = {
     "Pipe Mill": "/batchcode/pipe-mill",
     "Laddel": "/batchcode/laddel",
     "Tundis": "/batchcode/tundis",
-    "Leads": "/lead-to-order/leads",
-    "Follow Up": "/lead-to-order/follow-up",
-    "Call Tracker": "/lead-to-order/call-tracker",
-    "Quotation": "/lead-to-order/quotation",
-    "Customers": "/o2d/customers",
-    "Follow Ups": "/o2d/follow-ups",
 };
 
 export const isAdminUser = (user: UserAccess | null | undefined): boolean => {
@@ -86,7 +74,7 @@ export const isPathAllowed = (
 
         // If we have a whitelist of pages, and the current path is a specific sub-page (not a system root),
         // we should deny access even if the whole system is technically allowed.
-        const isSystemRoot = ["/", "/o2d", "/batchcode", "/lead-to-order"].includes(effectivePath);
+        const isSystemRoot = ["/", "/batchcode"].includes(effectivePath);
         if (!isSystemRoot && !path.includes("?tab=")) {
             return false;
         }
@@ -94,12 +82,8 @@ export const isPathAllowed = (
 
     // Determine system match
     let systemMatch = false;
-    if (effectivePath === "/" || effectivePath.startsWith("/o2d") || path.includes("?tab=o2d")) {
-        systemMatch = systemAccess.includes("o2d");
-    } else if (effectivePath.startsWith("/batchcode") || path.includes("?tab=batchcode")) {
+    if (effectivePath === "/" || effectivePath.startsWith("/batchcode") || path.includes("?tab=batchcode")) {
         systemMatch = systemAccess.includes("batchcode");
-    } else if (effectivePath.startsWith("/lead-to-order") || path.includes("?tab=lead-to-order")) {
-        systemMatch = systemAccess.includes("lead-to-order");
     }
 
     // Special case: if on root "/" and user has access to ANY sub-page, allow root
@@ -132,8 +116,6 @@ export const getDefaultAllowedPath = (user: UserAccess | null | undefined): stri
         ? user.system_access.split(",").map(s => s.trim().toLowerCase().replace(/\s+/g, "")).filter(Boolean)
         : [];
 
-    if (systemAccess.includes("o2d")) return "/?tab=o2d";
-    if (systemAccess.includes("lead-to-order")) return "/?tab=lead-to-order";
     if (systemAccess.includes("batchcode")) return "/?tab=batchcode";
 
     // 3. Fallback to Dashboard if explicitly allowed or no other choice

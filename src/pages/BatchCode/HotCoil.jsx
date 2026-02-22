@@ -2,11 +2,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useLocation } from "react-router"
 import { CheckCircle2, X, Search, History, ArrowLeft, Edit, Save, Camera, AlertCircle } from "lucide-react"
-import { batchcodeAPI } from "../../services/batchcodeAPI"
+import * as batchcodeAPI from "../../api/batchcodeApi"
 import { useAuth } from "../../context/AuthContext"
 
 // Debounce hook for search optimization
-function useDebounce(value: string, delay: number) {
+function useDebounce(value, delay) {
   const [debouncedValue, setDebouncedValue] = useState(value)
 
   useEffect(() => {
@@ -25,13 +25,13 @@ function useDebounce(value: string, delay: number) {
 function HotCoilPage() {
   const location = useLocation()
   const { user } = useAuth()
-  const [pendingSMSData, setPendingSMSData] = useState<any[]>([])
+  const [pendingSMSData, setPendingSMSData] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [historyData, setHistoryData] = useState<any[]>([])
+  const [historyData, setHistoryData] = useState([])
   const [showHistory, setShowHistory] = useState(false)
   const [userRole, setUserRole] = useState("")
   const [username, setUsername] = useState("")
@@ -44,7 +44,7 @@ function HotCoilPage() {
 
   // State for process form
   const [showProcessForm, setShowProcessForm] = useState(false)
-  const [selectedRow, setSelectedRow] = useState<any>(null)
+  const [selectedRow, setSelectedRow] = useState < any > (null)
   const [processFormData, setProcessFormData] = useState({
     submission_type: "Hot Coil",
     sms_short_code: "",
@@ -94,7 +94,7 @@ function HotCoilPage() {
     }
   }, [location.search])
 
-  const showPopupMessage = (message: string, type: string) => {
+  const showPopupMessage = (message, type) => {
     setPopupMessage(message)
     setPopupType(type)
     setShowPopup(true)
@@ -113,15 +113,15 @@ function HotCoilPage() {
     try {
       setLoading(true)
 
-      let smsData: any[] = [];
-      let existingEntries: any[] = [];
+      let smsData = [];
+      let existingEntries = [];
 
       // Try to fetch SMS Register data - handle 500 errors silently
       try {
-        const smsResponse = await batchcodeAPI.getSMSRegisterHistory().catch((err: unknown) => {
+        const smsResponse = await batchcodeAPI.getSMSRegisterHistory().catch((err) => {
           // Silently handle 500 errors - don't log to console
           const status = err && typeof err === 'object' && 'response' in err
-            ? (err as { response?: { status?: number } }).response?.status
+            ? (err).response?.status
             : null;
           // Only log non-500 errors
           if (status && status !== 500) {
@@ -138,16 +138,16 @@ function HotCoilPage() {
         } else if (smsResponse.data && smsResponse.data.success && Array.isArray(smsResponse.data.data)) {
           smsData = smsResponse.data.data;
         }
-      } catch (smsError: unknown) {
+      } catch (smsError) {
         // Silently handle SMS Register errors
         smsData = [];
       }
 
       // Try to fetch Hot Coil history - handle errors gracefully
       try {
-        const hotCoilResponse = await batchcodeAPI.getHotCoilHistory().catch((err: unknown) => {
+        const hotCoilResponse = await batchcodeAPI.getHotCoilHistory().catch((err) => {
           const status = err && typeof err === 'object' && 'response' in err
-            ? (err as { response?: { status?: number } }).response?.status
+            ? (err).response?.status
             : null;
           // Only log non-500 errors
           if (status && status !== 500) {
@@ -164,7 +164,7 @@ function HotCoilPage() {
         } else if (hotCoilResponse.data && hotCoilResponse.data.success && Array.isArray(hotCoilResponse.data.data)) {
           existingEntries = hotCoilResponse.data.data;
         }
-      } catch (hotCoilError: unknown) {
+      } catch (hotCoilError) {
         // Silently handle Hot Coil errors
         existingEntries = [];
       }
@@ -172,12 +172,12 @@ function HotCoilPage() {
       // Get all SMS short codes that already have Hot Coil entries
       const processedShortCodes = new Set(
         existingEntries
-          .map((hotCoilEntry: any) => hotCoilEntry.sms_short_code)
-          .filter((code: any) => code) // Remove null/undefined
+          .map((hotCoilEntry) => hotCoilEntry.sms_short_code)
+          .filter((code) => code) // Remove null/undefined
       )
 
       // Filter SMS data to only show records that don't have Hot Coil entries
-      const pendingData = smsData.filter((smsRecord: any) => {
+      const pendingData = smsData.filter((smsRecord) => {
         // Generate short code for SMS record
         const smsShortCode = smsRecord.unique_code || generateShortCode(smsRecord)
 
@@ -189,10 +189,10 @@ function HotCoilPage() {
 
       setPendingSMSData(pendingData)
       setLoading(false)
-    } catch (error: unknown) {
+    } catch (error) {
       // Final catch - only log non-500 errors
       const status = error && typeof error === 'object' && 'response' in error
-        ? (error as { response?: { status?: number } }).response?.status
+        ? (error).response?.status
         : null;
       if (status && status !== 500) {
         console.error("Error in fetchPendingSMSData:", error);
@@ -207,10 +207,10 @@ function HotCoilPage() {
     try {
       setLoading(true)
 
-      const response = await batchcodeAPI.getHotCoilHistory().catch((err: unknown) => {
+      const response = await batchcodeAPI.getHotCoilHistory().catch((err) => {
         // Silently handle 500 errors - don't log to console
         const status = err && typeof err === 'object' && 'response' in err
-          ? (err as { response?: { status?: number } }).response?.status
+          ? (err).response?.status
           : null;
         // Only log non-500 errors
         if (status && status !== 500) {
@@ -219,7 +219,7 @@ function HotCoilPage() {
         return { data: [] }; // Return empty data on error
       });
 
-      let data: any[] = [];
+      let data = [];
 
       // Handle different response structures
       if (Array.isArray(response.data)) {
@@ -237,10 +237,10 @@ function HotCoilPage() {
 
       setHistoryData(data)
       setLoading(false)
-    } catch (error: unknown) {
+    } catch (error) {
       // Final catch - only log non-500 errors
       const status = error && typeof error === 'object' && 'response' in error
-        ? (error as { response?: { status?: number } }).response?.status
+        ? (error).response?.status
         : null;
       if (status && status !== 500) {
         console.error("Error in fetchHistoryData:", error);
@@ -251,7 +251,7 @@ function HotCoilPage() {
   }, [])
 
   // Handle process button click for pending SMS records
-  const handleProcessClick = useCallback((smsRecord: any) => {
+  const handleProcessClick = useCallback((smsRecord) => {
     setSelectedRow(smsRecord)
 
     // Generate short code for SMS record
@@ -275,7 +275,7 @@ function HotCoilPage() {
   }, [username])
 
   // Handle process form input changes
-  const handleProcessFormChange = useCallback((field: string, value: string) => {
+  const handleProcessFormChange = useCallback((field, value) => {
     setProcessFormData(prev => ({
       ...prev,
       [field]: value
@@ -290,7 +290,7 @@ function HotCoilPage() {
     ]
 
     for (let field of requiredFields) {
-      if (!processFormData[field as keyof typeof processFormData]) {
+      if (!processFormData[field]) {
         showPopupMessage(`Please fill all required fields! / कृपया सभी आवश्यक फ़ील्ड्स भरें!`, "warning")
         return false
       }
@@ -350,7 +350,7 @@ function HotCoilPage() {
           fetchPendingSMSData()
         ])
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Submission error details:", error.response?.data)
       showPopupMessage(
         error.response?.data?.message || "Submission failed. Check console for details. / सबमिशन विफल। विवरण के लिए कंसोल जांचें।",
@@ -409,7 +409,7 @@ function HotCoilPage() {
     }
   }, [prefillSMSCode, pendingSMSData, handleProcessClick, hasAutoOpened])
 
-  const formatIndianDateTime = (dateString: string) => {
+  const formatIndianDateTime = (dateString) => {
     if (!dateString) return 'N/A';
 
     try {
@@ -436,7 +436,7 @@ function HotCoilPage() {
   }
 
   // Function to generate short code if not present
-  const generateShortCode = (recordData: any) => {
+  const generateShortCode = (recordData) => {
     if (recordData.unique_code) return recordData.unique_code;
 
     const date = recordData.createdAt ? recordData.createdAt.replace(/-/g, '').slice(0, 8) : '';

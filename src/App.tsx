@@ -18,25 +18,6 @@ import PipeMill from "./pages/BatchCode/PipeMill";
 import Laddel from "./pages/BatchCode/Laddel";
 import Tundis from "./pages/BatchCode/Tundis";
 
-// Lead-to-Order pages
-import Leads from "./pages/LeadToOrder/Leads";
-import FollowUp from "./pages/LeadToOrder/FollowUp";
-import NewFollowUp from "./pages/LeadToOrder/NewFollowUp";
-import CallTracker from "./pages/LeadToOrder/CallTracker";
-import NewCallTracker from "./pages/LeadToOrder/NewCallTracker";
-import Quotation from "./pages/LeadToOrder/Quotation/Quotation";
-import Settings from "./pages/LeadToOrder/Settings";
-
-// O2D pages
-import { DashboardView as O2DDashboard } from "./pages/O2D/dashboard-view";
-import { OrdersView as O2DOrders } from "./pages/O2D/order-view";
-import { PendingVehicles as O2DProcess } from "./pages/O2D/pendding-vehicle";
-import EnquiryView from "./pages/O2D/enq-view";
-import EnqList from "./pages/O2D/enq-list";
-
-
-import CustomersPage from "./pages/O2D/CustomersPage";
-import FollowUpsPage from "./pages/O2D/FollowUpsPage";
 
 export default function App() {
   return (
@@ -61,7 +42,7 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            {/* Main Dashboard - Shows O2D, Lead to Order, or Batchcode based on tab param */}
+            {/* Main Dashboard */}
             <Route path="/" element={<RouteGuard><Home /></RouteGuard>} />
             <Route path="/dashboard" element={<RouteGuard><Home /></RouteGuard>} />
             <Route path="/profile" element={<RouteGuard><UserProfiles /></RouteGuard>} />
@@ -76,24 +57,6 @@ export default function App() {
             <Route path="/batchcode/pipe-mill" element={<RouteGuard><PipeMill /></RouteGuard>} />
             <Route path="/batchcode/laddel" element={<RouteGuard><Laddel /></RouteGuard>} />
             <Route path="/batchcode/tundis" element={<RouteGuard><Tundis /></RouteGuard>} />
-
-            {/* Lead-to-Order Routes */}
-            <Route path="/lead-to-order/leads" element={<RouteGuard><Leads /></RouteGuard>} />
-            <Route path="/lead-to-order/follow-up" element={<RouteGuard><FollowUp /></RouteGuard>} />
-            <Route path="/lead-to-order/follow-up/new" element={<RouteGuard><NewFollowUp /></RouteGuard>} />
-            <Route path="/lead-to-order/call-tracker" element={<RouteGuard><CallTracker /></RouteGuard>} />
-            <Route path="/lead-to-order/call-tracker/new" element={<RouteGuard><NewCallTracker /></RouteGuard>} />
-            <Route path="/lead-to-order/quotation" element={<RouteGuard><Quotation /></RouteGuard>} />
-            <Route path="/lead-to-order/settings" element={<RouteGuard><Settings /></RouteGuard>} />
-
-            {/* O2D Routes */}
-            <Route path="/o2d/dashboard" element={<RouteGuard><O2DDashboard /></RouteGuard>} />
-            <Route path="/o2d/orders" element={<RouteGuard><O2DOrders /></RouteGuard>} />
-            <Route path="/o2d/process" element={<RouteGuard><O2DProcess /></RouteGuard>} />
-            <Route path="/o2d/enquiry" element={<RouteGuard><EnquiryView /></RouteGuard>} />
-            <Route path="/o2d/enquiry-list" element={<RouteGuard><EnqList /></RouteGuard>} />
-            <Route path="/o2d/customers" element={<RouteGuard><CustomersPage /></RouteGuard>} />
-            <Route path="/o2d/follow-ups" element={<RouteGuard><FollowUpsPage /></RouteGuard>} />
           </Route>
 
           {/* Catch all - redirect to login if not authenticated, otherwise home */}

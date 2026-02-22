@@ -2,13 +2,13 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { CheckCircle2, X, Search, History, ArrowLeft, Plus, Save, AlertCircle } from "lucide-react"
 // @ts-ignore - JSX component
-import { batchcodeAPI } from "../../services/batchcodeAPI";
+import * as batchcodeAPI from "../../api/batchcodeApi";
 
 function SMSRegister() {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [successMessage, setSuccessMessage] = useState("")
     const [error, setError] = useState(null)
-    const [historyData, setHistoryData] = useState([])
+    const [pendingSMSData, setPendingSMSData] = useState([])
     const [showHistory, setShowHistory] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
     const [loading, setLoading] = useState(false)
@@ -28,6 +28,7 @@ function SMSRegister() {
     }), [])
 
     // State for process form - ALWAYS VISIBLE like ladle form
+    const [historyData, setHistoryData] = useState([])
     const [formData, setFormData] = useState({
         sequence_number: "",
         laddle_number: "",
@@ -123,7 +124,7 @@ function SMSRegister() {
     }, [])
 
     const buildHotCoilLink = useCallback((code) => {
-        const baseUrl = "http://192.168.1.34:5173/dashboard/delegation"
+        const baseUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard/delegation`
         if (!code) return baseUrl
         return `${baseUrl}?sms_short_code=${encodeURIComponent(code)}`
     }, [])

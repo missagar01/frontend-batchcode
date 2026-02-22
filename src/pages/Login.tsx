@@ -109,7 +109,7 @@ const Login: React.FC = () => {
           <div className="px-8 py-6">
             {/* Heading */}
             <h3 className="text-2xl font-bold text-blue-600 mb-6 text-center">
-              O2D - BatchCode - Lead
+              BatchCode
             </h3>
 
             <form onSubmit={handleSubmit} className="space-y-5">

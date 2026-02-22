@@ -19,25 +19,11 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-// Dashboard item - shows O2D dashboard by default
+// Dashboard item - shows Dashboard by default
 const dashboardItem: NavItem = {
   icon: <PieChartIcon />,
   name: "Dashboard",
   path: "/",
-};
-
-// O2D with submenu
-const o2dItem: NavItem = {
-  icon: <BoxCubeIcon />,
-  name: "O2D",
-  subItems: [
-    { name: "Orders", path: "/o2d/orders", pro: false },
-    { name: "Enquiry", path: "/o2d/enquiry", pro: false },
-    { name: "Enquiry List", path: "/o2d/enquiry-list", pro: false },
-    { name: "Pending Vehicles", path: "/o2d/process", pro: false },
-    { name: "Customers", path: "/o2d/customers", pro: false },
-    { name: "Follow Ups", path: "/o2d/follow-ups", pro: false },
-  ],
 };
 
 // BatchCode with submenu
@@ -55,24 +41,6 @@ const batchCodeItem: NavItem = {
   ],
 };
 
-const leadToOrderBaseItem: NavItem = {
-  icon: <PlugInIcon />,
-  name: "Lead to Order",
-};
-
-const leadToOrderBaseSubItems = [
-  { name: "Leads", path: "/lead-to-order/leads", pro: false },
-  { name: "Follow Up", path: "/lead-to-order/follow-up", pro: false },
-  { name: "Call Tracker", path: "/lead-to-order/call-tracker", pro: false },
-  { name: "Quotation", path: "/lead-to-order/quotation", pro: false },
-];
-
-const leadToOrderSettingsItem: NavItem = {
-  icon: <BoxCubeIcon />,
-  name: "Settings",
-  path: "/lead-to-order/settings",
-};
-
 const AppSidebar: FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered, toggleMobileSidebar } = useSidebar();
   const location = useLocation();
@@ -86,34 +54,6 @@ const AppSidebar: FC = () => {
       toggleMobileSidebar();
     }
   }, [isMobileOpen, toggleMobileSidebar]);
-
-  const leadToOrderNavItem = useMemo(() => {
-    const subItems = leadToOrderBaseSubItems.filter(subItem =>
-      isPathAllowed(subItem.path, user)
-    );
-
-    return {
-      ...leadToOrderBaseItem,
-      subItems,
-    };
-  }, [user]);
-
-  const filteredO2dItem = useMemo(() => {
-    if (!isAdmin && !isPathAllowed("/o2d", user) && !o2dItem.subItems?.some(s => isPathAllowed(s.path, user))) {
-      return null;
-    }
-
-    const filteredSubItems = o2dItem.subItems?.filter(subItem =>
-      isPathAllowed(subItem.path, user)
-    ) || [];
-
-    if (filteredSubItems.length === 0 && !isAdmin) return null;
-
-    return {
-      ...o2dItem,
-      subItems: filteredSubItems,
-    };
-  }, [user, isAdmin]);
 
   const filteredBatchCodeItem = useMemo(() => {
     if (!isAdmin && !isPathAllowed("/batchcode", user) && !batchCodeItem.subItems?.some(s => isPathAllowed(s.path, user))) {
@@ -136,18 +76,13 @@ const AppSidebar: FC = () => {
     return isPathAllowed("/", user) || isPathAllowed("/dashboard", user);
   }, [user]);
 
-  // Combine items in order: Dashboard (shows O2D), O2D items, BatchCode, Lead to Order
+  // Combine items in order: Dashboard, BatchCode
   const navItems: NavItem[] = useMemo(() => {
     const items: NavItem[] = [];
 
-    // Add dashboard if O2D access is allowed
+    // Add dashboard
     if (showDashboard) {
       items.push(dashboardItem);
-    }
-
-    // Add O2D if allowed
-    if (filteredO2dItem) {
-      items.push(filteredO2dItem);
     }
 
     // Add BatchCode if allowed
@@ -155,18 +90,8 @@ const AppSidebar: FC = () => {
       items.push(filteredBatchCodeItem);
     }
 
-    // Add Lead to Order if it has any allowed subItems
-    if (leadToOrderNavItem.subItems && leadToOrderNavItem.subItems.length > 0) {
-      items.push(leadToOrderNavItem);
-    }
-
-    // Add Settings only for admins (Settings page is admin-only)
-    if (isAdmin) {
-      items.push(leadToOrderSettingsItem);
-    }
-
     return items;
-  }, [showDashboard, filteredO2dItem, filteredBatchCodeItem, leadToOrderNavItem, isAdmin, user]);
+  }, [showDashboard, filteredBatchCodeItem, isAdmin, user]);
 
   // Check if path is active - handle query params for dashboard tabs
   const isActive = useCallback(
@@ -179,7 +104,7 @@ const AppSidebar: FC = () => {
         // If on root path and tab matches, it's active
         if (location.pathname === "/" || location.pathname === "/dashboard") {
           if (tabValue && currentTab === tabValue) return true
-          // If no tab param and path is root, check if it's the default (o2d)
+          // If no tab param and path is root, check if it's the default
           if (!tabValue && !currentTab && basePath === "/") return true
         }
         return location.pathname === basePath && currentTab === tabValue
@@ -325,12 +250,7 @@ const AppSidebar: FC = () => {
         {/* Navigation */}
         <div className="flex flex-col flex-1 overflow-y-auto duration-300 no-scrollbar py-2">
           {showDashboard && renderSection("Main Navigation", [dashboardItem])}
-          {filteredO2dItem && renderSection("O2D Section", [filteredO2dItem])}
           {filteredBatchCodeItem && renderSection("BatchCode Section", [filteredBatchCodeItem])}
-          {leadToOrderNavItem.subItems && leadToOrderNavItem.subItems.length > 0 &&
-            renderSection("Lead to Order Section", [leadToOrderNavItem])
-          }
-          {isAdmin && renderSection("System Access", [leadToOrderSettingsItem])}
         </div>
 
         {/* Logout Section */}

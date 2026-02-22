@@ -2,7 +2,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { CheckCircle2, X, Search, History, ArrowLeft, Edit, Save, Camera, AlertCircle } from "lucide-react"
 // @ts-ignore - JSX component
-import { batchcodeAPI } from "../../services/batchcodeAPI";
+import * as batchcodeAPI from "../../api/batchcodeApi";
+import { API_BASE_URL } from "../../api/apiClient";
 
 // Debounce hook for search optimization
 function useDebounce(value, delay) {
@@ -269,9 +270,10 @@ function PipeMillPage() {
 
         // Construct full URL
         if (!imageUrl.startsWith('http')) {
+            const baseUrl = API_BASE_URL || '';
             fullImageUrl = imageUrl.startsWith('/')
-                ? `http://localhost:3005${imageUrl}`
-                : `http://localhost:3005/uploads/pipe-mill-pictures/${imageUrl}`;
+                ? `${baseUrl}${imageUrl}`
+                : `${baseUrl}/uploads/pipe-mill-pictures/${imageUrl}`;
         }
 
         // console.log('🖼️ Loading image from:', fullImageUrl);
