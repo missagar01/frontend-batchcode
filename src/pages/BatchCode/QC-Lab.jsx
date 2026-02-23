@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { CheckCircle2, X, Search, History, ArrowLeft, Edit, Save, Camera, AlertCircle } from "lucide-react"
 // @ts-ignore - JSX component
+import * as batchcodeAPI from "../../api/batchcodeApi";
 import { API_BASE_URL } from "../../api/apiClient";
 
 // Debounce hook for search optimization
@@ -533,7 +534,7 @@ function QCLabDataPage() {
     ]
 
     return (
-        <div>
+        <div className="batchcode-page">
             <div className="space-y-6">
                 {/* Popup Modal */}
                 {showPopup && (

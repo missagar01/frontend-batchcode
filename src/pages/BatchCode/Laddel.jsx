@@ -1,6 +1,6 @@
 "use client"
-import { useState, useEffect } from "react"
-import { Save, ArrowLeft, CheckCircle, AlertCircle, X, Eye, Edit, Trash2, Search } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { Save, ArrowLeft, CheckCircle, AlertCircle, X, Eye, Edit, Trash2, Search, CalendarDays } from "lucide-react"
 // @ts-ignore - JSX component
 import * as batchcodeAPI from "../../api/batchcodeApi";
 
@@ -36,6 +36,7 @@ function LaddleFormPage() {
     const [viewMode, setViewMode] = useState("form") // "form" or "list"
     const [searchTerm, setSearchTerm] = useState("")
     const [filteredLaddleData, setFilteredLaddleData] = useState([])
+    const sampleDateInputRef = useRef(null)
 
     // Auto-hide popup only for warnings (not for success - user must click OK)
     useEffect(() => {
@@ -156,6 +157,30 @@ function LaddleFormPage() {
                 ...prev,
                 [name]: ""
             }))
+        }
+    }
+
+    const openSampleDatePicker = () => {
+        const input = sampleDateInputRef.current
+        if (!input) return
+
+        input.focus()
+
+        if (typeof input.showPicker === "function") {
+            try {
+                input.showPicker()
+            } catch {
+                // Some browsers only allow showPicker on strict click gestures.
+                // Focusing the input still allows native date selection.
+            }
+        }
+    }
+
+    const handleSampleDateChange = (e) => {
+        handleInputChange(e)
+        // Native date picker usually closes automatically; blur ensures clean close behavior.
+        if (typeof e.target.blur === "function") {
+            e.target.blur()
         }
     }
 
@@ -416,7 +441,7 @@ function LaddleFormPage() {
     ]
 
     return (
-        <div>
+        <div className="batchcode-page">
             <div className="space-y-6">
                 {/* Popup Modal */}
                 {showPopup && (
@@ -561,18 +586,29 @@ function LaddleFormPage() {
                                     <label htmlFor="sample_date" className="block text-sm font-medium text-gray-700 mb-2">
                                         Date / दिनांक <span className="text-red-500">*</span>
                                     </label>
-                                    <input
-                                        type="date"
-                                        id="sample_date"
-                                        name="sample_date"
-                                        value={formData.sample_date}
-                                        onChange={handleInputChange}
-                                        min="2000-01-01"
-                                        max="2100-12-31"
-                                        className={`w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors.sample_date ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
-                                            }`}
-                                        style={{ WebkitAppearance: 'none', appearance: 'none' }}
-                                    />
+                                    <div className="relative">
+                                        <input
+                                            ref={sampleDateInputRef}
+                                            type="date"
+                                            id="sample_date"
+                                            name="sample_date"
+                                            value={formData.sample_date}
+                                            onChange={handleSampleDateChange}
+                                            onClick={openSampleDatePicker}
+                                            min="2000-01-01"
+                                            max="2100-12-31"
+                                            className={`w-full px-3 py-2.5 pr-11 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors.sample_date ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
+                                                }`}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={openSampleDatePicker}
+                                            className="absolute inset-y-0 right-0 px-3 text-gray-500 hover:text-red-500"
+                                            aria-label="Open date picker"
+                                        >
+                                            <CalendarDays className="h-4 w-4" />
+                                        </button>
+                                    </div>
                                     {errors.sample_date && (
                                         <p className="text-red-500 text-xs mt-1.5">{errors.sample_date}</p>
                                     )}

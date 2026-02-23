@@ -44,7 +44,7 @@ function HotCoilPage() {
 
   // State for process form
   const [showProcessForm, setShowProcessForm] = useState(false)
-  const [selectedRow, setSelectedRow] = useState < any > (null)
+  const [selectedRow, setSelectedRow] = useState(null)
   const [processFormData, setProcessFormData] = useState({
     submission_type: "Hot Coil",
     sms_short_code: "",
@@ -508,7 +508,7 @@ function HotCoilPage() {
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="batchcode-page space-y-6">
       {/* Popup Modal */}
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
@@ -1054,4 +1054,3 @@ function HotCoilPage() {
 }
 
 export default HotCoilPage
-

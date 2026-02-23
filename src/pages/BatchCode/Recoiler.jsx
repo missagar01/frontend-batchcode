@@ -494,7 +494,7 @@ function ReCoilPage() {
     ]
 
     return (
-        <div>
+        <div className="batchcode-page">
             <div className="space-y-6">
                 {/* Popup Modal */}
                 {showPopup && (

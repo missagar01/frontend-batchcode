@@ -77,7 +77,7 @@ function TundishFormPage() {
                 // Search across all columns
                 return (
                     // Search in numeric fields
-                    String(recordData.tundish_number || '').toLowerCase().includes(searchLower) ||
+                    String(recordData.tundish_number || recordData.tundish_no || '').toLowerCase().includes(searchLower) ||
 
                     // Search in text fields
                     String(recordData.tundish_mession_name || '').toLowerCase().includes(searchLower) ||
@@ -370,7 +370,7 @@ function TundishFormPage() {
 
         // Generate a unique code based on data
         const date = recordData.sample_date ? recordData.sample_date.replace(/-/g, '') : '';
-        const tundishNum = recordData.tundish_number || '0';
+        const tundishNum = recordData.tundish_number || recordData.tundish_no || '0';
         return `TUN${date}${tundishNum}`;
     }
 
@@ -448,7 +448,7 @@ function TundishFormPage() {
     ]
 
     return (
-        <div>
+        <div className="batchcode-page">
             <div className="space-y-6">
                 {/* Popup Modal */}
                 {showPopup && (
@@ -914,7 +914,7 @@ function TundishFormPage() {
                                                             {recordData.unique_code || generateUniqueCode(recordData) || 'N/A'}
                                                         </td>
                                                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                            {recordData.tundish_number || 'N/A'}
+                                                            {recordData.tundish_number || recordData.tundish_no || 'N/A'}
                                                         </td>
                                                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                                                             {formatIndianDateTime(recordData.sample_timestamp) || 'N/A'}

@@ -756,6 +756,94 @@ span.flatpickr-weekday,
   cursor: grabbing; /* Changes the cursor to indicate dragging */
 }
 
+@layer utilities {
+  .batchcode-page {
+    width: 100%;
+  }
+
+  .batchcode-page .overflow-x-auto {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .batchcode-page .overflow-x-auto table {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .batchcode-page table th,
+  .batchcode-page table td {
+    vertical-align: middle;
+  }
+
+  .batchcode-page table td {
+    white-space: nowrap;
+  }
+
+  .batchcode-page table th {
+    min-width: 120px;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .batchcode-page input,
+  .batchcode-page select,
+  .batchcode-page textarea,
+  .batchcode-page button {
+    font-size: clamp(0.875rem, 1.4vw, 1rem);
+  }
+
+  @media (max-width: 1024px) {
+    .batchcode-page h1 {
+      font-size: clamp(1.25rem, 3.2vw, 1.9rem);
+      line-height: 1.2;
+    }
+
+    .batchcode-page h2 {
+      font-size: clamp(1rem, 2.6vw, 1.25rem);
+      line-height: 1.3;
+    }
+
+    .batchcode-page table th,
+    .batchcode-page table td {
+      padding: 0.625rem 0.5rem;
+      font-size: 0.75rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .batchcode-page .grid[class*="sm:grid-cols-2"],
+    .batchcode-page .grid[class*="md:grid-cols-2"] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .batchcode-page .max-w-sm {
+      max-width: calc(100vw - 2rem);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .batchcode-page input,
+    .batchcode-page select,
+    .batchcode-page textarea {
+      font-size: 16px;
+    }
+
+    .batchcode-page button {
+      min-height: 40px;
+    }
+
+    .batchcode-page .overflow-x-auto {
+      margin-left: -0.5rem;
+      margin-right: -0.5rem;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+  }
+}
+
 .custom-calendar .fc-h-event {
   background-color: transparent;
   border: none;
