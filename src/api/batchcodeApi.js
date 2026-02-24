@@ -93,6 +93,20 @@ export const getTundishChecklistByUniqueCode = (uniqueCode) =>
         method: 'GET'
     });
 
+export const submitPatchingChecklist = (data) => apiRequest(API_ENDPOINTS.BATCHCODE.PATCHING, {
+    method: 'POST',
+    body: data
+});
+
+export const getPatchingChecklists = () => apiRequest(API_ENDPOINTS.BATCHCODE.PATCHING, {
+    method: 'GET'
+});
+
+export const getPatchingChecklistByUniqueCode = (uniqueCode) =>
+    apiRequest(`${API_ENDPOINTS.BATCHCODE.PATCHING}/${uniqueCode}`, {
+        method: 'GET'
+    });
+
 export const getAdminOverview = (uniqueCode) => {
     const url = uniqueCode
         ? `${API_ENDPOINTS.BATCHCODE.ADMIN_OVERVIEW_BY_CODE}/${uniqueCode}`

@@ -17,6 +17,7 @@ import Recoiler from "./pages/BatchCode/Recoiler";
 import PipeMill from "./pages/BatchCode/PipeMill";
 import Laddel from "./pages/BatchCode/Laddel";
 import Tundis from "./pages/BatchCode/Tundis";
+import PatchingChecklist from "./pages/BatchCode/PatchingChecklist";
 
 
 export default function App() {
@@ -57,6 +58,7 @@ export default function App() {
             <Route path="/batchcode/pipe-mill" element={<RouteGuard><PipeMill /></RouteGuard>} />
             <Route path="/batchcode/laddel" element={<RouteGuard><Laddel /></RouteGuard>} />
             <Route path="/batchcode/tundis" element={<RouteGuard><Tundis /></RouteGuard>} />
+            <Route path="/batchcode/patching-checklist" element={<RouteGuard><PatchingChecklist /></RouteGuard>} />
           </Route>
 
           {/* Catch all - redirect to login if not authenticated, otherwise home */}

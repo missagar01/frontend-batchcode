@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Save, ArrowLeft, CheckCircle, AlertCircle, X, Eye, Edit, Trash2, Search } from "lucide-react"
 // @ts-ignore - JSX component
 import * as batchcodeAPI from "../../api/batchcodeApi";
@@ -58,12 +58,51 @@ function TundishFormPage() {
         setSuccessUniqueCode("")
     }
 
-    // Fetch tundish data when in list view
+    const showPopupMessage = useCallback((message, type) => {
+        setPopupMessage(message)
+        setPopupType(type)
+        setShowPopup(true)
+    }, [])
+
+    const fetchTundishData = useCallback(async (isSilent = false) => {
+        if (!isSilent) setLoading(true)
+        try {
+            const response = await batchcodeAPI.getTundishChecklists()
+
+            // Handle different response structures
+            let data = [];
+
+            if (Array.isArray(response.data)) {
+                data = response.data;
+            } else if (response.data && Array.isArray(response.data.data)) {
+                data = response.data.data;
+            } else if (response.data && response.data.success && Array.isArray(response.data.data)) {
+                data = response.data.data;
+            } else if (response.data && response.data.data && typeof response.data.data === 'object') {
+                data = Object.values(response.data.data);
+            } else {
+                data = [];
+            }
+
+            setTundishData(data)
+        } catch (error) {
+            console.error("❌ Error fetching tundish data:", error)
+            if (!isSilent) showPopupMessage("Error fetching tundish data! / टनडिस डेटा प्राप्त करने में त्रुटि!", "warning")
+        } finally {
+            if (!isSilent) setLoading(false)
+        }
+    }, [])
+
     useEffect(() => {
         if (viewMode === "list") {
             fetchTundishData()
+            // Auto-refresh every 10 seconds
+            const interval = setInterval(() => {
+                fetchTundishData(true)
+            }, 10000)
+            return () => clearInterval(interval)
         }
-    }, [viewMode])
+    }, [viewMode, fetchTundishData])
 
     // Filter data when search term or tundishData changes
     useEffect(() => {
@@ -115,40 +154,27 @@ function TundishFormPage() {
         }
     }, [searchTerm, tundishData])
 
-    const showPopupMessage = (message, type) => {
-        setPopupMessage(message)
-        setPopupType(type)
-        setShowPopup(true)
+    const formatIndianDateTime = (dateString) => {
+        if (!dateString) return 'N/A';
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return 'Invalid Date';
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            const hour = date.getHours().toString().padStart(2, '0');
+            const minute = date.getMinutes().toString().padStart(2, '0');
+            const second = date.getSeconds().toString().padStart(2, '0');
+            return `${day}-${month}-${year} ${hour}:${minute}:${second}`;
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return 'Invalid Date';
+        }
     }
 
-    const fetchTundishData = async () => {
-        setLoading(true)
-        try {
-            const response = await batchcodeAPI.getTundishChecklists()
-
-            // Handle different response structures
-            let data = [];
-
-            if (Array.isArray(response.data)) {
-                data = response.data;
-            } else if (response.data && Array.isArray(response.data.data)) {
-                data = response.data.data;
-            } else if (response.data && response.data.success && Array.isArray(response.data.data)) {
-                data = response.data.data;
-            } else if (response.data && response.data.data && typeof response.data.data === 'object') {
-                data = Object.values(response.data.data);
-            } else {
-                data = [];
-            }
-
-            setTundishData(data)
-
-        } catch (error) {
-            console.error("❌ Error fetching tundish data:", error)
-            showPopupMessage("Error fetching tundish data! / टनडिस डेटा प्राप्त करने में त्रुटि!", "warning")
-        } finally {
-            setLoading(false)
-        }
+    const generateUniqueCode = (recordData) => {
+        if (recordData.unique_code) return recordData.unique_code;
+        return `TUND-${recordData.id || Math.floor(Math.random() * 1000)}`;
     }
 
     const handleInputChange = (e) => {
@@ -248,13 +274,9 @@ function TundishFormPage() {
         try {
             // Prepare data for submission - convert tundish_number to number
             // Backend expects sample_timestamp (auto-generated if not provided)
-            // Backend does NOT expect sample_date or sample_time - remove them
-            const { sample_date, sample_time, ...restFormData } = formData;
             const submissionData = {
-                ...restFormData,
+                ...formData,
                 tundish_number: parseInt(formData.tundish_number)
-                // sample_timestamp will be auto-generated by backend if not provided
-                // Backend validation schema only expects: sample_timestamp, tundish_number, and checklist fields
             }
 
             const response = await batchcodeAPI.submitTundishChecklist(submissionData)
@@ -337,42 +359,6 @@ function TundishFormPage() {
         }
     }
 
-    // Function to format date in Indian format (DD-MM-YYYY)
-    const formatIndianDateTime = (dateString) => {
-        if (!dateString) return 'N/A';
-
-        try {
-            const date = new Date(dateString);
-
-            // Check if date is valid
-            if (isNaN(date.getTime())) {
-                return dateString;
-            }
-
-            // Format to DD-MM-YYYY
-            const day = date.getDate().toString().padStart(2, '0');
-            const month = (date.getMonth() + 1).toString().padStart(2, '0');
-            const year = date.getFullYear();
-            const hours = date.getHours().toString().padStart(2, '0');
-            const minutes = date.getMinutes().toString().padStart(2, '0');
-            const seconds = date.getSeconds().toString().padStart(2, '0');
-
-            return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
-        } catch (error) {
-            console.error('Error formatting date:', error);
-            return dateString;
-        }
-    }
-
-    // Function to generate unique code if not present+
-    const generateUniqueCode = (recordData) => {
-        if (recordData.unique_code) return recordData.unique_code;
-
-        // Generate a unique code based on data
-        const date = recordData.sample_date ? recordData.sample_date.replace(/-/g, '') : '';
-        const tundishNum = recordData.tundish_number || recordData.tundish_no || '0';
-        return `TUN${date}${tundishNum}`;
-    }
 
     // Tundish Number options (1-6)
     const tundishNumberOptions = [
@@ -610,6 +596,38 @@ function TundishFormPage() {
                                 </div>
                             </div>
 
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                                <div>
+                                    <label htmlFor="sample_date" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Sample Date / तारीख
+                                    </label>
+                                    <input
+                                        type="date"
+                                        id="sample_date"
+                                        name="sample_date"
+                                        value={formData.sample_date}
+                                        onChange={handleInputChange}
+                                        onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm hover:border-gray-400 transition-colors"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="sample_time" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Sample Time / समय
+                                    </label>
+                                    <input
+                                        type="time"
+                                        id="sample_time"
+                                        name="sample_time"
+                                        value={formData.sample_time}
+                                        onChange={handleInputChange}
+                                        onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm hover:border-gray-400 transition-colors"
+                                    />
+                                </div>
+                            </div>
+
                             {/* Tundish Checklist Section - Two columns on larger screens */}
                             <div className="border border-gray-200 rounded-lg p-4 md:p-6 bg-gray-50">
                                 <h3 className="text-lg font-semibold text-gray-800 mb-4 md:mb-6">
@@ -825,8 +843,14 @@ function TundishFormPage() {
                     <div className="rounded-lg border border-gray-200 shadow-md bg-white overflow-hidden">
                         <div className="bg-gradient-to-r from-red-500 to-red-400 border-b border-red-200 p-4">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                <div>
-                                    <h2 className="text-white text-lg font-semibold">Tundish Form Records</h2>
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                    <div className="flex items-center gap-3">
+                                        <h2 className="text-white text-lg font-semibold">Tundish Form Records</h2>
+                                        <div className="flex items-center gap-1.5 py-0.5 px-2 bg-white/10 text-white rounded-full border border-white/20 animate-pulse">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                                            <span className="text-[9px] font-black uppercase tracking-tight">Live Sync</span>
+                                        </div>
+                                    </div>
                                     <p className="text-white text-sm opacity-90">
                                         Total Records: {filteredTundishData.length} {searchTerm && `(Filtered from ${tundishData.length})`}
                                     </p>
@@ -852,11 +876,11 @@ function TundishFormPage() {
                                                     Tundish No.<br />टनडिस नंबर
                                                 </th>
                                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Date & Time<br />तारीख
+                                                    Sample Date<br />तारीख
                                                 </th>
-                                                {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Time<br />समय
-                                                </th> */}
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Sample Time<br />समय
+                                                </th>
                                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Nozzle Plate<br />नोजल प्लेट
                                                 </th>
@@ -917,11 +941,11 @@ function TundishFormPage() {
                                                             {recordData.tundish_number || recordData.tundish_no || 'N/A'}
                                                         </td>
                                                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {formatIndianDateTime(recordData.sample_timestamp) || 'N/A'}
+                                                            {recordData.sample_date ? new Date(recordData.sample_date).toLocaleDateString('en-GB') : 'N/A'}
                                                         </td>
-                                                        {/* <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                                                             {recordData.sample_time || 'N/A'}
-                                                        </td> */}
+                                                        </td>
                                                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                                                             {getYesNoBadge(recordData.nozzle_plate_check, "tundish")}
                                                         </td>

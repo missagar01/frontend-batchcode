@@ -82,6 +82,7 @@ export const API_ENDPOINTS = {
         PIPE_MILL: '/api/batchcode/pipe-mill',
         LADDLE: '/api/batchcode/laddle-checklist',
         TUNDISH: '/api/batchcode/tundish-checklist',
+        PATCHING: '/api/batchcode/patching-checklist',
         ADMIN_OVERVIEW: '/api/batchcode/admin/overview',
         ADMIN_OVERVIEW_BY_CODE: '/api/batchcode/admin/overview',
     }

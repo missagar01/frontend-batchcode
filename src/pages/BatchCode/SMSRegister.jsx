@@ -29,15 +29,29 @@ function SMSRegister() {
 
     // State for process form - ALWAYS VISIBLE like ladle form
     const [historyData, setHistoryData] = useState([])
+    const requiredFieldLabels = {
+        sequence_number: "Sequence Number / अनुक्रम संख्या",
+        laddle_number: "Laddle Number / लेडल नंबर",
+        furnace_number: "Furnace Number / भट्ठी नंबर",
+        melter_name: "Melter Name / मेल्टर नाम",
+        temperature: "Temperature / तापमान",
+        shift_incharge: "Shift Incharge / शिफ्ट इंचार्ज",
+        sms_head: "SMS Head / एसएमएस हेड"
+    }
+
     const [formData, setFormData] = useState({
         sequence_number: "",
         laddle_number: "",
         sms_head: "",
         furnace_number: "",
+        melter_name: "",
         remarks: "",
         shift_incharge: "",
-        temperature: ""
+        temperature: "",
+        picture: null
     })
+    const [imagePreview, setImagePreview] = useState(null)
+    const [selectedFile, setSelectedFile] = useState(null)
 
     // Auto-hide popup only for warnings (not for success - user must click OK)
     useEffect(() => {
@@ -59,12 +73,54 @@ function SMSRegister() {
         setSuccessUniqueCode("")
     }
 
+    const showPopupMessage = useCallback((message, type) => {
+        setPopupMessage(message)
+        setPopupType(type)
+        setShowPopup(true)
+    }, [])
+
+    // Fetch history data from Node backend
+    const fetchHistoryData = useCallback(async (isSilent = false) => {
+        try {
+            if (!isSilent) setLoading(true)
+            const response = await batchcodeAPI.getSMSRegisterHistory()
+
+            // Handle different response structures like the ladle form
+            let data = [];
+
+            if (Array.isArray(response.data)) {
+                data = response.data;
+            } else if (response.data && Array.isArray(response.data.data)) {
+                data = response.data.data;
+            } else if (response.data && response.data.success && Array.isArray(response.data.data)) {
+                data = response.data.data;
+            } else if (response.data && response.data.data && typeof response.data.data === 'object') {
+                data = Object.values(response.data.data);
+            } else {
+                data = [];
+            }
+
+            setHistoryData(data)
+            setFilteredHistoryData(data)
+        } catch (error) {
+            console.error("Error fetching history data:", error)
+            if (!isSilent) showPopupMessage("Error fetching SMS history data! / एसएमएस इतिहास डेटा प्राप्त करने में त्रुटि!", "warning")
+        } finally {
+            if (!isSilent) setLoading(false)
+        }
+    }, [])
+
     // Fetch history data when in history view
     useEffect(() => {
         if (showHistory) {
             fetchHistoryData()
+            // Auto-refresh every 8 seconds (IPL style)
+            const interval = setInterval(() => {
+                fetchHistoryData(true)
+            }, 8000)
+            return () => clearInterval(interval)
         }
-    }, [showHistory])
+    }, [showHistory, fetchHistoryData])
 
     // Filter data when search term or historyData changes
     useEffect(() => {
@@ -85,6 +141,7 @@ function SMSRegister() {
 
                     // Search in text fields
                     String(record.furnace_number || '').toLowerCase().includes(searchLower) ||
+                    String(record.melter_name || '').toLowerCase().includes(searchLower) ||
                     String(record.shift_incharge || '').toLowerCase().includes(searchLower) ||
                     String(record.sms_head || '').toLowerCase().includes(searchLower) ||
                     String(record.remarks || '').toLowerCase().includes(searchLower) ||
@@ -101,11 +158,6 @@ function SMSRegister() {
         }
     }, [searchTerm, historyData])
 
-    const showPopupMessage = (message, type) => {
-        setPopupMessage(message)
-        setPopupType(type)
-        setShowPopup(true)
-    }
 
     // Get user info from session storage
     useEffect(() => {
@@ -152,6 +204,7 @@ function SMSRegister() {
             `Sequence: ${safeRecord.sequence_number || ""}`,
             `Laddle No: ${safeRecord.laddle_number || ""}`,
             `Furnace: ${safeRecord.furnace_number || ""}`,
+            `Melter Name: ${safeRecord.melter_name || ""}`,
             `Temperature: ${safeRecord.temperature ? `${safeRecord.temperature}°C` : ""}`,
             `Shift Incharge: ${safeRecord.shift_incharge || ""}`,
             `SMS Head: ${safeRecord.sms_head || ""}`,
@@ -178,36 +231,22 @@ function SMSRegister() {
         }
     }, [maytapiConfig, buildHotCoilLink])
 
-    // Fetch history data from Node backend
-    const fetchHistoryData = useCallback(async () => {
-        try {
-            setLoading(true)
-            const response = await batchcodeAPI.getSMSRegisterHistory()
-
-            // Handle different response structures like the ladle form
-            let data = [];
-
-            if (Array.isArray(response.data)) {
-                data = response.data;
-            } else if (response.data && Array.isArray(response.data.data)) {
-                data = response.data.data;
-            } else if (response.data && response.data.success && Array.isArray(response.data.data)) {
-                data = response.data.data;
-            } else if (response.data && response.data.data && typeof response.data.data === 'object') {
-                data = Object.values(response.data.data);
-            } else {
-                data = [];
+    const handleFileChange = (e) => {
+        const file = e.target.files[0]
+        if (file) {
+            setSelectedFile(file)
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setImagePreview(reader.result)
             }
-
-            setHistoryData(data)
-            setFilteredHistoryData(data)
-            setLoading(false)
-        } catch (error) {
-            console.error("Error fetching history data:", error)
-            showPopupMessage("Error fetching SMS history data! / एसएमएस इतिहास डेटा प्राप्त करने में त्रुटि!", "warning")
-            setLoading(false)
+            reader.readAsDataURL(file)
         }
-    }, [])
+    }
+
+    const removeImage = () => {
+        setSelectedFile(null)
+        setImagePreview(null)
+    }
 
     // Handle form input changes
     const handleInputChange = (e) => {
@@ -239,6 +278,9 @@ function SMSRegister() {
         if (!formData.furnace_number) {
             newErrors.furnace_number = "Furnace number is required"
         }
+        if (!formData.melter_name.trim()) {
+            newErrors.melter_name = "Melter name is required"
+        }
         if (!formData.temperature) {
             newErrors.temperature = "Temperature is required"
         }
@@ -255,7 +297,21 @@ function SMSRegister() {
         }
 
         setErrors(newErrors)
-        return Object.keys(newErrors).length === 0
+        const errorKeys = Object.keys(newErrors)
+        if (errorKeys.length > 0) {
+            const firstErrorField = errorKeys[0]
+            requestAnimationFrame(() => {
+                const fieldEl = document.querySelector(`[name="${firstErrorField}"]`)
+                if (fieldEl && typeof fieldEl.focus === "function") {
+                    fieldEl.focus()
+                }
+            })
+        }
+
+        return {
+            isValid: errorKeys.length === 0,
+            newErrors
+        }
     }
 
     // Handle form submission
@@ -263,74 +319,98 @@ function SMSRegister() {
         e.preventDefault()
 
         // Validate all fields
-        if (!validateForm()) {
-            showPopupMessage("Please fill all required fields correctly! / कृपया सभी आवश्यक फ़ील्ड्स सही से भरें!", "warning")
+        const { isValid, newErrors } = validateForm()
+        if (!isValid) {
+            const missingFields = Object.keys(newErrors)
+                .map((field) => requiredFieldLabels[field] || field)
+                .join(", ")
+
+            showPopupMessage(
+                `Please fill required fields: ${missingFields}`,
+                "warning"
+            )
             return
         }
 
         setIsSubmitting(true)
         try {
-            // Prepare data with correct types
-            const submissionData = {
-                sequence_number: formData.sequence_number,
-                laddle_number: parseInt(formData.laddle_number),
-                sms_head: formData.sms_head,
-                furnace_number: formData.furnace_number,
-                remarks: formData.remarks,
-                shift_incharge: formData.shift_incharge,
-                temperature: parseInt(formData.temperature)
+            // Prepare data with FormData for file upload
+            const formDataToSend = new FormData()
+            formDataToSend.append('sequence_number', formData.sequence_number)
+            formDataToSend.append('laddle_number', formData.laddle_number)
+            formDataToSend.append('sms_head', formData.sms_head)
+            formDataToSend.append('furnace_number', formData.furnace_number)
+            formDataToSend.append('melter_name', formData.melter_name.trim())
+            formDataToSend.append('remarks', formData.remarks)
+            formDataToSend.append('shift_incharge', formData.shift_incharge)
+            formDataToSend.append('temperature', formData.temperature)
+
+            if (selectedFile) {
+                formDataToSend.append('picture', selectedFile)
             }
 
-            const response = await batchcodeAPI.submitSMSRegister(submissionData)
+            console.log("Submitting SMS Report FormData:", Object.fromEntries(formDataToSend.entries()))
 
-            if (response.data.success) {
-                const apiRecord = response.data?.data || {}
-                const whatsAppPayload = {
-                    ...submissionData,
+            const response = await batchcodeAPI.submitSMSRegister(formDataToSend)
+            console.log("Server Response:", response.data)
+
+            if (response.data && response.data.success) {
+                const apiRecord = response.data.data || {}
+
+                // Get the final values combining form state and API response
+                const finalData = {
+                    ...formData,
                     ...apiRecord,
-                    unique_code: apiRecord.unique_code,
-                    remarks: apiRecord.remarks ?? submissionData.remarks,
-                    shift_incharge: apiRecord.shift_incharge || submissionData.shift_incharge,
-                    sms_head: apiRecord.sms_head || submissionData.sms_head,
+                    unique_code: apiRecord.unique_code || "",
+                    remarks: apiRecord.remarks || formData.remarks || "",
+                    shift_incharge: apiRecord.shift_incharge || formData.shift_incharge || "",
+                    sms_head: apiRecord.sms_head || formData.sms_head || "",
+                    melter_name: apiRecord.melter_name || formData.melter_name || "",
                     createdAt: apiRecord.createdAt || apiRecord.sample_timestamp || new Date().toISOString()
                 }
 
-                sendWhatsAppNotification(whatsAppPayload).catch((whatsAppError) => {
-                    console.error("Error sending WhatsApp notification:", whatsAppError)
-                    showPopupMessage("Report saved, but WhatsApp alert failed.", "warning")
+                // Send notification
+                sendWhatsAppNotification(finalData).catch((err) => {
+                    console.error("WhatsApp Error:", err)
+                    showPopupMessage("Saved, but WhatsApp failed.", "warning")
                 })
 
-                // Extract unique_code from response - try multiple possible locations
-                const uniqueCode = apiRecord.unique_code
-                    || response.data?.data?.unique_code
-                    || response.data?.unique_code
-                    || generateUniqueCode(whatsAppPayload)
-                    || ""
-                setSuccessUniqueCode(uniqueCode)
-                showPopupMessage("SMS Report submitted successfully! / एसएमएस रिपोर्ट सफलतापूर्वक सबमिट हो गई!", "success")
+                // Set unique code and show success
+                const uniqueCodeToShow = finalData.unique_code || generateUniqueCode(finalData)
+                setSuccessUniqueCode(uniqueCodeToShow)
+                showPopupMessage("Report submitted successfully!", "success")
 
-                // Reset form
+                // RESET FORM
                 setFormData({
                     sequence_number: "",
                     laddle_number: "",
                     sms_head: "",
                     furnace_number: "",
+                    melter_name: "",
                     remarks: "",
                     shift_incharge: username || "",
-                    temperature: ""
+                    temperature: "",
+                    picture: null
                 })
+                setSelectedFile(null)
+                setImagePreview(null)
                 setErrors({})
 
-                // Refresh data if in history view
-                if (showHistory) {
-                    fetchHistoryData()
-                }
+                if (showHistory) fetchHistoryData()
             } else {
-                throw new Error(response.data.message || "Failed to submit SMS report")
+                throw new Error("Failed to submit")
             }
         } catch (error) {
             console.error("Error submitting SMS report:", error)
-            showPopupMessage("Error submitting SMS report. Please try again. / एसएमएस रिपोर्ट सबमिट करने में त्रुटि, कृपया पुनः प्रयास करें!", "warning")
+            const validationErrors = error?.response?.data?.details?.errors
+            if (Array.isArray(validationErrors) && validationErrors.length > 0) {
+                const validationMessage = validationErrors
+                    .map((item) => item?.message || `${item?.field || "field"} is invalid`)
+                    .join(", ")
+                showPopupMessage(`Validation failed: ${validationMessage}`, "warning")
+            } else {
+                showPopupMessage("Error submitting SMS report. Please try again. / एसएमएस रिपोर्ट सबमिट करने में त्रुटि, कृपया पुनः प्रयास करें!", "warning")
+            }
         } finally {
             setIsSubmitting(false)
         }
@@ -454,7 +534,7 @@ function SMSRegister() {
 
     const smsHeadOptions = [
         { value: "", label: "Select SMS Head", hindiLabel: "एसएमएस हेड चुनें" },
-        { value: "Suman Jha", label: "Suman Jha", hindiLabel: "सुमन झा" },
+        { value: "V M Gupta", label: "V M Gupta", hindiLabel: "वी एम गुप्ता" },
         { value: "Baldev Singh Saini", label: "Baldev Singh Saini", hindiLabel: "बलदेव सिंह सैनी" }
     ]
 
@@ -521,10 +601,14 @@ function SMSRegister() {
                 {/* Header Section */}
                 <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
                     <div className="flex items-center gap-3 w-full md:w-auto">
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 flex items-center gap-4">
                             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-red-500 truncate">
                                 {showHistory ? "SMS Report History" : "Create SMS Report"}
                             </h1>
+                            <div className="hidden sm:flex items-center gap-1.5 py-1 px-3 bg-red-50 text-red-600 rounded-full border border-red-100 shadow-sm animate-pulse">
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                                <span className="text-[10px] font-black uppercase tracking-widest">Live Sync</span>
+                            </div>
                         </div>
                     </div>
 
@@ -618,6 +702,9 @@ function SMSRegister() {
                                                 Furnace / भट्ठी
                                             </th>
                                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                Melter Name / मेल्टर नाम
+                                            </th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Temperature / तापमान
                                             </th>
                                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -652,6 +739,9 @@ function SMSRegister() {
                                                     </td>
                                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                                                         {item.furnace_number || 'N/A'}
+                                                    </td>
+                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                        {item.melter_name || 'N/A'}
                                                     </td>
                                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                                                         {item.temperature || 'N/A'}
@@ -790,8 +880,28 @@ function SMSRegister() {
                                     )}
                                 </div>
 
-                                {/* Temperature */}
+                                {/* Melter Name */}
                                 <div>
+                                    <label htmlFor="melter_name" className="block text-sm font-medium text-gray-700 mb-2">
+                                        Melter Name / मेल्टर नाम <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="melter_name"
+                                        name="melter_name"
+                                        value={formData.melter_name}
+                                        onChange={handleInputChange}
+                                        className={`w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors.melter_name ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
+                                            }`}
+                                        placeholder="Enter melter name"
+                                    />
+                                    {errors.melter_name && (
+                                        <p className="text-red-500 text-xs mt-1.5">{errors.melter_name}</p>
+                                    )}
+                                </div>
+
+                                {/* Temperature - Full width to start new row for Shift Incharge & SMS Head */}
+                                <div className="sm:col-span-2">
                                     <label htmlFor="temperature" className="block text-sm font-medium text-gray-700 mb-2">
                                         Temperature / तापमान (°C) <span className="text-red-500">*</span>
                                     </label>
@@ -810,25 +920,29 @@ function SMSRegister() {
                                     )}
                                 </div>
 
-                                {/* Shift Incharge */}
+                                {/* Shift Incharge - Now grouped with SMS Head */}
                                 <div>
                                     <label htmlFor="shift_incharge" className="block text-sm font-medium text-gray-700 mb-2">
                                         Shift Incharge / शिफ्ट इंचार्ज <span className="text-red-500">*</span>
                                     </label>
-                                    <select
+                                    <input
+                                        list="shift_incharge_list"
+                                        type="text"
                                         id="shift_incharge"
                                         name="shift_incharge"
                                         value={formData.shift_incharge}
                                         onChange={handleInputChange}
                                         className={`w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors.shift_incharge ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
                                             }`}
-                                    >
-                                        {shiftInchargeOptions.map((option) => (
+                                        placeholder="Type or select shift incharge"
+                                    />
+                                    <datalist id="shift_incharge_list">
+                                        {shiftInchargeOptions.filter(opt => opt.value !== "").map((option) => (
                                             <option key={option.value} value={option.value}>
                                                 {option.label}
                                             </option>
                                         ))}
-                                    </select>
+                                    </datalist>
                                     {errors.shift_incharge && (
                                         <p className="text-red-500 text-xs mt-1.5">{errors.shift_incharge}</p>
                                     )}
@@ -872,6 +986,57 @@ function SMSRegister() {
                                         className="w-full px-3 py-3 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-base sm:text-sm"
                                         placeholder="Enter any remarks or notes / कोई टिप्पणी या नोट दर्ज करें"
                                     />
+                                </div>
+
+                                {/* Picture Upload - Full width */}
+                                <div className="sm:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Upload Picture / तस्वीर अपलोड करें
+                                    </label>
+                                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-red-400 transition-colors">
+                                        <div className="space-y-1 text-center">
+                                            {imagePreview ? (
+                                                <div className="relative inline-block">
+                                                    <img
+                                                        src={imagePreview}
+                                                        alt="Preview"
+                                                        className="max-h-48 rounded-lg shadow-sm"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={removeImage}
+                                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors"
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <Plus className="mx-auto h-12 w-12 text-gray-400" />
+                                                    <div className="flex text-sm text-gray-600">
+                                                        <label
+                                                            htmlFor="picture"
+                                                            className="relative cursor-pointer bg-white rounded-md font-medium text-red-600 hover:text-red-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-red-500"
+                                                        >
+                                                            <span>Upload a file</span>
+                                                            <input
+                                                                id="picture"
+                                                                name="picture"
+                                                                type="file"
+                                                                className="sr-only"
+                                                                accept="image/*"
+                                                                onChange={handleFileChange}
+                                                            />
+                                                        </label>
+                                                        <p className="pl-1">or drag and drop</p>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500">
+                                                        PNG, JPG, GIF up to 5MB
+                                                    </p>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 

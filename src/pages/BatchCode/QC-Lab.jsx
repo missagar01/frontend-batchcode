@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, useCallback, useMemo } from "react"
-import { CheckCircle2, X, Search, History, ArrowLeft, Edit, Save, Camera, AlertCircle } from "lucide-react"
+import { CheckCircle2, X, Search, History, ArrowLeft, Edit, Save, Camera, AlertCircle, FileText, Beaker } from "lucide-react"
 // @ts-ignore - JSX component
 import * as batchcodeAPI from "../../api/batchcodeApi";
 import { API_BASE_URL } from "../../api/apiClient";
@@ -438,6 +438,17 @@ function QCLabDataPage() {
         } else {
             fetchPendingSMSData()
         }
+
+        // Auto-refresh every 8 seconds (IPL style)
+        const interval = setInterval(() => {
+            if (showHistory) {
+                fetchHistoryData()
+            } else {
+                fetchPendingSMSData()
+            }
+        }, 8000)
+
+        return () => clearInterval(interval)
     }, [showHistory, fetchHistoryData, fetchPendingSMSData])
 
     const formatIndianDateTime = (dateString) => {
@@ -534,656 +545,446 @@ function QCLabDataPage() {
     ]
 
     return (
-        <div className="batchcode-page">
-            <div className="space-y-6">
-                {/* Popup Modal */}
-                {showPopup && (
-                    <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-                        <div
-                            className={`relative mx-4 p-6 rounded-lg shadow-2xl max-w-sm w-full transform transition-all duration-300 pointer-events-auto ${popupType === "success"
-                                ? 'bg-green-50 border-2 border-green-400'
-                                : 'bg-yellow-50 border-2 border-yellow-400'
-                                }`}
-                        >
-                            <div className="flex items-center justify-center mb-4">
-                                {popupType === "success" ? (
-                                    <CheckCircle2 className="h-12 w-12 text-green-500" />
-                                ) : (
-                                    <AlertCircle className="h-12 w-12 text-yellow-500" />
-                                )}
+        <div className="flex flex-col h-full w-full bg-slate-50/50 animate-in fade-in duration-500">
+            {/* Popups (Z-indexed) */}
+            {showPopup && (
+                <div className="fixed inset-0 flex items-center justify-center z-[100] p-4 bg-black/20 backdrop-blur-sm">
+                    <div className={`w-full max-w-sm p-6 rounded-2xl shadow-2xl transform transition-all border ${popupType === "success" ? 'bg-white border-green-100' : 'bg-white border-orange-100'
+                        }`}>
+                        <div className="flex flex-col items-center text-center">
+                            <div className={`p-3 rounded-full mb-4 ${popupType === "success" ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'
+                                }`}>
+                                {popupType === "success" ? <CheckCircle2 size={32} /> : <AlertCircle size={32} />}
                             </div>
-                            <div className="text-center">
-                                <h3 className={`text-lg font-semibold mb-2 ${popupType === "success" ? 'text-green-800' : 'text-yellow-800'
-                                    }`}>
-                                    {popupType === "success" ? "Success!" : "Warning!"}
-                                </h3>
-                                <p className={popupType === "success" ? 'text-green-700' : 'text-yellow-700'}>
-                                    {popupMessage}
-                                </p>
-                                {popupType === "success" && successUniqueCode && (
-                                    <p className="mt-2 text-green-700 font-semibold">
-                                        Unique Code: <span className="font-bold">{successUniqueCode}</span>
-                                    </p>
-                                )}
-                            </div>
-                            {/* Progress bar for auto-dismiss - only for warnings */}
-                            {popupType === "warning" && (
-                                <div className="mt-4 w-full bg-gray-200 rounded-full h-1">
-                                    <div
-                                        className="h-1 rounded-full bg-yellow-500"
-                                        style={{
-                                            animation: 'shrink 2s linear forwards'
-                                        }}
-                                    />
+                            <h3 className="text-lg font-bold text-slate-900 mb-1">
+                                {popupType === "success" ? "Operation Successful" : "Attention Required"}
+                            </h3>
+                            <p className="text-slate-500 text-sm mb-6">{popupMessage}</p>
+                            {popupType === "success" && successUniqueCode && (
+                                <div className="mb-6 px-4 py-2 bg-slate-50 rounded-lg border border-slate-100">
+                                    <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Batch Code</span>
+                                    <span className="font-mono font-bold text-green-700">{successUniqueCode}</span>
                                 </div>
                             )}
-                            {/* OK Button */}
-                            <div className="mt-4 flex justify-center">
-                                <button
-                                    onClick={handleClosePopup}
-                                    className={`px-6 py-2 rounded-md font-medium transition-colors ${popupType === "success"
-                                        ? 'bg-green-500 hover:bg-green-600 text-white'
-                                        : 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                                        }`}
-                                >
-                                    OK
-                                </button>
-                            </div>
+                            <button
+                                onClick={handleClosePopup}
+                                className={`w-full py-3 rounded-xl font-bold text-white transition-all shadow-lg active:scale-95 ${popupType === "success" ? 'bg-green-600 hover:bg-green-700 shadow-green-200' : 'bg-orange-600 hover:bg-orange-700 shadow-orange-200'
+                                    }`}
+                            >
+                                Continue
+                            </button>
                         </div>
                     </div>
-                )}
+                </div>
+            )}
 
-                {/* Image Viewer Popup Modal */}
-                {showImagePopup && (
-                    <div className="fixed inset-0 flex items-center justify-center p-4 z-50 pointer-events-none">
-                        <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden pointer-events-auto">
-                            <div className="bg-red-500 text-white p-4 flex justify-between items-center">
-                                <h3 className="text-lg font-semibold">Test Report Image / टेस्ट रिपोर्ट चित्र</h3>
-                                <button
-                                    onClick={handleCloseImagePopup}
-                                    className="text-white hover:text-gray-200 transition-colors"
-                                >
-                                    <X className="h-6 w-6" />
-                                </button>
-                            </div>
-
-                            <div className="p-4 flex items-center justify-center bg-gray-100 min-h-[400px] max-h-[70vh] overflow-auto">
-                                {selectedImage ? (
-                                    <img
-                                        src={selectedImage}
-                                        alt="Test Report"
-                                        className="max-w-full max-h-full object-contain rounded-lg shadow-md"
-                                        onError={(e) => {
-                                            console.error('❌ Error displaying image:', selectedImage);
-                                            // Show error state
-                                            e.target.style.display = 'none';
-                                        }}
-                                        onLoad={() => console.log('✅ Image displayed successfully')}
-                                    />
-                                ) : (
-                                    <div className="text-center text-gray-500">
-                                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500 mb-4"></div>
-                                        <p>Loading image... / चित्र लोड हो रहा है...</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* <div className="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end items-center">
-                                {/* <span className="text-sm text-gray-600">
-                                    Click outside or press ESC to close / बंद करने के लिए बाहर क्लिक करें
-                                </span>
-                                <button
-                                    onClick={handleCloseImagePopup}
-                                    className=" px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                                >
-                                    Close
-                                </button>
-                            </div> */}
+            {/* Header Area */}
+            <div className="p-4 lg:p-6 space-y-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 bg-gradient-to-tr from-rose-600 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg shadow-rose-200">
+                            <Beaker className="text-white" size={24} />
                         </div>
-                    </div>
-                )}
-
-                {/* Header Section */}
-                <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-                    <div className="flex items-center gap-3 w-full">
-                        <div className="flex-1 min-w-0">
-                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-red-500 truncate">
-                                {showHistory ? "Lab Test History" : "QC Lab Test"}
+                        <div>
+                            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+                                QC Lab {showHistory ? <span className="text-rose-600">History</span> : <span className="text-sky-600">Testing</span>}
                             </h1>
+                            <div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                                <span className="flex items-center gap-1.5 py-0.5 px-2 bg-green-50 text-green-700 rounded-full border border-green-100">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                    Live Sync
+                                </span>
+                                Material Analysis Unit
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                        <div className="relative w-full sm:flex-1">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <div className="flex flex-wrap items-center gap-2">
+                        <div className="relative flex-1 md:flex-none">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                             <input
                                 type="text"
-                                placeholder="Search across all columns..."
+                                placeholder="Search by batch, laddle, or date..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                className="w-full md:w-64 pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-4 focus:ring-rose-50 outline-none transition-all shadow-sm"
                             />
-                            {searchTerm && (
-                                <button
-                                    onClick={() => setSearchTerm("")}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                >
-                                    <X size={16} />
-                                </button>
-                            )}
                         </div>
-
                         <button
                             onClick={toggleView}
-                            className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors w-full sm:w-auto"
+                            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95 ${showHistory
+                                ? 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
+                                : 'bg-slate-900 text-white hover:bg-slate-800'
+                                }`}
                         >
-                            {showHistory ? (
-                                <>
-                                    <ArrowLeft className="h-4 w-4" />
-                                    Back to Pending
-                                </>
-                            ) : (
-                                <>
-                                    <History className="h-4 w-4" />
-                                    View History
-                                </>
-                            )}
+                            {showHistory ? <><ArrowLeft size={16} /> Pending Queue</> : <><History size={16} /> View History</>}
                         </button>
                     </div>
                 </div>
+            </div>
 
-                {/* Process Form */}
-                {showProcessForm && (
-                    <div className="mt-6">
-                        <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-200">
-                            <div className="bg-red-500 text-white p-4 rounded-t-lg flex justify-between items-center">
-                                <h3 className="text-lg font-semibold">Submit QC Lab Test Data</h3>
-                                <button onClick={handleCloseProcessForm} className="text-white hover:text-gray-200">
-                                    <X className="h-5 w-5" />
-                                </button>
-                            </div>
-
-                            <div className="p-6 space-y-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {/* SMS Batch Code (Auto-filled from SMS Register) */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            SMS Batch Code / एसएमएस बैच कोड <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={processFormData.sms_batch_code}
-                                            readOnly
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">Auto-filled from SMS Register</p>
-                                    </div>
-
-                                    {/* Sampled Furnace Number (Auto-filled) */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Sampled Furnace Number / नमूना भट्ठी नंबर <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={processFormData.sampled_furnace_number}
-                                            readOnly
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
-                                        />
-                                    </div>
-
-                                    {/* Sampled Sequence (Auto-filled) */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Sampled Sequence / नमूना अनुक्रम <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={processFormData.sampled_sequence}
-                                            readOnly
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
-                                        />
-                                    </div>
-
-                                    {/* Sampled Laddle Number (Auto-filled) */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Sampled Laddle Number / नमूना लेडल नंबर <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={processFormData.sampled_laddle_number}
-                                            readOnly
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
-                                        />
-                                    </div>
-
-                                    {/* Shift */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Shift / शिफ्ट <span className="text-red-500">*</span>
-                                        </label>
-                                        <select
-                                            value={processFormData.shift}
-                                            onChange={(e) => handleProcessFormChange("shift", e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                                            required
-                                        >
-                                            {shiftOptions.map((option) => (
-                                                <option key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    {/* Final C% */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Final C% / अंतिम सी% <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={processFormData.final_c}
-                                            onChange={(e) => handleProcessFormChange("final_c", e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                                            placeholder="Enter C%"
-                                            required
-                                        />
-                                    </div>
-
-                                    {/* Final MN% */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Final MN% / अंतिम एमएन% <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={processFormData.final_mn}
-                                            onChange={(e) => handleProcessFormChange("final_mn", e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                                            placeholder="Enter MN%"
-                                            required
-                                        />
-                                    </div>
-
-                                    {/* Final S% */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Final S% / अंतिम एस% <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={processFormData.final_s}
-                                            onChange={(e) => handleProcessFormChange("final_s", e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                                            placeholder="Enter S%"
-                                            required
-                                        />
-                                    </div>
-
-                                    {/* Final P% */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Final P% / अंतिम पी% <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={processFormData.final_p}
-                                            onChange={(e) => handleProcessFormChange("final_p", e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                                            placeholder="Enter P%"
-                                            required
-                                        />
-                                    </div>
-
-                                    {/* Sample Tested by */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Sample Tested by / नमूना परीक्षणकर्ता <span className="text-red-500">*</span>
-                                        </label>
-                                        <select
-                                            value={processFormData.sample_tested_by}
-                                            onChange={(e) => handleProcessFormChange("sample_tested_by", e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                                            required
-                                        >
-                                            {testerOptions.map((option) => (
-                                                <option key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    {/* Test Report Picture */}
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Test Report Picture / टेस्ट रिपोर्ट चित्र
-                                        </label>
-                                        <div className="flex items-center gap-4">
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={handlePictureUpload}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                                            />
-                                            {processFormData.test_report_picture && (
-                                                <Camera className="h-5 w-5 text-green-500" />
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Remarks */}
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Remarks / टिप्पणियाँ
-                                        </label>
-                                        <textarea
-                                            value={processFormData.remarks}
-                                            onChange={(e) => handleProcessFormChange("remarks", e.target.value)}
-                                            rows={3}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                                            placeholder="Enter any remarks / कोई टिप्पणी दर्ज करें"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3">
-                                <button
-                                    onClick={handleCloseProcessForm}
-                                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100"
-                                >
-                                    Cancel / रद्द करें
-                                </button>
-                                <button
-                                    onClick={handleProcessSubmit}
-                                    disabled={isSubmitting}
-                                    className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                                >
-                                    <Save className="h-4 w-4" />
-                                    {isSubmitting ? "Submitting... / जमा किया जा रहा है..." : "Submit Data / डेटा जमा करें"}
-                                </button>
-                            </div>
+            {/* Main Table Container */}
+            <div className="flex-1 px-4 lg:px-6 pb-6 min-h-0">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 h-full flex flex-col overflow-hidden">
+                    {/* Table Status Bar */}
+                    <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+                        <div className="flex items-center gap-3">
+                            <span className={`flex h-2 w-2 rounded-full ${showHistory ? 'bg-rose-500' : 'bg-sky-500'}`}></span>
+                            <span className="text-xs font-black text-slate-700 uppercase tracking-widest leading-none">
+                                {showHistory ? "Analytic Repository" : "Sampling Pipeline"}
+                            </span>
                         </div>
-                    </div>
-                )}
-
-                <div className="rounded-lg border border-gray-200 shadow-md bg-white overflow-hidden">
-                    <div className="bg-gradient-to-r from-red-500 to-red-400 border-b border-red-200 p-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                                <h2 className="text-white text-lg font-semibold">
-                                    {showHistory ? "QC Lab Test Records" : "Pending for Lab Test"}
-                                </h2>
-                                <div className="relative flex items-center justify-center w-10 h-10">
-                                    <div className="absolute inset-0 rounded-full bg-white/20 p-0.5">
-                                        <div className="w-full h-full rounded-full bg-transparent flex items-center justify-center">
-                                            <span className="text-white text-sm font-bold">
-                                                {showHistory ? filteredHistoryData.length : filteredPendingData.length}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <span className="px-3 py-1 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-slate-500">
+                            {showHistory ? filteredHistoryData.length : filteredPendingData.length} Records Found
+                        </span>
                     </div>
 
-                    {loading ? (
-                        <div className="text-center py-10">
-                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500 mb-4"></div>
-                            <p className="text-red-600">Loading data...</p>
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            {showHistory ? (
-                                /* HISTORY VIEW - QC Lab Tests with SMS Batch Code */
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Date / तारीख
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                SMS Unique Code / SMS कोड
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Lab Test Code / लैब कोड
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Furnace Number / भट्ठी नंबर
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Sequence Code / अनुक्रम कोड
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Laddle Number / लेडल नंबर
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Shift Type / शिफ्ट प्रकार
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Final C% / अंतिम सी%
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Final MN% / अंतिम एमएन%
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Final S% / अंतिम एस%
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Final P% / अंतिम पी%
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Tested By / परीक्षणकर्ता
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Remarks / टिप्पणियाँ
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Test Report / टेस्ट रिपोर्ट
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {filteredHistoryData.length > 0 ? (
-                                            filteredHistoryData.map((record, index) => (
-                                                <tr key={record.id || record._id || index} className="hover:bg-gray-50">
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {formatIndianDateTime(record.created_at || 'N/A')}
+                    {/* Table Content */}
+                    <div className="flex-1 overflow-auto">
+                        {loading ? (
+                            <div className="h-full flex flex-col items-center justify-center bg-slate-50/20">
+                                <div className="w-10 h-10 border-4 border-rose-600/10 border-t-rose-600 rounded-full animate-spin"></div>
+                                <p className="mt-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Hydrating data...</p>
+                            </div>
+                        ) : (
+                            <table className="w-full text-left border-collapse min-w-[800px]">
+                                <thead className="bg-slate-50/80 sticky top-0 z-10 backdrop-blur-md">
+                                    <tr>
+                                        {showHistory ? (
+                                            <>
+                                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Timestamp</th>
+                                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Batch Code</th>
+                                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Sequence</th>
+                                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Details</th>
+                                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Elements (C/Mn/S/P)</th>
+                                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Tester</th>
+                                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Media</th>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Action</th>
+                                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Batch Code</th>
+                                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Sample Time</th>
+                                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Furnace Info</th>
+                                                <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Temperature</th>
+                                            </>
+                                        )}
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {showHistory ? (
+                                        filteredHistoryData.length > 0 ? (
+                                            filteredHistoryData.map((record, i) => (
+                                                <tr key={i} className="group hover:bg-slate-50/50 transition-colors">
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-xs font-bold text-slate-900">{formatIndianDateTime(record.created_at).split(' ')[0]}</div>
+                                                        <div className="text-[10px] font-medium text-slate-400 uppercase">{formatIndianDateTime(record.created_at).split(' ')[1]}</div>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.sms_batch_code || 'N/A'}
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span className="px-2 py-1 bg-rose-50 text-rose-600 rounded text-[10px] font-black uppercase tracking-tight">
+                                                            {record.sms_batch_code}
+                                                        </span>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.unique_code || 'N/A'}
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-700 capitalize">
+                                                        SEQ-{record.sequence_code}
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.furnace_number || 'N/A'}
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-xs font-bold text-slate-700">Laddle: {record.laddle_number}</div>
+                                                        <div className="text-[10px] font-medium text-slate-400 italic">{record.furnace_number}</div>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.sequence_code || 'N/A'}
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            {[
+                                                                { l: 'C', v: record.final_c },
+                                                                { l: 'Mn', v: record.final_mn },
+                                                                { l: 'S', v: record.final_s },
+                                                                { l: 'P', v: record.final_p }
+                                                            ].map(el => (
+                                                                <div key={el.l} className="flex flex-col items-center bg-slate-50 px-2 py-1 rounded min-w-[45px] border border-slate-100">
+                                                                    <span className="text-[9px] font-black text-slate-400 leading-none mb-1">{el.l}</span>
+                                                                    <span className="text-xs font-mono font-bold text-slate-800 leading-none">{el.v}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.laddle_number || 'N/A'}
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold text-[10px]">
+                                                                {record.tested_by?.charAt(0)}
+                                                            </div>
+                                                            <span className="text-xs font-bold text-slate-600 capitalize">{record.tested_by}</span>
+                                                        </div>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.shift_type || 'N/A'}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.final_c || 'N/A'}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.final_mn || 'N/A'}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.final_s || 'N/A'}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.final_p || 'N/A'}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.tested_by || 'N/A'}
-                                                    </td>
-                                                    <td className="px-4 py-4 text-sm text-gray-900">
-                                                        {record.remarks || '—'}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.report_picture ? (
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        {record.report_picture && (
                                                             <button
                                                                 onClick={() => handleViewImage(record.report_picture)}
-                                                                className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 transition-colors"
+                                                                className="flex items-center gap-2 text-rose-600 hover:text-rose-700 font-black text-[10px] uppercase transition-colors"
                                                             >
-                                                                <Camera className="h-4 w-4" />
-                                                                View
+                                                                <Camera size={14} /> View Report
                                                             </button>
-                                                        ) : (
-                                                            <span className="text-gray-400">—</span>
                                                         )}
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
-                                            <tr>
-                                                <td colSpan={12} className="px-4 py-8 text-center text-gray-500">
-                                                    <div className="flex flex-col items-center justify-center">
-                                                        <Search className="h-12 w-12 text-gray-300 mb-4" />
-                                                        <p className="text-lg font-medium mb-2">
-                                                            {searchTerm ? "No matching QC Lab tests found" : "No QC Lab tests found"}
-                                                        </p>
-                                                        <p className="text-sm mb-4">
-                                                            {searchTerm ? "Try adjusting your search terms" : "Submit a test first to see records here"}
-                                                        </p>
-                                                        <div className="flex gap-2">
-                                                            {searchTerm && (
-                                                                <button
-                                                                    onClick={() => setSearchTerm("")}
-                                                                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
-                                                                >
-                                                                    Clear Search
-                                                                </button>
-                                                            )}
-                                                            <button
-                                                                onClick={fetchHistoryData}
-                                                                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-                                                            >
-                                                                Refresh Data
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            ) : (
-                                /* PENDING VIEW - SMS Register Records */
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Action / कार्रवाई
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                SMS Batch Code / एसएमएस बैच कोड
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Date / तारीख
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Sequence / अनुक्रम
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Laddle No. / लेडल नंबर
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Furnace / भट्ठी
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Temperature / तापमान
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {filteredPendingData.length > 0 ? (
-                                            filteredPendingData.map((record, index) => (
-                                                <tr key={record.id || record._id || index} className="hover:bg-gray-50">
-                                                    <td className="px-4 py-4 whitespace-nowrap">
+                                            <tr><td colSpan={7} className="py-20 text-center font-bold text-slate-300 uppercase text-xs tracking-[0.2em]">No history records available</td></tr>
+                                        )
+                                    ) : (
+                                        filteredPendingData.length > 0 ? (
+                                            filteredPendingData.map((record, i) => (
+                                                <tr key={i} className="group hover:bg-sky-50/30 transition-colors">
+                                                    <td className="px-6 py-4 whitespace-nowrap">
                                                         <button
                                                             onClick={() => handleProcessClick(record)}
-                                                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors"
+                                                            className="px-4 py-2 bg-slate-900 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center gap-2"
                                                         >
-                                                            <Edit className="h-3 w-3" />
-                                                            Lab Test
+                                                            <Edit size={12} /> Start Test
                                                         </button>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.unique_code || generateUniqueCode(record) || 'N/A'}
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span className="font-mono font-bold text-slate-900">
+                                                            {record.unique_code || generateUniqueCode(record)}
+                                                        </span>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {formatIndianDateTime(record.sample_timestamp) || 'N/A'}
+                                                    <td className="px-6 py-4 whitespace-nowrap text-xs font-bold text-slate-500">
+                                                        {formatIndianDateTime(record.sample_timestamp)}
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.sequence_number || 'N/A'}
+                                                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                        <div className="text-sm font-black text-slate-700">{record.furnace_number}</div>
+                                                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">SEQ: {record.sequence_number} • LAT: {record.laddle_number}</div>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.laddle_number || 'N/A'}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.furnace_number || 'N/A'}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.temperature ? `${record.temperature}°C` : 'N/A'}
+                                                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                        <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full font-black text-xs">
+                                                            {record.temperature}°C
+                                                        </span>
                                                     </td>
                                                 </tr>
                                             ))
                                         ) : (
-                                            <tr>
-                                                <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                                                    <div className="flex flex-col items-center justify-center">
-                                                        <CheckCircle2 className="h-12 w-12 text-green-300 mb-4" />
-                                                        <p className="text-lg font-medium mb-2">
-                                                            {searchTerm ? "No matching pending SMS records found" : "No pending SMS records for testing"}
-                                                        </p>
-                                                        <p className="text-sm mb-4">
-                                                            {searchTerm ? "Try adjusting your search terms" : "All SMS records have been processed for QC Lab testing"}
-                                                        </p>
-                                                        <div className="flex gap-2">
-                                                            {searchTerm && (
-                                                                <button
-                                                                    onClick={() => setSearchTerm("")}
-                                                                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
-                                                                >
-                                                                    Clear Search
-                                                                </button>
-                                                            )}
-                                                            <button
-                                                                onClick={fetchPendingSMSData}
-                                                                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-                                                            >
-                                                                Refresh Data
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
-                    )}
+                                            <tr><td colSpan={5} className="py-20 text-center font-bold text-slate-300 uppercase text-xs tracking-[0.2em]">Everything is up to date</td></tr>
+                                        )
+                                    )}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            {/* Add CSS for progress bar animation */}
-            <style>{`
-                @keyframes shrink {
-                    from { width: 100%; }
-                    to { width: 0%; }
-                }
-            `}</style>
+            {/* Entry Modal (Centered with Top Offset) */}
+            {showProcessForm && (
+                <div className="fixed inset-0 z-[101] flex items-start justify-center bg-slate-900/60 backdrop-blur-sm p-4 pt-4 sm:pt-10 overflow-y-auto animate-in fade-in duration-300">
+                    <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 my-auto sm:my-0 mb-8">
+                        {/* Modal Header */}
+                        <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-rose-600 text-white rounded-lg shadow-md">
+                                    <Beaker size={20} />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">LABORATORY INPUT</h3>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Test Protocol Entry</p>
+                                </div>
+                            </div>
+                            <button onClick={handleCloseProcessForm} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                                <X size={20} className="text-slate-500" />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="flex-1 overflow-y-auto p-4 sm:p-8">
+                            <form onSubmit={(e) => { e.preventDefault(); handleProcessSubmit(); }} className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+                                    {/* Row 1 */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-bold text-slate-700">SMS Batch Code / एसएमएस बैच कोड <span className="text-rose-500">*</span></label>
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            value={processFormData.sms_batch_code}
+                                            className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-lg font-bold text-slate-900 outline-none cursor-not-allowed"
+                                        />
+                                        <p className="text-[10px] text-slate-400 font-medium">Auto-filled from SMS Register</p>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-bold text-slate-700">Sampled Furnace Number / नमूना भठ्ठी नंबर <span className="text-rose-500">*</span></label>
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            value={processFormData.sampled_furnace_number}
+                                            className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-lg font-bold text-slate-900 outline-none cursor-not-allowed"
+                                        />
+                                    </div>
+
+                                    {/* Row 2 */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-bold text-slate-700">Sampled Sequence / नमूना अनुक्रम <span className="text-rose-500">*</span></label>
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            value={processFormData.sampled_sequence}
+                                            className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-lg font-bold text-slate-900 outline-none cursor-not-allowed"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-bold text-slate-700">Sampled Laddle Number / नमूना लेडल नंबर <span className="text-rose-500">*</span></label>
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            value={processFormData.sampled_laddle_number}
+                                            className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-lg font-bold text-slate-900 outline-none cursor-not-allowed"
+                                        />
+                                    </div>
+
+                                    {/* Row 3 */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-bold text-slate-700">Shift / शिफ्ट <span className="text-rose-500">*</span></label>
+                                        <select
+                                            value={processFormData.shift}
+                                            onChange={(e) => handleProcessFormChange("shift", e.target.value)}
+                                            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg font-bold text-slate-900 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all"
+                                            required
+                                        >
+                                            {shiftOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-bold text-slate-700">Final C% / अंतिम सी% <span className="text-rose-500">*</span></label>
+                                        <input
+                                            type="number"
+                                            step="0.0001"
+                                            placeholder="Enter C%"
+                                            value={processFormData.final_c}
+                                            onChange={(e) => handleProcessFormChange("final_c", e.target.value)}
+                                            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg font-mono font-bold text-slate-900 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all"
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* Row 4 */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-bold text-slate-700">Final MN% / अंतिम एमएन% <span className="text-rose-500">*</span></label>
+                                        <input
+                                            type="number"
+                                            step="0.0001"
+                                            placeholder="Enter MN%"
+                                            value={processFormData.final_mn}
+                                            onChange={(e) => handleProcessFormChange("final_mn", e.target.value)}
+                                            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg font-mono font-bold text-slate-900 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-bold text-slate-700">Final S% / अंतिम एस% <span className="text-rose-500">*</span></label>
+                                        <input
+                                            type="number"
+                                            step="0.0001"
+                                            placeholder="Enter S%"
+                                            value={processFormData.final_s}
+                                            onChange={(e) => handleProcessFormChange("final_s", e.target.value)}
+                                            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg font-mono font-bold text-slate-900 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all"
+                                            required
+                                        />
+                                    </div>
+
+                                    {/* Row 5 */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-bold text-slate-700">Final P% / अंतिम पी% <span className="text-rose-500">*</span></label>
+                                        <input
+                                            type="number"
+                                            step="0.0001"
+                                            placeholder="Enter P%"
+                                            value={processFormData.final_p}
+                                            onChange={(e) => handleProcessFormChange("final_p", e.target.value)}
+                                            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg font-mono font-bold text-slate-900 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-bold text-slate-700">Sample Tested by / नमूना परीक्षणकर्ता <span className="text-rose-500">*</span></label>
+                                        <select
+                                            value={processFormData.sample_tested_by}
+                                            onChange={(e) => handleProcessFormChange("sample_tested_by", e.target.value)}
+                                            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg font-bold text-slate-900 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all"
+                                            required
+                                        >
+                                            {testerOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Row 6 - Picture */}
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-bold text-slate-700">Test Report Picture / टेस्ट रिपोर्ट चित्र</label>
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative flex-1">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handlePictureUpload}
+                                                className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                            />
+                                            <div className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg font-bold text-slate-500 flex items-center justify-between">
+                                                <span>{processFormData.test_report_picture ? processFormData.test_report_picture.name : "Choose File No file chosen"}</span>
+                                                <Camera size={18} className="text-slate-400" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Row 7 - Remarks */}
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-bold text-slate-700">Remarks / टिप्पणियाँ</label>
+                                    <textarea
+                                        rows={3}
+                                        value={processFormData.remarks}
+                                        onChange={(e) => handleProcessFormChange("remarks", e.target.value)}
+                                        placeholder="Enter any remarks / कोई टिप्पणी दर्ज करें"
+                                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-lg font-bold text-slate-900 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none transition-all resize-none"
+                                    />
+                                </div>
+                            </form>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-center gap-6 flex-shrink-0">
+                            <button
+                                onClick={handleCloseProcessForm}
+                                className="px-10 py-3 text-sm font-black uppercase tracking-widest text-slate-500 hover:text-slate-700 transition-colors"
+                            >
+                                DISCARD
+                            </button>
+                            <button
+                                onClick={handleProcessSubmit}
+                                disabled={isSubmitting}
+                                className="px-16 py-3 bg-[#0f172a] text-white font-black text-sm uppercase tracking-widest rounded shadow-xl hover:bg-slate-800 transition-all disabled:opacity-50 active:scale-95"
+                            >
+                                {isSubmitting ? "PROCESSING..." : "COMMIT ANALYSIS"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Image Popup */}
+            {showImagePopup && (
+                <div className="fixed inset-0 z-[200] flex flex-col bg-slate-900/95 backdrop-blur-xl animate-in zoom-in duration-300">
+                    <div className="h-16 flex items-center justify-between px-6 border-b border-white/10">
+                        <span className="text-white text-[10px] font-black uppercase tracking-widest">Spectral Analysis Report</span>
+                        <button onClick={handleCloseImagePopup} className="p-2 text-white/60 hover:text-white transition-colors">
+                            <X size={24} />
+                        </button>
+                    </div>
+                    <div className="flex-1 flex items-center justify-center p-6">
+                        {selectedImage ? (
+                            <img src={selectedImage} alt="Report" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl border border-white/10" />
+                        ) : (
+                            <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

@@ -437,6 +437,17 @@ function PipeMillPage() {
         } else {
             fetchPendingReCoilData()
         }
+
+        // Auto-refresh every 8 seconds
+        const interval = setInterval(() => {
+            if (showHistory) {
+                fetchHistoryData()
+            } else {
+                fetchPendingReCoilData()
+            }
+        }, 8000)
+
+        return () => clearInterval(interval)
     }, [showHistory, fetchHistoryData, fetchPendingReCoilData])
 
     // Filter data based on search term
@@ -508,8 +519,8 @@ function PipeMillPage() {
     }
 
     return (
-        <div className="batchcode-page">
-            <div className="space-y-6">
+        <div className="batchcode-page" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <div className="space-y-4 sm:space-y-6" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
                 {/* Popup Modal */}
                 {showPopup && (
                     <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
@@ -618,103 +629,129 @@ function PipeMillPage() {
 
 
                 {/* Header Section */}
-                <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-                    <div className="flex items-center gap-3 w-full">
-                        <div className="flex-1 min-w-0">
-                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-red-500 truncate">
-                                {showHistory ? "Pipe Mill History" : "Pipe Mill Processing"}
-                            </h1>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                        <div className="relative w-full sm:flex-1">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                            <input
-                                type="text"
-                                placeholder="Search across all columns..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                            />
-                            {searchTerm && (
-                                <button
-                                    onClick={() => setSearchTerm("")}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                >
-                                    <X size={16} />
-                                </button>
-                            )}
+                <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 lg:p-6 mb-4 sm:mb-6 lg:mb-8 transform transition-all hover:shadow-md">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="p-2 sm:p-3 bg-red-50 rounded-lg sm:rounded-xl">
+                                <History className="h-6 w-6 sm:h-8 sm:w-8 text-red-500" />
+                            </div>
+                            <div>
+                                <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-gray-900 tracking-tight">
+                                    Pipe Mill <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-600 to-orange-500">
+                                        {showHistory ? "History" : "Processing"}
+                                    </span>
+                                </h1>
+                                <p className="text-gray-500 text-xs sm:text-sm mt-0.5 sm:mt-1 font-medium">
+                                    Manage and track pipe manufacturing cycles efficiently
+                                </p>
+                            </div>
                         </div>
 
-                        <button
-                            onClick={toggleView}
-                            className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors w-full sm:w-auto"
-                        >
-                            {showHistory ? (
-                                <>
-                                    <ArrowLeft className="h-4 w-4" />
-                                    Back to Pending
-                                </>
-                            ) : (
-                                <>
-                                    <History className="h-4 w-4" />
-                                    View History
-                                </>
-                            )}
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center">
+                            <div className="relative group">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-red-500 transition-colors" size={18} />
+                                <input
+                                    type="text"
+                                    placeholder="Search records..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full sm:w-56 lg:w-64 pl-9 pr-9 py-2 sm:py-2.5 bg-gray-50 border border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-all text-sm font-medium"
+                                />
+                                {searchTerm && (
+                                    <button
+                                        onClick={() => setSearchTerm("")}
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={toggleView}
+                                className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm shadow-lg shadow-red-200/50 transform active:scale-95 transition-all ${showHistory
+                                    ? "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                                    : "bg-gradient-to-r from-red-600 to-red-500 text-white hover:from-red-700 hover:to-red-600"
+                                    }`}
+                            >
+                                {showHistory ? (
+                                    <>
+                                        <ArrowLeft className="h-4 w-4" />
+                                        Back to Pending
+                                    </>
+                                ) : (
+                                    <>
+                                        <History className="h-4 w-4" />
+                                        View History
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 {showProcessForm && (
-                    <div className="mt-6">
-                        <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-200">
-                            <div className="bg-red-500 text-white p-4 rounded-t-lg flex justify-between items-center">
-                                <h3 className="text-lg font-semibold">Submit Pipe Mill Data</h3>
-                                <button onClick={handleCloseProcessForm} className="text-white hover:text-gray-200">
-                                    <X className="h-5 w-5" />
+                    <div className="mt-4 sm:mt-6 lg:mt-8">
+                        <div className="bg-white rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] shadow-2xl w-full sm:w-[98%] lg:w-[96%] mx-auto max-h-[85vh] overflow-y-auto border border-gray-100 transform transition-all duration-500 custom-scrollbar">
+                            {/* Form Header */}
+                            <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white p-4 sm:p-6 md:p-8 flex justify-between items-center sticky top-0 z-30 shadow-lg backdrop-blur-md border-b border-white/10">
+                                <div className="flex items-center gap-4">
+                                    <div className="p-2 sm:p-3 bg-red-600 rounded-xl sm:rounded-2xl shadow-lg shadow-red-600/30">
+                                        <Edit className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-base sm:text-xl md:text-2xl font-black tracking-tight">Production Process Control</h3>
+                                        <p className="text-gray-400 text-[9px] sm:text-[10px] md:text-xs font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] mt-0.5">Manufacturing Execution System</p>
+                                    </div>
+                                </div>
+                                <button onClick={handleCloseProcessForm} className="p-2.5 bg-white/5 hover:bg-red-600/20 hover:text-red-400 rounded-2xl transition-all duration-300 border border-white/10 group">
+                                    <X className="h-6 w-6 group-hover:rotate-90 transition-transform duration-300" />
                                 </button>
                             </div>
 
-                            <div className="p-6 space-y-4">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {/* Recoiler Short Code - NON EDITABLE */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Recoiler Short Code / रिकोइलर शॉर्ट कोड <span className="text-red-500">*</span>
+                            <div className="p-4 sm:p-6 md:p-8 lg:p-12 space-y-6 sm:space-y-8 lg:space-y-10">
+                                {/* Technical Info Grid */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+                                    {/* Recoiler Short Code - READONLY */}
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                                            Recoiler Code / कोड <span className="text-red-500">*</span>
                                         </label>
-                                        <input
-                                            type="text"
-                                            value={processFormData.recoiler_short_code}
-                                            readOnly
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
-                                        />
-                                        <p className="text-xs text-gray-500 mt-1">Auto-filled from ReCoil record</p>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={processFormData.recoiler_short_code}
+                                                readOnly
+                                                className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-gray-500 font-black cursor-not-allowed shadow-inner"
+                                            />
+                                        </div>
                                     </div>
 
-                                    {/* Machine Number - NON EDITABLE (if you have this field) */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    {/* Machine Number - READONLY */}
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
                                             Machine Number / मशीन नंबर <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="text"
                                             value={selectedRow?.machine_number || "N/A"}
                                             readOnly
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
+                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-gray-500 font-black cursor-not-allowed shadow-inner"
                                         />
-                                        <p className="text-xs text-gray-500 mt-1">Auto-filled from ReCoil record</p>
                                     </div>
 
                                     {/* Mill Number - EDITABLE */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <div className="space-y-2 group">
+                                        <label className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest px-1 group-focus-within:text-red-500 transition-colors">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300 group-focus-within:bg-red-500 transition-colors"></div>
                                             Mill Number / मिल नंबर <span className="text-red-500">*</span>
                                         </label>
                                         <select
                                             value={processFormData.mill_number}
                                             onChange={(e) => handleProcessFormChange("mill_number", e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all font-bold text-gray-700 outline-none hover:border-red-200 shadow-sm"
                                             required
                                         >
                                             <option value="">Select Mill Number</option>
@@ -727,28 +764,31 @@ function PipeMillPage() {
                                     </div>
 
                                     {/* Section - EDITABLE */}
-                                    {/* <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Section / सेक्शन
+                                    <div className="space-y-2 group">
+                                        <label className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest px-1 group-focus-within:text-red-500 transition-colors">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300 group-focus-within:bg-red-500 transition-colors"></div>
+                                            Section / सेक्शन <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="text"
                                             value={processFormData.section}
                                             onChange={(e) => handleProcessFormChange("section", e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                                            placeholder="Enter section"
+                                            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all font-bold text-gray-700 outline-none hover:border-red-200 shadow-sm"
+                                            placeholder="Enter section name"
+                                            required
                                         />
-                                    </div> */}
+                                    </div>
 
                                     {/* Item Type - EDITABLE */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <div className="space-y-2 group">
+                                        <label className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest px-1 group-focus-within:text-red-500 transition-colors">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300 group-focus-within:bg-red-500 transition-colors"></div>
                                             Item Type / आइटम प्रकार <span className="text-red-500">*</span>
                                         </label>
                                         <select
                                             value={processFormData.item_type}
                                             onChange={(e) => handleProcessFormChange("item_type", e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all font-bold text-gray-700 outline-none hover:border-red-200 shadow-sm"
                                             required
                                         >
                                             <option value="">Select Item Type</option>
@@ -759,14 +799,15 @@ function PipeMillPage() {
                                     </div>
 
                                     {/* Size - EDITABLE */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <div className="space-y-2 group">
+                                        <label className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest px-1 group-focus-within:text-red-500 transition-colors">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300 group-focus-within:bg-red-500 transition-colors"></div>
                                             Size / आकार <span className="text-red-500">*</span>
                                         </label>
                                         <select
                                             value={processFormData.size}
                                             onChange={(e) => handleProcessFormChange("size", e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all font-bold text-gray-700 outline-none hover:border-red-200 shadow-sm"
                                             required
                                         >
                                             <option value="">Select Size</option>
@@ -790,29 +831,31 @@ function PipeMillPage() {
                                     </div>
 
                                     {/* Thickness - EDITABLE */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <div className="space-y-2 group">
+                                        <label className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest px-1 group-focus-within:text-red-500 transition-colors">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300 group-focus-within:bg-red-500 transition-colors"></div>
                                             Thickness / मोटाई <span className="text-red-500">*</span>
                                         </label>
                                         <input
                                             type="text"
                                             value={processFormData.thickness}
                                             onChange={(e) => handleProcessFormChange("thickness", e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all font-bold text-gray-700 outline-none hover:border-red-200 shadow-sm"
                                             placeholder="e.g., 1.50mm"
                                             required
                                         />
                                     </div>
 
                                     {/* Shift - EDITABLE */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <div className="space-y-2 group">
+                                        <label className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest px-1 group-focus-within:text-red-500 transition-colors">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300 group-focus-within:bg-red-500 transition-colors"></div>
                                             Shift / शिफ्ट <span className="text-red-500">*</span>
                                         </label>
                                         <select
                                             value={processFormData.shift}
                                             onChange={(e) => handleProcessFormChange("shift", e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all font-bold text-gray-700 outline-none hover:border-red-200 shadow-sm"
                                             required
                                         >
                                             <option value="">Select Shift</option>
@@ -822,14 +865,15 @@ function PipeMillPage() {
                                     </div>
 
                                     {/* Fitter Name - EDITABLE */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <div className="space-y-2 group">
+                                        <label className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest px-1 group-focus-within:text-red-500 transition-colors">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300 group-focus-within:bg-red-500 transition-colors"></div>
                                             Fitter Name / फिटर नाम <span className="text-red-500">*</span>
                                         </label>
                                         <select
                                             value={processFormData.fitter_name}
                                             onChange={(e) => handleProcessFormChange("fitter_name", e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all font-bold text-gray-700 outline-none hover:border-red-200 shadow-sm"
                                             required
                                         >
                                             <option value="">Select Fitter Name</option>
@@ -849,15 +893,16 @@ function PipeMillPage() {
 
                                     {/* Fitter Name Other - EDITABLE */}
                                     {processFormData.fitter_name === "Other" && (
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Specify Other Fitter Name / अन्य फिटर नाम निर्दिष्ट करें <span className="text-red-500">*</span>
+                                        <div className="space-y-2 group animate-in zoom-in-95 duration-200">
+                                            <label className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest px-1 group-focus-within:text-red-500 transition-colors">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-gray-300 group-focus-within:bg-red-500 transition-colors"></div>
+                                                Specify Fitter / नाम निर्दिष्ट करें <span className="text-red-500">*</span>
                                             </label>
                                             <input
                                                 type="text"
                                                 value={processFormData.fitter_name_other}
                                                 onChange={(e) => handleProcessFormChange("fitter_name_other", e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                                className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all font-bold text-gray-700 outline-none hover:border-red-200 shadow-sm"
                                                 placeholder="Enter fitter name"
                                                 required
                                             />
@@ -865,14 +910,15 @@ function PipeMillPage() {
                                     )}
 
                                     {/* Quality Supervisor - EDITABLE */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Quality Supervisor / गुणवत्ता पर्यवेक्षक <span className="text-red-500">*</span>
+                                    <div className="space-y-2 group">
+                                        <label className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest px-1 group-focus-within:text-red-500 transition-colors">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300 group-focus-within:bg-red-500 transition-colors"></div>
+                                            Quality Supervisor <span className="text-red-500">*</span>
                                         </label>
                                         <select
                                             value={processFormData.quality_supervisor}
                                             onChange={(e) => handleProcessFormChange("quality_supervisor", e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all font-bold text-gray-700 outline-none hover:border-red-200 shadow-sm"
                                             required
                                         >
                                             <option value="">Select Quality Supervisor</option>
@@ -889,14 +935,15 @@ function PipeMillPage() {
                                     </div>
 
                                     {/* Mill Incharge - EDITABLE */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <div className="space-y-2 group">
+                                        <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 group-focus-within:text-red-500 transition-colors">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300 group-focus-within:bg-red-500 transition-colors"></div>
                                             Mill Incharge / मिल इंचार्ज <span className="text-red-500">*</span>
                                         </label>
                                         <select
                                             value={processFormData.mill_incharge}
                                             onChange={(e) => handleProcessFormChange("mill_incharge", e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all font-bold text-gray-700 outline-none hover:border-red-200 shadow-sm"
                                             required
                                         >
                                             <option value="">Select Mill Incharge</option>
@@ -906,14 +953,15 @@ function PipeMillPage() {
                                     </div>
 
                                     {/* Forman Name - EDITABLE */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <div className="space-y-2 group">
+                                        <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 group-focus-within:text-red-500 transition-colors">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300 group-focus-within:bg-red-500 transition-colors"></div>
                                             Forman Name / फोरमैन नाम <span className="text-red-500">*</span>
                                         </label>
                                         <select
                                             value={processFormData.forman_name}
                                             onChange={(e) => handleProcessFormChange("forman_name", e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all font-bold text-gray-700 outline-none hover:border-red-200 shadow-sm"
                                             required
                                         >
                                             <option value="">Select Forman Name</option>
@@ -923,73 +971,99 @@ function PipeMillPage() {
                                     </div>
 
                                     {/* Picture - EDITABLE */}
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Picture / तस्वीर
+                                    <div className="space-y-2 group">
+                                        <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 group-focus-within:text-red-500 transition-colors">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300 group-focus-within:bg-red-500 transition-colors"></div>
+                                            Media Evidence / तस्वीर
                                         </label>
-                                        <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-3">
                                             <input
                                                 type="file"
                                                 accept="image/*"
                                                 onChange={handlePictureUpload}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                                                className="w-full px-5 py-3 border border-gray-200 rounded-2xl bg-gray-50 focus:outline-none focus:ring-4 focus:ring-red-500/10 cursor-pointer text-sm file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-red-50 file:text-red-700 hover:file:bg-red-100 transition-all font-medium text-gray-500"
                                             />
                                             {processFormData.picture && (
-                                                <Camera className="h-5 w-5 text-green-500" />
+                                                <div className="p-2.5 bg-green-50 rounded-xl border border-green-100 animate-pulse">
+                                                    <Camera className="h-5 w-5 text-green-500" />
+                                                </div>
                                             )}
                                         </div>
                                     </div>
 
                                     {/* Remarks - EDITABLE */}
-                                    <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Remarks / टिप्पणियाँ
+                                    <div className="lg:col-span-2 space-y-2 group">
+                                        <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 group-focus-within:text-red-500 transition-colors">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-300 group-focus-within:bg-red-500 transition-colors"></div>
+                                            Operational Remarks / टिप्पणियाँ
                                         </label>
                                         <textarea
                                             value={processFormData.remarks}
                                             onChange={(e) => handleProcessFormChange("remarks", e.target.value)}
-                                            rows={3}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-                                            placeholder="Enter any remarks / कोई टिप्पणी दर्ज करें"
+                                            rows={1}
+                                            className="w-full px-5 py-4 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all font-bold text-gray-700 outline-none hover:border-red-200 shadow-sm resize-none"
+                                            placeholder="Add any specific manufacturing notes or observations..."
                                         />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3">
+                            {/* Form Footer */}
+                            <div className="bg-gray-50/50 backdrop-blur-sm p-4 sm:p-6 md:p-8 lg:p-12 border-t border-gray-100 flex flex-col sm:flex-row justify-end items-center gap-3 sm:gap-4">
                                 <button
                                     onClick={handleCloseProcessForm}
-                                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100"
+                                    className="w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-4 text-xs sm:text-sm font-black text-gray-500 border-2 border-gray-200 rounded-xl sm:rounded-2xl hover:bg-gray-100 hover:border-gray-300 transition-all duration-300 active:scale-95 tracking-wider sm:tracking-widest uppercase"
                                 >
-                                    Cancel / रद्द करें
+                                    Cancel Operations
                                 </button>
                                 <button
                                     onClick={handleProcessSubmit}
                                     disabled={isSubmitting}
-                                    className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                    className="w-full sm:w-auto px-8 sm:px-12 py-3 sm:py-4 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-xl sm:rounded-2xl shadow-xl shadow-red-500/30 hover:shadow-red-500/50 hover:from-red-700 hover:to-red-600 font-black text-xs sm:text-sm transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:gap-3 tracking-wider sm:tracking-widest uppercase"
                                 >
-                                    <Save className="h-4 w-4" />
-                                    {isSubmitting ? "Submitting... / जमा किया जा रहा है..." : "Submit Data / डेटा जमा करें"}
+                                    {isSubmitting ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                            Finalizing Records...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Save className="h-4 w-4" />
+                                            Confirm Submission
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </div>
                     </div>
                 )}
-                <div className="rounded-lg border border-gray-200 shadow-md bg-white overflow-hidden">
-                    <div className="bg-gradient-to-r from-red-500 to-red-400 border-b border-red-200 p-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                                <h2 className="text-white text-lg font-semibold">
-                                    {showHistory ? "Pipe Mill Records" : "Pending for Pipe Mill Processing"}
-                                </h2>
-                                <div className="relative flex items-center justify-center w-10 h-10">
-                                    <div className="absolute inset-0 rounded-full bg-white/20 p-0.5">
-                                        <div className="w-full h-full rounded-full bg-transparent flex items-center justify-center">
-                                            <span className="text-white text-sm font-bold">
-                                                {showHistory ? filteredHistoryData.length : filteredPendingData.length}
-                                            </span>
-                                        </div>
-                                    </div>
+                <div className="bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden transform transition-all" style={{ minWidth: 0 }}>
+                    <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border-b border-gray-700 p-3 sm:p-4 lg:p-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="p-2 sm:p-2.5 bg-red-500 rounded-xl sm:rounded-2xl shadow-lg shadow-red-500/30">
+                                    <History className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                                </div>
+                                <div>
+                                    <h2 className="text-white text-base sm:text-lg lg:text-xl font-bold tracking-tight">
+                                        {showHistory ? "Manufacturing Log" : "Incoming Batches"}
+                                    </h2>
+                                    <p className="text-gray-400 text-[10px] sm:text-xs font-medium uppercase tracking-wider sm:tracking-widest mt-0.5">
+                                        {showHistory ? "Complete production history" : "Waiting for mill processing"}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <div className="hidden sm:flex items-center gap-2 bg-black/20 px-3 py-1.5 rounded-full border border-white/5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                                    <span className="text-white text-[9px] font-black uppercase tracking-widest">Live Sync</span>
+                                </div>
+                                <div className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 rounded-xl sm:rounded-2xl border border-white/10 backdrop-blur-sm">
+                                    <span className="text-white/60 text-[10px] sm:text-xs font-bold mr-2 sm:mr-3 uppercase tracking-tighter">Total Records</span>
+                                    <span className="text-white text-sm sm:text-lg font-black font-mono">
+                                        {showHistory ? filteredHistoryData.length : filteredPendingData.length}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -1001,13 +1075,13 @@ function PipeMillPage() {
                             <p className="text-red-600">Loading data...</p>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
+                        <div className="flex-1 min-h-0 overflow-auto custom-scrollbar" style={{ maxHeight: 'calc(100vh - 280px)', WebkitOverflowScrolling: 'touch' }}>
                             {showHistory ? (
                                 /* HISTORY VIEW - Pipe Mill Records */
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
+                                <table className="min-w-full divide-y divide-gray-100">
+                                    <thead className="bg-gray-50/50">
                                         <tr>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <th className="sticky left-0 z-10 bg-gray-50/80 backdrop-blur-md px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
                                                 Time / तारीख व समय
                                             </th>
                                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -1016,101 +1090,97 @@ function PipeMillPage() {
                                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                 Pipe MIll Code / पाइप मिल कोड
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                                 Mill Number / मिल नंबर
                                             </th>
-                                            {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                                 Section / सेक्शन
-                                            </th> */}
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Item Type / आइटम प्रकार
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Size / आकार
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
+                                                Recoiler / रिकोइलर
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Thickness / मोटाई
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
+                                                Pipe Mill / पाइप मिल
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Shift / शिफ्ट
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
+                                                Parameters / पैरामीटर्स
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Fitter Name / फिटर नाम
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
+                                                Operations / ऑपरेशंस
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Quality Supervisor / गुणवत्ता पर्यवेक्षक
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
+                                                Logistics / रसद
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Mill Incharge / मिल इंचार्ज
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Forman Name / फोरमैन नाम
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Remarks
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Picture
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
+                                                Evidence / साक्ष्य
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
+                                    <tbody className="bg-white divide-y divide-gray-50">
                                         {filteredHistoryData.length > 0 ? (
                                             filteredHistoryData.map((record, index) => (
-                                                <tr key={record.id || record._id || index} className="hover:bg-gray-50">
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {formatIndianDateTime(record.created_at || 'N/A')}
+                                                <tr key={record.id || record._id || index} className="hover:bg-gray-50/50 transition-colors group">
+                                                    <td className="sticky left-0 z-10 bg-white group-hover:bg-gray-50/50 px-6 py-5 whitespace-nowrap">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-bold text-gray-900">{formatIndianDateTime(record.created_at).split(' ')[0]}</span>
+                                                            <span className="text-xs font-medium text-gray-500">{formatIndianDateTime(record.created_at).split(' ')[1]}</span>
+                                                        </div>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.recoiler_short_code || 'N/A'}
+                                                    <td className="px-6 py-5 whitespace-nowrap">
+                                                        <span className="px-3 py-1 bg-orange-50 text-orange-700 rounded-lg text-xs font-bold border border-orange-100 shadow-sm">
+                                                            {record.recoiler_short_code || 'N/A'}
+                                                        </span>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.unique_code || 'N/A'}
+                                                    <td className="px-6 py-5 whitespace-nowrap">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-black text-red-600 tracking-tighter">{record.unique_code || 'N/A'}</span>
+                                                            <span className="text-[10px] text-gray-400 font-bold uppercase">{record.mill_number}</span>
+                                                        </div>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.mill_number || 'N/A'}
+                                                    <td className="px-6 py-5 whitespace-nowrap">
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-[10px] font-bold uppercase">{record.section}</span>
+                                                            <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-[10px] font-bold uppercase">{record.item_type}</span>
+                                                            <span className="px-2 py-0.5 bg-red-50 text-red-700 rounded text-[10px] font-bold uppercase">{record.size}</span>
+                                                            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[10px] font-bold uppercase">{record.thickness}</span>
+                                                        </div>
                                                     </td>
-                                                    {/* <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.section || 'N/A'}
-                                                    </td> */}
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.item_type || 'N/A'}
+                                                    <td className="px-6 py-5 whitespace-nowrap">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`w-2 h-2 rounded-full ${record.shift === 'Day' ? 'bg-yellow-400' : 'bg-indigo-400'}`}></div>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-xs font-bold text-gray-800">{record.fitter_name}</span>
+                                                                <span className="text-[10px] text-gray-500 font-medium uppercase tracking-tight">{record.shift} Shift</span>
+                                                            </div>
+                                                        </div>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.size || 'N/A'}
+                                                    <td className="px-6 py-5 whitespace-nowrap">
+                                                        <div className="space-y-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-[10px] font-bold text-gray-400 w-4">S:</span>
+                                                                <span className="text-xs text-gray-600 font-medium">{record.quality_supervisor}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-[10px] font-bold text-gray-400 w-4">I:</span>
+                                                                <span className="text-xs text-gray-600 font-medium">{record.mill_incharge}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-[10px] font-bold text-gray-400 w-4">F:</span>
+                                                                <span className="text-xs text-gray-600 font-medium">{record.forman_name}</span>
+                                                            </div>
+                                                        </div>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.thickness || 'N/A'}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.shift || 'N/A'}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.fitter_name || 'N/A'}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.quality_supervisor || 'N/A'}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.mill_incharge || 'N/A'}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.forman_name || 'N/A'}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.remarks || 'N/A'}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    <td className="px-6 py-5 whitespace-nowrap">
                                                         {record.picture ? (
                                                             <button
                                                                 onClick={() => handleViewImage(record.picture)}
-                                                                className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 transition-colors"
+                                                                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:border-red-200 hover:text-red-600 hover:shadow-sm transition-all shadow-[0_2px_4px_rgba(0,0,0,0.02)]"
                                                             >
-                                                                <Camera className="h-4 w-4" />
-                                                                View
+                                                                <Camera className="h-3.5 w-3.5" />
+                                                                View Record
                                                             </button>
                                                         ) : (
-                                                            <span className="text-gray-400">—</span>
+                                                            <span className="px-3 py-1.5 bg-gray-50 rounded-lg text-[10px] font-bold text-gray-400 uppercase">No Media</span>
                                                         )}
                                                     </td>
                                                 </tr>
@@ -1150,74 +1220,65 @@ function PipeMillPage() {
                                 </table>
                             ) : (
                                 /* PENDING VIEW - ReCoil Records */
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
+                                <table className="min-w-full divide-y divide-gray-100" style={{ tableLayout: 'auto' }}>
+                                    <thead className="bg-gray-50/50">
                                         <tr>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Action / कार्रवाई
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
+                                                Batch Control / बैच नियंत्रण
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Time / तारीख व समय
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
+                                                Arrival / आगमन
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                ReCoil Code / रीकॉइल कोड
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
+                                                Input Material / इनपुट सामग्री
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Size / आकार
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
+                                                Personnel / कार्मिक
                                             </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Supervisor / पर्यवेक्षक
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Incharge / इंचार्ज
-                                            </th>
-                                            {/* <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Contractor / ठेकेदार
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Welder Name / वेल्डर नाम
-                                            </th> */}
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                Machine No. / मशीन नंबर
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100">
+                                                Station / स्टेशन
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
+                                    <tbody className="bg-white divide-y divide-gray-50">
                                         {filteredPendingData.length > 0 ? (
                                             filteredPendingData.map((record, index) => (
-                                                <tr key={record.id || record._id || index} className="hover:bg-gray-50">
-                                                    <td className="px-4 py-4 whitespace-nowrap">
+                                                <tr key={record.id || record._id || index} className="hover:bg-red-50/30 transition-all group">
+                                                    <td className="px-6 py-5 whitespace-nowrap">
                                                         <button
                                                             onClick={() => handleProcessClick(record)}
-                                                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors"
+                                                            className="relative overflow-hidden group/btn px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-gray-200 hover:shadow-red-200 hover:bg-red-600 transition-all active:scale-95"
                                                         >
-                                                            <Edit className="h-3 w-3" />
-                                                            Process
+                                                            <div className="absolute inset-0 bg-red-500 translate-x-[-100%] group-hover/btn:translate-x-0 transition-transform duration-300"></div>
+                                                            <Edit className="h-3.5 w-3.5 relative z-10" />
+                                                            <span className="relative z-10">Start Processing</span>
                                                         </button>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {formatIndianDateTime(record.created_at || 'N/A')}
+                                                    <td className="px-6 py-5 whitespace-nowrap">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-bold text-gray-900">{formatIndianDateTime(record.created_at).split(' ')[0]}</span>
+                                                            <span className="text-xs font-medium text-gray-500">{formatIndianDateTime(record.created_at).split(' ')[1]}</span>
+                                                        </div>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.unique_code || 'N/A'}
+                                                    <td className="px-6 py-5 whitespace-nowrap">
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className="px-3 py-1 bg-red-50 text-red-700 border border-red-100 rounded-lg text-sm font-black w-fit">{record.unique_code || 'N/A'}</span>
+                                                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Material: {record.size}</span>
+                                                        </div>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.size || 'N/A'}
+                                                    <td className="px-6 py-5 whitespace-nowrap">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-xs font-bold text-gray-800">{record.supervisor}</span>
+                                                            <span className="text-[10px] text-gray-500 font-medium uppercase tracking-tight">Lead: {record.incharge}</span>
+                                                        </div>
                                                     </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.supervisor || 'N/A'}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.incharge || 'N/A'}
-                                                    </td>
-                                                    {/* <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.contractor || 'N/A'}
-                                                    </td>
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.welder_name || 'N/A'}
-                                                    </td> */}
-                                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {record.machine_number || 'N/A'}
+                                                    <td className="px-6 py-5 whitespace-nowrap">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-xs font-black text-gray-500 group-hover:bg-red-100 group-hover:text-red-600 transition-colors">
+                                                                #{record.machine_number}
+                                                            </div>
+                                                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Recoiler Unit</span>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))
@@ -1265,6 +1326,20 @@ function PipeMillPage() {
                 @keyframes shrink {
                     from { width: 100%; }
                     to { width: 0%; }
+                }
+                .custom-scrollbar::-webkit-scrollbar {
+                    height: 6px;
+                    width: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: #e5e7eb;
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: #d1d5db;
                 }
             `}</style>
         </div>

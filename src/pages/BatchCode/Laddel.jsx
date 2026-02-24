@@ -1,6 +1,10 @@
 "use client"
-import { useState, useEffect, useRef } from "react"
-import { Save, ArrowLeft, CheckCircle, AlertCircle, X, Eye, Edit, Trash2, Search, CalendarDays } from "lucide-react"
+import { useState, useEffect, useRef, useCallback } from "react"
+import {
+    Save, ArrowLeft, CheckCircle, AlertCircle, X, Eye, Edit, Trash2, Search,
+    Calendar, Hash, ChevronDown, HardHat, Droplets, Shield, User, UserPlus,
+    Send, Info, ClipboardEdit
+} from "lucide-react"
 // @ts-ignore - JSX component
 import * as batchcodeAPI from "../../api/batchcodeApi";
 
@@ -22,7 +26,8 @@ function LaddleFormPage() {
         timber_man_name: "",
         laddle_man_name: "",
         laddle_foreman_name: "",
-        supervisor_name: ""
+        supervisor_name: "",
+        dip_reading: ""
     })
 
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -58,71 +63,17 @@ function LaddleFormPage() {
         setSuccessUniqueCode("")
     }
 
-    // Fetch ladle data when in list view
-    useEffect(() => {
-        if (viewMode === "list") {
-            fetchLaddleData()
-        }
-    }, [viewMode])
-
-    // Filter data when search term or laddleData changes
-    useEffect(() => {
-        if (!searchTerm.trim()) {
-            setFilteredLaddleData(laddleData)
-        } else {
-            const filtered = laddleData.filter(record => {
-                const recordData = record.data || record
-                const searchLower = searchTerm.toLowerCase()
-
-                // Search across all columns
-                return (
-                    // Search in numeric fields
-                    String(recordData.laddle_number || '').toLowerCase().includes(searchLower) ||
-                    String(recordData.plate_life || '').toLowerCase().includes(searchLower) ||
-
-                    // Search in text fields
-                    String(recordData.timber_man_name || '').toLowerCase().includes(searchLower) ||
-                    String(recordData.laddle_man_name || '').toLowerCase().includes(searchLower) ||
-                    String(recordData.laddle_foreman_name || '').toLowerCase().includes(searchLower) ||
-                    String(recordData.supervisor_name || '').toLowerCase().includes(searchLower) ||
-
-                    // Search in unique code
-                    String(recordData.unique_code || generateUniqueCode(recordData) || '').toLowerCase().includes(searchLower) ||
-
-                    // Search in date (both formatted and original)
-                    formatIndianDateTime(recordData.sample_date).toLowerCase().includes(searchLower) ||
-                    String(recordData.sample_date || '').toLowerCase().includes(searchLower) ||
-
-                    // Search in status fields (Yes/No)
-                    String(recordData.slag_cleaning_top === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower) ||
-                    String(recordData.slag_cleaning_bottom === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower) ||
-                    String(recordData.nozzle_proper_lancing === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower) ||
-                    String(recordData.pursing_plug_cleaning === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower) ||
-                    String(recordData.sly_gate_check === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower) ||
-                    String(recordData.nozzle_check_cleaning === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower) ||
-                    String(recordData.sly_gate_operate === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower) ||
-                    String(recordData.nfc_proper_heat === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower) ||
-                    String(recordData.nfc_filling_nozzle === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower)
-                )
-            })
-            setFilteredLaddleData(filtered)
-        }
-    }, [searchTerm, laddleData])
-
-    const showPopupMessage = (message, type) => {
+    const showPopupMessage = useCallback((message, type) => {
         setPopupMessage(message)
         setPopupType(type)
         setShowPopup(true)
-    }
+    }, [])
 
-    const fetchLaddleData = async () => {
-        setLoading(true)
+    const fetchLaddleData = useCallback(async (isSilent = false) => {
+        if (!isSilent) setLoading(true)
         try {
             const response = await batchcodeAPI.getLaddleChecklists()
-
-            // Handle different response structures
             let data = [];
-
             if (Array.isArray(response.data)) {
                 data = response.data;
             } else if (response.data && Array.isArray(response.data.data)) {
@@ -134,16 +85,26 @@ function LaddleFormPage() {
             } else {
                 data = [];
             }
-
             setLaddleData(data)
-
         } catch (error) {
             console.error("❌ Error fetching ladle data:", error)
-            showPopupMessage("Error fetching ladle data! / लेडल डेटा प्राप्त करने में त्रुटि!", "warning")
+            if (!isSilent) showPopupMessage("Error fetching ladle data! / लेडल डेटा प्राप्त करने में त्रुटि!", "warning")
         } finally {
-            setLoading(false)
+            if (!isSilent) setLoading(false)
         }
-    }
+    }, [])
+
+    // Fetch ladle data when in list view
+    useEffect(() => {
+        if (viewMode === "list") {
+            fetchLaddleData()
+            // Auto-refresh every 10 seconds
+            const interval = setInterval(() => {
+                fetchLaddleData(true)
+            }, 10000)
+            return () => clearInterval(interval)
+        }
+    }, [viewMode, fetchLaddleData])
 
     const handleInputChange = (e) => {
         const { name, value } = e.target
@@ -184,6 +145,74 @@ function LaddleFormPage() {
         }
     }
 
+    const formatIndianDateTime = (dateString) => {
+        if (!dateString) return 'N/A';
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return 'Invalid Date';
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            const hour = date.getHours().toString().padStart(2, '0');
+            const minute = date.getMinutes().toString().padStart(2, '0');
+            const second = date.getSeconds().toString().padStart(2, '0');
+            return `${day}-${month}-${year} ${hour}:${minute}:${second}`;
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return 'Invalid Date';
+        }
+    }
+
+    const generateUniqueCode = (recordData) => {
+        if (recordData.unique_code) return recordData.unique_code;
+        return `LAD-${recordData.id || Math.floor(Math.random() * 1000)}`;
+    }
+
+    // Filter data when search term or laddleData changes
+    useEffect(() => {
+        if (!searchTerm.trim()) {
+            setFilteredLaddleData(laddleData)
+        } else {
+            const filtered = laddleData.filter(record => {
+                const recordData = record.data || record
+                const searchLower = searchTerm.toLowerCase()
+
+                // Search across all columns
+                return (
+                    // Search in numeric fields
+                    String(recordData.laddle_number || '').toLowerCase().includes(searchLower) ||
+                    String(recordData.plate_life || '').toLowerCase().includes(searchLower) ||
+
+                    // Search in text fields
+                    String(recordData.timber_man_name || '').toLowerCase().includes(searchLower) ||
+                    String(recordData.laddle_man_name || '').toLowerCase().includes(searchLower) ||
+                    String(recordData.laddle_foreman_name || '').toLowerCase().includes(searchLower) ||
+                    String(recordData.supervisor_name || '').toLowerCase().includes(searchLower) ||
+
+                    // Search in unique code
+                    String(recordData.unique_code || generateUniqueCode(recordData) || '').toLowerCase().includes(searchLower) ||
+
+                    // Search in date (both formatted and original)
+                    formatIndianDateTime(recordData.sample_date).toLowerCase().includes(searchLower) ||
+                    String(recordData.sample_date || '').toLowerCase().includes(searchLower) ||
+
+                    // Search in status fields (Yes/No)
+                    String(recordData.slag_cleaning_top === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower) ||
+                    String(recordData.slag_cleaning_bottom === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower) ||
+                    String(recordData.nozzle_proper_lancing === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower) ||
+                    String(recordData.pursing_plug_cleaning === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower) ||
+                    String(recordData.sly_gate_check === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower) ||
+                    String(recordData.nozzle_check_cleaning === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower) ||
+                    String(recordData.sly_gate_operate === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower) ||
+                    String(recordData.nfc_proper_heat === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower) ||
+                    String(recordData.nfc_filling_nozzle === "Done" ? "Yes" : "No").toLowerCase().includes(searchLower) ||
+                    String(recordData.dip_reading || '').toLowerCase().includes(searchLower)
+                )
+            })
+            setFilteredLaddleData(filtered)
+        }
+    }, [searchTerm, laddleData])
+
     const handleChecklistChange = (field, value) => {
         setFormData(prev => ({
             ...prev,
@@ -222,6 +251,9 @@ function LaddleFormPage() {
         }
         if (!formData.supervisor_name.trim()) {
             newErrors.supervisor_name = "Supervisor Name is required"
+        }
+        if (!formData.dip_reading.trim()) {
+            newErrors.dip_reading = "Dip Reading is required"
         }
 
         // Validate that all checklist items have values (both "Done" and "Not Done" are valid)
@@ -294,7 +326,8 @@ function LaddleFormPage() {
                     timber_man_name: "",
                     laddle_man_name: "",
                     laddle_foreman_name: "",
-                    supervisor_name: ""
+                    supervisor_name: "",
+                    dip_reading: ""
                 })
                 setErrors({})
 
@@ -330,39 +363,6 @@ function LaddleFormPage() {
         )
     }
 
-    // Function to format date in Indian format (DD-MM-YYYY)
-    const formatIndianDateTime = (dateString) => {
-        if (!dateString) return '';
-
-        try {
-            const date = new Date(dateString);
-
-            // Check if date is valid
-            if (isNaN(date.getTime())) {
-                return dateString;
-            }
-
-            // Format to DD-MM-YYYY
-            const day = date.getDate().toString().padStart(2, '0');
-            const month = (date.getMonth() + 1).toString().padStart(2, '0');
-            const year = date.getFullYear();
-
-            return `${day}-${month}-${year}`;
-        } catch (error) {
-            console.error('Error formatting date:', error);
-            return dateString;
-        }
-    }
-
-    // Function to generate unique code if not present
-    const generateUniqueCode = (recordData) => {
-        if (recordData.unique_code) return recordData.unique_code;
-
-        // Generate a unique code based on data
-        const date = recordData.sample_date ? recordData.sample_date.replace(/-/g, '') : '';
-        const laddleNum = recordData.laddle_number || '0';
-        return `LAD${date}${laddleNum}`;
-    }
 
     const checklistItems = [
         {
@@ -441,536 +441,312 @@ function LaddleFormPage() {
     ]
 
     return (
-        <div className="batchcode-page">
-            <div className="space-y-6">
-                {/* Popup Modal */}
-                {showPopup && (
-                    <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-                        <div
-                            className={`relative mx-4 p-6 rounded-lg shadow-2xl max-w-sm w-full transform transition-all duration-300 pointer-events-auto ${popupType === "success"
-                                ? 'bg-green-50 border-2 border-green-400'
-                                : 'bg-yellow-50 border-2 border-yellow-400'
-                                }`}
-                        >
-                            <div className="flex items-center justify-center mb-4">
-                                {popupType === "success" ? (
-                                    <CheckCircle className="h-12 w-12 text-green-500" />
-                                ) : (
-                                    <AlertCircle className="h-12 w-12 text-yellow-500" />
-                                )}
+        <div className="min-h-screen bg-slate-50">
+            {/* Popup Modal */}
+            {showPopup && (
+                <div className="fixed inset-0 flex items-center justify-center z-[100] px-4">
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={handleClosePopup} />
+                    <div className={`relative w-full max-w-sm transform transition-all duration-300 p-6 rounded-2xl shadow-2xl bg-white border-t-8 ${popupType === "success" ? 'border-green-500' : 'border-amber-500'}`}>
+                        <button onClick={handleClosePopup} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><X size={20} /></button>
+                        <div className="flex flex-col items-center text-center">
+                            <div className={`p-4 rounded-full mb-4 ${popupType === "success" ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'}`}>
+                                {popupType === "success" ? <CheckCircle size={32} /> : <AlertCircle size={32} />}
                             </div>
-                            <div className="text-center">
-                                <h3 className={`text-lg font-semibold mb-2 ${popupType === "success" ? 'text-green-800' : 'text-yellow-800'
-                                    }`}>
-                                    {popupType === "success" ? "Success!" : "Warning!"}
-                                </h3>
-                                <p className={popupType === "success" ? 'text-green-700' : 'text-yellow-700'}>
-                                    {popupMessage}
-                                </p>
-                                {popupType === "success" && successUniqueCode && (
-                                    <p className="mt-2 text-green-700 font-semibold">
-                                        Unique Code: <span className="font-bold">{successUniqueCode}</span>
-                                    </p>
-                                )}
-                            </div>
-                            {/* Progress bar for auto-dismiss - only for warnings */}
-                            {popupType === "warning" && (
-                                <div className="mt-4 w-full bg-gray-200 rounded-full h-1">
-                                    <div
-                                        className="h-1 rounded-full bg-yellow-500"
-                                        style={{
-                                            animation: 'shrink 2s linear forwards'
-                                        }}
-                                    />
+                            <h3 className="text-xl font-bold text-slate-900 mb-2">{popupType === "success" ? "Success" : "Warning"}</h3>
+                            <p className="text-slate-600 text-sm mb-6">{popupMessage}</p>
+                            {popupType === "success" && successUniqueCode && (
+                                <div className="w-full bg-slate-50 rounded-xl p-3 mb-6">
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Unique Code</p>
+                                    <p className="text-lg font-mono font-bold text-slate-700">{successUniqueCode}</p>
                                 </div>
                             )}
-                            {/* OK Button */}
-                            <div className="mt-4 flex justify-center">
-                                <button
-                                    onClick={handleClosePopup}
-                                    className={`px-6 py-2 rounded-md font-medium transition-colors ${popupType === "success"
-                                        ? 'bg-green-500 hover:bg-green-600 text-white'
-                                        : 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                                        }`}
-                                >
-                                    OK
-                                </button>
-                            </div>
+                            <button onClick={handleClosePopup} className={`w-full py-3 rounded-xl font-bold text-white transition-all active:scale-95 ${popupType === "success" ? 'bg-green-500 hover:bg-green-600' : 'bg-amber-500 hover:bg-amber-600'}`}>
+                                OK
+                            </button>
                         </div>
-                    </div>
-                )}
-
-                {/* Header */}
-                <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-                    <div className="flex items-center gap-3 w-full md:w-auto">
-                        <div className="flex-1 min-w-0">
-                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-red-500 truncate">
-                                {viewMode === "form" ? "Create Laddle Form" : "Laddle Form Records"}
-                            </h1>
-                        </div>
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-                        {viewMode === "list" && (
-                            <div className="relative w-full sm:w-64">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                                <input
-                                    type="text"
-                                    placeholder="Search across all columns..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                                />
-                                {searchTerm && (
-                                    <button
-                                        onClick={() => setSearchTerm("")}
-                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                    >
-                                        <X size={16} />
-                                    </button>
-                                )}
-                            </div>
-                        )}
-                        <button
-                            onClick={toggleViewMode}
-                            className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors w-full sm:w-auto"
-                        >
-                            {viewMode === "form" ? (
-                                <>
-                                    <Eye className="h-4 w-4" />
-                                    View Records
-                                </>
-                            ) : (
-                                <>
-                                    <ArrowLeft className="h-4 w-4" />
-                                    Back to Form
-                                </>
-                            )}
-                        </button>
                     </div>
                 </div>
+            )}
 
-                {viewMode === "form" ? (
-                    /* FORM VIEW */
-                    <div className="rounded-lg border border-gray-200 shadow-md bg-white overflow-hidden">
-                        <div className="bg-gradient-to-r from-red-500 to-red-400 border-b border-red-200 p-4">
-                            <h2 className="text-white text-lg font-semibold">Laddle Information</h2>
-                        </div>
-
-                        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6">
-                            {/* Laddle Number and Date Section - Two columns on larger screens */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                                <div>
-                                    <label htmlFor="laddle_number" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Laddle Number / लेडल नंबर <span className="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        id="laddle_number"
-                                        name="laddle_number"
-                                        value={formData.laddle_number}
-                                        onChange={handleInputChange}
-                                        className={`w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors.laddle_number ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
-                                            }`}
-                                    >
-                                        {laddleNumberOptions.map((option) => (
-                                            <option key={option.value} value={option.value}>
-                                                {option.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.laddle_number && (
-                                        <p className="text-red-500 text-xs mt-1.5">{errors.laddle_number}</p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label htmlFor="sample_date" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Date / दिनांक <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            ref={sampleDateInputRef}
-                                            type="date"
-                                            id="sample_date"
-                                            name="sample_date"
-                                            value={formData.sample_date}
-                                            onChange={handleSampleDateChange}
-                                            onClick={openSampleDatePicker}
-                                            min="2000-01-01"
-                                            max="2100-12-31"
-                                            className={`w-full px-3 py-2.5 pr-11 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors.sample_date ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
-                                                }`}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={openSampleDatePicker}
-                                            className="absolute inset-y-0 right-0 px-3 text-gray-500 hover:text-red-500"
-                                            aria-label="Open date picker"
-                                        >
-                                            <CalendarDays className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                    {errors.sample_date && (
-                                        <p className="text-red-500 text-xs mt-1.5">{errors.sample_date}</p>
+            {/* Main Header */}
+            <header className="sticky top-0 z-40 bg-white border-b border-slate-200">
+                <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-red-600 rounded-xl shadow-lg shadow-red-200">
+                                <ClipboardEdit className="h-6 w-6 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-xl sm:text-2xl font-black text-slate-900 leading-none">Laddle <span className="text-red-600">Form</span></h1>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{viewMode === "form" ? "New Entry" : "Historical Records"}</p>
+                                    {viewMode === "list" && (
+                                        <div className="flex items-center gap-1.5 py-0.5 px-2 bg-green-50 text-green-700 rounded-full border border-green-100 animate-pulse">
+                                            <span className="w-1 h-1 rounded-full bg-green-500"></span>
+                                            <span className="text-[9px] font-black uppercase tracking-tight">Live Sync</span>
+                                        </div>
                                     )}
                                 </div>
                             </div>
+                        </div>
 
-                            {/* Completion Checklist Section - Two columns on larger screens */}
-                            <div className="border border-gray-200 rounded-lg p-4 md:p-6 bg-gray-50">
-                                <div className="flex items-center justify-between mb-4 md:mb-6">
-                                    <h3 className="text-lg font-semibold text-gray-800">
-                                        Completion Checklist / लेडल बनाने का चेकलिस्ट <span className="text-red-500">*</span>
-                                    </h3>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {viewMode === "list" && (
+                                <div className="relative flex-1 min-w-[200px]">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                    <input
+                                        type="text"
+                                        placeholder="Search records..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-4 focus:ring-red-500/10 focus:border-red-500 outline-none transition-all"
+                                    />
+                                    {searchTerm && <button onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"><X size={14} /></button>}
                                 </div>
+                            )}
+                            <button
+                                onClick={toggleViewMode}
+                                className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 whitespace-nowrap ${viewMode === "form" ? "bg-slate-900 text-white hover:bg-black" : "bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-200"}`}
+                            >
+                                {viewMode === "form" ? <><Eye size={18} /><span>View Records</span></> : <><ArrowLeft size={18} /><span>Back to Form</span></>}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                                    {checklistItems.map((item) => (
-                                        <div key={item.id} className="p-4 border border-gray-200 rounded-lg hover:bg-white hover:shadow-sm transition-all bg-white">
-                                            <div className="mb-3">
-                                                <label className="block text-sm font-medium text-gray-700 break-words">
-                                                    {item.label}
-                                                </label>
-                                                <p className="text-xs text-gray-500 mt-1 break-words">
-                                                    {item.hindiLabel}
-                                                </p>
-                                            </div>
+            <main className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+                {viewMode === "form" ? (
+                    <div className="max-w-full mx-auto">
+                        <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+                            {/* Section: Logistics */}
+                            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+                                <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+                                    <span className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center text-sm">01</span>
+                                    Logistics Information / लॉजिस्टिक्स जानकारी
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700 flex items-center gap-1">Laddle Number <span className="text-slate-400 font-normal">/ लेडल नंबर</span> <span className="text-red-500">*</span></label>
+                                        <div className="relative">
+                                            <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                             <select
-                                                value={formData[item.id]}
-                                                onChange={(e) => handleChecklistChange(item.id, e.target.value)}
-                                                className={`w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors[item.id] ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
-                                                    }`}
+                                                name="laddle_number"
+                                                value={formData.laddle_number}
+                                                onChange={handleInputChange}
+                                                className={`w-full appearance-none pl-10 pr-10 py-3 bg-slate-50 border-2 rounded-xl text-sm font-bold focus:ring-4 focus:ring-red-500/10 focus:border-red-500 outline-none transition-all ${errors.laddle_number ? 'border-red-200 bg-red-50' : 'border-slate-100'}`}
                                             >
-                                                {statusOptions.map((option) => (
-                                                    <option key={option.value} value={option.value}>
-                                                        {option.label} - {option.hindiLabel}
-                                                    </option>
-                                                ))}
+                                                {laddleNumberOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label} {opt.hindiLabel && `- ${opt.hindiLabel}`}</option>)}
                                             </select>
-                                            {errors[item.id] && (
-                                                <p className="text-red-500 text-xs mt-1.5">{errors[item.id]}</p>
-                                            )}
+                                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                        </div>
+                                        {errors.laddle_number && <p className="text-red-500 text-[10px] font-bold mt-1">{errors.laddle_number}</p>}
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700 flex items-center gap-1">Sample Date <span className="text-slate-400 font-normal">/ दिनांक</span> <span className="text-red-500">*</span></label>
+                                        <div className="relative group" onClick={openSampleDatePicker}>
+                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors group-hover:text-red-500" size={18} />
+                                            <input
+                                                ref={sampleDateInputRef}
+                                                type="date"
+                                                name="sample_date"
+                                                value={formData.sample_date}
+                                                onChange={handleSampleDateChange}
+                                                className={`w-full pl-10 pr-4 py-3 bg-slate-50 border-2 rounded-xl text-sm font-bold focus:ring-4 focus:ring-red-500/10 focus:border-red-500 outline-none transition-all ${errors.sample_date ? 'border-red-200 bg-red-50' : 'border-slate-100'}`}
+                                            />
+                                        </div>
+                                        {errors.sample_date && <p className="text-red-500 text-[10px] font-bold mt-1">{errors.sample_date}</p>}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section: Maintenance Checklist */}
+                            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+                                <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+                                    <span className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center text-sm">02</span>
+                                    Maintenance Checklist / चेकलिस्ट
+                                </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                                    {checklistItems.map((item) => (
+                                        <div key={item.id} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl space-y-3">
+                                            <div>
+                                                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Checking Point</p>
+                                                <p className="text-sm font-bold text-slate-800 leading-tight">{item.label}</p>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">{item.hindiLabel}</p>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                {statusOptions.map((opt) => (
+                                                    <button
+                                                        key={opt.value}
+                                                        type="button"
+                                                        onClick={() => handleChecklistChange(item.id, opt.value)}
+                                                        className={`flex-1 py-2 text-[10px] font-black rounded-xl transition-all border-2 ${formData[item.id] === opt.value
+                                                            ? opt.value === 'Done' ? 'bg-green-500 border-green-500 text-white shadow-lg shadow-green-100' : 'bg-red-600 border-red-600 text-white shadow-lg shadow-red-100'
+                                                            : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'}`}
+                                                    >
+                                                        {opt.label.toUpperCase()}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            {errors[item.id] && <p className="text-red-500 text-[10px] font-bold text-center mt-1">Required*</p>}
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
-                            {/* Plate Life and Timber Man Name - Two columns on larger screens */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                                <div>
-                                    <label htmlFor="plate_life" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Plate life / प्लेट की लाइफ कितनी है <span className="text-red-500">*</span>
-                                    </label>
-                                    <select
-                                        id="plate_life"
-                                        name="plate_life"
-                                        value={formData.plate_life}
-                                        onChange={handleInputChange}
-                                        className={`w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors.plate_life ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
-                                            }`}
-                                    >
-                                        {plateLifeOptions.map((option) => (
-                                            <option key={option.value} value={option.value}>
-                                                {option.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.plate_life && (
-                                        <p className="text-red-500 text-xs mt-1.5">{errors.plate_life}</p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label htmlFor="timber_man_name" className="block text-sm font-medium text-gray-700 mb-2">
-                                        Timber Man Name / टिम्बर मेन का नाम <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="timber_man_name"
-                                        name="timber_man_name"
-                                        value={formData.timber_man_name}
-                                        onChange={handleInputChange}
-                                        className={`w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors.timber_man_name ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
-                                            }`}
-                                        placeholder="Enter timber man name"
-                                    />
-                                    {errors.timber_man_name && (
-                                        <p className="text-red-500 text-xs mt-1.5">{errors.timber_man_name}</p>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Checked By Section - Two columns on larger screens */}
-                            <div className="border border-gray-200 rounded-lg p-4 md:p-6 bg-gray-50">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-4 md:mb-6">
-                                    Checked By - किस किस के द्वारा चेक किया गया <span className="text-red-500">*</span>
+                            {/* Section: Observables & Crew */}
+                            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+                                <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+                                    <span className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center text-sm">03</span>
+                                    Observations & Crew / टिप्पणियां एवं टीम
                                 </h3>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                                    <div>
-                                        <label htmlFor="laddle_man_name" className="block text-sm font-medium text-gray-700 mb-2">
-                                            Laddle Man Name / लेडल मेन का नाम <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="laddle_man_name"
-                                            name="laddle_man_name"
-                                            value={formData.laddle_man_name}
-                                            onChange={handleInputChange}
-                                            className={`w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors.laddle_man_name ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
-                                                }`}
-                                            placeholder="Enter laddle man name"
-                                        />
-                                        {errors.laddle_man_name && (
-                                            <p className="text-red-500 text-xs mt-1.5">{errors.laddle_man_name}</p>
-                                        )}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-bold text-slate-700">Plate Life <span className="text-slate-400 font-normal">/ लाइफ</span></label>
+                                        <div className="relative">
+                                            <select
+                                                name="plate_life"
+                                                value={formData.plate_life}
+                                                onChange={handleInputChange}
+                                                className="w-full appearance-none px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold focus:ring-4 focus:ring-red-500/10 focus:border-red-500 outline-none transition-all"
+                                            >
+                                                {plateLifeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                                            </select>
+                                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                        </div>
                                     </div>
-
-                                    <div>
-                                        <label htmlFor="laddle_foreman_name" className="block text-sm font-medium text-gray-700 mb-2">
-                                            Laddle Foreman Name / लेडल फोरमेन का नाम <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="laddle_foreman_name"
-                                            name="laddle_foreman_name"
-                                            value={formData.laddle_foreman_name}
-                                            onChange={handleInputChange}
-                                            className={`w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors.laddle_foreman_name ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
-                                                }`}
-                                            placeholder="Enter laddle foreman name"
-                                        />
-                                        {errors.laddle_foreman_name && (
-                                            <p className="text-red-500 text-xs mt-1.5">{errors.laddle_foreman_name}</p>
-                                        )}
-                                    </div>
-
-                                    <div className="md:col-span-2">
-                                        <label htmlFor="supervisor_name" className="block text-sm font-medium text-gray-700 mb-2">
-                                            Supervisor Name (Controller) / सुपरवाइजर का नाम <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="supervisor_name"
-                                            name="supervisor_name"
-                                            value={formData.supervisor_name}
-                                            onChange={handleInputChange}
-                                            className={`w-full px-3 py-2.5 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm transition-colors ${errors.supervisor_name ? 'border-red-500 bg-red-50' : 'border-gray-300 hover:border-gray-400'
-                                                }`}
-                                            placeholder="Enter supervisor name"
-                                        />
-                                        {errors.supervisor_name && (
-                                            <p className="text-red-500 text-xs mt-1.5">{errors.supervisor_name}</p>
-                                        )}
-                                    </div>
+                                    {[
+                                        { id: 'dip_reading', label: 'Dip Reading', h: 'डिप रीडिंग', icon: <Droplets size={18} /> },
+                                        { id: 'timber_man_name', label: 'Timber Man', h: 'टिम्बर मेन', icon: <Shield size={18} /> },
+                                        { id: 'laddle_man_name', label: 'Laddle Man', h: 'लेडल मेन', icon: <User size={18} /> },
+                                        { id: 'laddle_foreman_name', label: 'Foreman', h: 'फोरमेन', icon: <UserPlus size={18} /> },
+                                        { id: 'supervisor_name', label: 'Supervisor', h: 'सुपरवाइजर', icon: <HardHat size={18} /> }
+                                    ].map(f => (
+                                        <div key={f.id} className="space-y-2">
+                                            <label className="text-sm font-bold text-slate-700">{f.label} <span className="text-slate-400 font-normal">/ {f.h}</span> <span className="text-red-500">*</span></label>
+                                            <div className="relative group">
+                                                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-red-500">{f.icon}</div>
+                                                <input
+                                                    type="text"
+                                                    name={f.id}
+                                                    value={formData[f.id]}
+                                                    onChange={handleInputChange}
+                                                    placeholder={`Enter ${f.label.toLowerCase()}`}
+                                                    className={`w-full pl-10 pr-4 py-3 bg-slate-50 border-2 rounded-xl text-sm font-bold focus:ring-4 focus:ring-red-500/10 focus:border-red-500 outline-none transition-all ${errors[f.id] ? 'border-red-200 bg-red-50' : 'border-slate-100'}`}
+                                                />
+                                            </div>
+                                            {errors[f.id] && <p className="text-red-500 text-[10px] font-bold mt-1">{errors[f.id]}</p>}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
 
-                            {/* Submit Button */}
-                            <div className="flex justify-end pt-6 border-t border-gray-200">
+                            {/* Form Actions */}
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-4">
+                                <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                    <Info size={14} className="text-red-500" /> Verify all check points before final submission
+                                </p>
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="flex items-center justify-center w-full sm:w-auto px-6 py-4 sm:py-3 bg-red-600 text-white font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-sm"
+                                    className="w-full sm:w-auto min-w-[200px] px-8 py-4 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl shadow-slate-300 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
                                 >
-                                    <Save className="mr-2 h-5 w-5" />
-                                    {isSubmitting ? "Submitting..." : "Submit Laddle Form"}
+                                    {isSubmitting ? <><div className="w-4 h-4 border-2 border-slate-400 border-t-white rounded-full animate-spin"></div><span>Processing...</span></> : <><Save size={20} /><span>Save Report</span></>}
                                 </button>
                             </div>
                         </form>
                     </div>
                 ) : (
-                    /* LIST VIEW WITH SEARCH */
-                    <div className="rounded-lg border border-gray-200 shadow-md bg-white overflow-hidden">
-                        <div className="bg-gradient-to-r from-red-500 to-red-400 border-b border-red-200 p-4">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                <div>
-                                    <h2 className="text-white text-lg font-semibold">Laddle Form Records</h2>
-                                    <p className="text-white text-sm opacity-90">
-                                        Total Records: {filteredLaddleData.length} {searchTerm && `(Filtered from ${laddleData.length})`}
-                                    </p>
-                                </div>
-
-                                {/* Search Bar */}
-
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                        {loading ? (
+                            <div className="py-32 flex flex-col items-center justify-center">
+                                <div className="w-12 h-12 border-4 border-slate-100 border-t-red-600 rounded-full animate-spin"></div>
+                                <p className="mt-4 text-xs font-black text-slate-400 uppercase tracking-widest">Loading Records...</p>
                             </div>
-                        </div>
-
-                        <div className="p-4">
-                            {loading ? (
-                                <div className="text-center py-8">
-                                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-500 mb-4"></div>
-                                    <p className="text-gray-600">Loading ladle data...</p>
-                                </div>
-                            ) : filteredLaddleData && filteredLaddleData.length > 0 ? (
-                                <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
-                                            <tr>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Unique Code / यूनिक कोड
+                        ) : filteredLaddleData.length > 0 ? (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse min-w-[1000px]">
+                                    <thead>
+                                        <tr className="bg-slate-50 border-b border-slate-200">
+                                            {[
+                                                { t: 'ID', h: 'आईडी' },
+                                                { t: 'Ladle No.', h: 'लेडल नंबर' },
+                                                { t: 'Date', h: 'तारीख' },
+                                                { t: 'Checklist Status', h: 'चेकलिस्ट विवरण' },
+                                                { t: 'Plate Life', h: 'लाइफ' },
+                                                { t: 'Dip Reading', h: 'डिप रीडिंग' },
+                                                { t: 'Crew Details', h: 'टीम सदस्य' }
+                                            ].map(col => (
+                                                <th key={col.t} className="px-6 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                                    <div className="flex flex-col">
+                                                        <span>{col.t}</span>
+                                                        <span className="text-[9px] font-medium text-slate-400 italic normal-case tracking-normal">{col.h}</span>
+                                                    </div>
                                                 </th>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Laddle No. / लेडल नंबर
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Date / तारीख
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Slag Top / लेडल के उपरी भाग का स्लैग साफ हो गया
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Slag Bottom / लेडल के निचे भाग का स्लैग साफ हो गया
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Nozzle Lancing / नोजल की उचित लैंसिंग की गई
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Pursing Plug / पर्सिंग प्लेग की उचित सफाई की गई
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Sly Gate Check / स्लाइ गेट प्लेट/मशीन/फ्रेम की उचित जांच की गई
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Nozzle Check / नोजल की जाँच और सफाई
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Sly Gate Operate / क्या आपने 80 दबाव के साथ 3 बार स्ली गेट संचालित किया
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    NFC Heat / NFC को अच्छे से गर्म किया गया
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    NFC Filling / क्या आपने नोजल में एनएफसी ठीक से भरा है
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Plate Life / प्लेट लाइफ
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Timber Man / टिम्बर मैन
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Laddle Man / लेडल मैन
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Laddle Foreman / लेडल फोरमैन
-                                                </th>
-                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Supervisor / सुपरवाइजर
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {filteredLaddleData.map((record, index) => {
-                                                // Safe data access with fallbacks
-                                                const recordData = record.data || record;
-
-                                                return (
-                                                    <tr key={recordData.id || recordData._id || index} className="hover:bg-gray-50">
-                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {recordData.unique_code || generateUniqueCode(recordData) || 'N/A'}
-                                                        </td>
-                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                            {recordData.laddle_number || 'N/A'}
-                                                        </td>
-                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {formatIndianDateTime(recordData.sample_date) || 'N/A'}
-                                                        </td>
-                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {getYesNoBadge(recordData.slag_cleaning_top)}
-                                                        </td>
-                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {getYesNoBadge(recordData.slag_cleaning_bottom)}
-                                                        </td>
-                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {getYesNoBadge(recordData.nozzle_proper_lancing)}
-                                                        </td>
-                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {getYesNoBadge(recordData.pursing_plug_cleaning)}
-                                                        </td>
-                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {getYesNoBadge(recordData.sly_gate_check)}
-                                                        </td>
-                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {getYesNoBadge(recordData.nozzle_check_cleaning)}
-                                                        </td>
-                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {getYesNoBadge(recordData.sly_gate_operate)}
-                                                        </td>
-                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {getYesNoBadge(recordData.nfc_proper_heat)}
-                                                        </td>
-                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {getYesNoBadge(recordData.nfc_filling_nozzle)}
-                                                        </td>
-                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {recordData.plate_life || 'N/A'}
-                                                        </td>
-                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {recordData.timber_man_name || 'N/A'}
-                                                        </td>
-                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {recordData.laddle_man_name || 'N/A'}
-                                                        </td>
-                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {recordData.laddle_foreman_name || 'N/A'}
-                                                        </td>
-                                                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {recordData.supervisor_name || 'N/A'}
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            ) : (
-                                <div className="text-center py-8">
-                                    <div className="text-gray-500 mb-4">
-                                        <p className="text-lg font-medium">
-                                            {searchTerm ? "No matching records found" : "No ladle form records found"}
-                                        </p>
-                                        <p className="text-sm">
-                                            {searchTerm ? "Try adjusting your search terms" : "Submit a form first to see records here"}
-                                        </p>
-                                    </div>
-                                    <div className="flex gap-2 justify-center">
-                                        {searchTerm && (
-                                            <button
-                                                onClick={() => setSearchTerm("")}
-                                                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
-                                            >
-                                                Clear Search
-                                            </button>
-                                        )}
-                                        <button
-                                            onClick={fetchLaddleData}
-                                            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
-                                        >
-                                            Refresh Data
-                                        </button>
-                                        <button
-                                            onClick={() => setViewMode("form")}
-                                            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                                        >
-                                            Create New Form
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {filteredLaddleData.map((d, i) => {
+                                            const r = d.data || d;
+                                            return (
+                                                <tr key={r.id || i} className="hover:bg-slate-50/50 transition-colors group">
+                                                    <td className="px-6 py-4 whitespace-nowrap"><span className="font-mono text-[11px] font-bold text-slate-400 group-hover:text-red-600 transition-colors">#{r.unique_code || '---'}</span></td>
+                                                    <td className="px-6 py-4 whitespace-nowrap"><span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 font-black text-slate-700 text-sm">{r.laddle_number || '0'}</span></td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-bold text-slate-800">{formatIndianDateTime(r.sample_date)}</span>
+                                                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Verified</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-wrap gap-1.5 max-w-[300px]">
+                                                            {checklistItems.slice(0, 3).map(item => (
+                                                                <div key={item.id} className="px-2 py-1 rounded-lg bg-white border border-slate-200 flex items-center gap-1.5 shadow-sm">
+                                                                    <div className={`w-1.5 h-1.5 rounded-full ${r[item.id] === 'Done' ? 'bg-green-500' : 'bg-red-600'}`}></div>
+                                                                    <span className="text-[9px] font-black text-slate-500 whitespace-nowrap uppercase tracking-tighter">{item.label.split(' ')[0]}</span>
+                                                                </div>
+                                                            ))}
+                                                            {checklistItems.length > 3 && <span className="text-[9px] font-black text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">+{checklistItems.length - 3}</span>}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap"><span className="px-3 py-1 rounded-full bg-red-50 text-red-600 text-[10px] font-black border border-red-100">LIFE-{r.plate_life || '0'}</span></td>
+                                                    <td className="px-6 py-4 whitespace-nowrap"><span className="text-sm font-black text-slate-700">{r.dip_reading || '---'}</span></td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col gap-0.5 min-w-[120px]">
+                                                            <span className="text-[10px] font-bold text-slate-800 leading-tight">{r.supervisor_name || 'N/A'}</span>
+                                                            <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest italic">Supervisor</span>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="py-32 flex flex-col items-center justify-center text-center px-6">
+                                <div className="p-6 bg-slate-50 rounded-full mb-6"><Search size={48} className="text-slate-200" /></div>
+                                <h3 className="text-xl font-bold text-slate-900 mb-2">No Records Found</h3>
+                                <p className="text-slate-500 text-sm max-w-md mx-auto mb-8">We couldn't find any maintenance reports matching your current search criteria. Try a different search term or create a new entry.</p>
+                                <button onClick={() => setViewMode("form")} className="flex items-center gap-2 px-8 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 shadow-lg shadow-red-200 transition-all"><Plus size={20} /><span>Create New Report</span></button>
+                            </div>
+                        )}
                     </div>
                 )}
+            </main>
 
-                {/* Add CSS for progress bar animation */}
-                <style>{`
-                    @keyframes shrink {
-                        from { width: 100%; }
-                        to { width: 0%; }
-                    }
-                `}</style>
-            </div>
+            <footer className="w-full px-4 sm:px-6 lg:px-8 py-10 bg-white border-t border-slate-200 mt-12">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">&copy; 2026 STEEL ERP SYSTEM MODULE</p>
+                    <div className="flex gap-6">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Privacy Policy</span>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Audit Trails</span>
+                    </div>
+                </div>
+            </footer>
         </div>
-    )
-}
+    );
+};
 
-export default LaddleFormPage
+export default LaddleFormPage;

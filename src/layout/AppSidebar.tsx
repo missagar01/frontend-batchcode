@@ -38,6 +38,7 @@ const batchCodeItem: NavItem = {
     { name: "Recoiler", path: "/batchcode/recoiler", pro: false },
     { name: "Pipe Mill", path: "/batchcode/pipe-mill", pro: false },
     { name: "QC Lab", path: "/batchcode/qc-lab", pro: false },
+    { name: "Patching Checklist", path: "/batchcode/patching-checklist", pro: false, new: true },
   ],
 };
 
