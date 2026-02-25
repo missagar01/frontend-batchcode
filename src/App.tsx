@@ -11,13 +11,13 @@ import UserProfiles from "./pages/UserProfiles";
 
 // BatchCode pages
 import HotCoil from "./pages/BatchCode/HotCoil";
-import QCLab from "./pages/BatchCode/QC-Lab";
-import SMSRegister from "./pages/BatchCode/SMSRegister";
+import QCLab from "./pages/BatchCode/QCLab";
+import SMSRegister from "./pages/BatchCode/SmsRegister";
 import Recoiler from "./pages/BatchCode/Recoiler";
 import PipeMill from "./pages/BatchCode/PipeMill";
-import Laddel from "./pages/BatchCode/Laddel";
-import Tundis from "./pages/BatchCode/Tundis";
-import PatchingChecklist from "./pages/BatchCode/PatchingChecklist";
+import Laddle from "./pages/BatchCode/Laddle";
+import Tundish from "./pages/BatchCode/Tundish";
+import PatchChecklist from "./pages/BatchCode/PatchChecklist";
 
 
 export default function App() {
@@ -56,9 +56,9 @@ export default function App() {
             <Route path="/batchcode/sms-register" element={<RouteGuard><SMSRegister /></RouteGuard>} />
             <Route path="/batchcode/recoiler" element={<RouteGuard><Recoiler /></RouteGuard>} />
             <Route path="/batchcode/pipe-mill" element={<RouteGuard><PipeMill /></RouteGuard>} />
-            <Route path="/batchcode/laddel" element={<RouteGuard><Laddel /></RouteGuard>} />
-            <Route path="/batchcode/tundis" element={<RouteGuard><Tundis /></RouteGuard>} />
-            <Route path="/batchcode/patching-checklist" element={<RouteGuard><PatchingChecklist /></RouteGuard>} />
+            <Route path="/batchcode/laddel" element={<RouteGuard><Laddle /></RouteGuard>} />
+            <Route path="/batchcode/tundis" element={<RouteGuard><Tundish /></RouteGuard>} />
+            <Route path="/batchcode/patching-checklist" element={<RouteGuard><PatchChecklist /></RouteGuard>} />
           </Route>
 
           {/* Catch all - redirect to login if not authenticated, otherwise home */}

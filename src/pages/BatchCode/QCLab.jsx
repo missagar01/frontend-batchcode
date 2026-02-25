@@ -18,38 +18,36 @@ import {
 } from "../../components/batchcode/PagePrimitives";
 import { formatDateTime, matchesSearch, normalizeApiRows, normalizeMediaUrl, valueOrDash } from "../../components/batchcode/dataUtils";
 
+const SHIFT_OPTIONS = ["", "Day", "Night"];
+const TESTER_OPTIONS = [
+  "",
+  "Komal Sahu",
+  "Sushil Bharti",
+  "Sunil Verma",
+  "Suraj",
+  "Govind Sahu",
+  "MD Mustaq",
+  "Devendra Chetan",
+  "Vikash",
+  "Chadrakant Sahu"
+];
+
 const INITIAL_FORM = {
-  sms_short_code: "",
-  submission_type: "Hot Coil",
-  size: "",
-  mill_incharge: "",
-  quality_supervisor: "",
-  quality_supervisor_other: "",
-  electrical_dc_operator: "",
-  strand1_temperature: "",
-  strand2_temperature: "",
-  shift_supervisor: "",
-  remarks: ""
+  sms_batch_code: "",
+  furnace_number: "",
+  sequence_code: "",
+  laddle_number: "",
+  shift_type: "",
+  tested_by: "",
+  final_c: "",
+  final_mn: "",
+  final_s: "",
+  final_p: "",
+  remarks: "",
+  sample_timestamp: ""
 };
 
-const submissionTypeOptions = ["Hot Coil", "Cold Billet"];
-const millInchargeOptions = ["", "Ravi Singh", "G Mohan Rao"];
-const qualitySupervisorOptions = [
-  "",
-  "Birendra Kumar Singh",
-  "Sandeep Gupta",
-  "Jitendra Diwakar",
-  "Rohan Kumar",
-  "Lallu Kumar",
-  "Dharmendra Kushwaha",
-  "Ashish Parida",
-  "Ajay Gupta",
-  "Lekh Singh Patle",
-  "Other"
-];
-const electricalOperatorOptions = ["", "Pankaj", "Anand", "Rahul", "Deepak", "Other"];
-
-function HotCoil() {
+function QCLab() {
   const [formData, setFormData] = useState(INITIAL_FORM);
   const [historyRows, setHistoryRows] = useState([]);
   const [smsRows, setSmsRows] = useState([]);
@@ -58,6 +56,7 @@ function HotCoil() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [queuePrefillLocked, setQueuePrefillLocked] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [popup, setPopup] = useState({ open: false, type: "success", message: "", code: "" });
@@ -101,18 +100,18 @@ function HotCoil() {
     }
 
     try {
-      const [smsResponse, hotCoilResponse] = await Promise.all([
+      const [smsResponse, qcResponse] = await Promise.all([
         batchcodeAPI.getSMSRegisterHistory(),
-        batchcodeAPI.getHotCoilHistory()
+        batchcodeAPI.getQCLabHistory()
       ]);
 
       setSmsRows(normalizeApiRows(smsResponse));
-      setHistoryRows(normalizeApiRows(hotCoilResponse));
+      setHistoryRows(normalizeApiRows(qcResponse));
     } catch (error) {
       if (!silent) {
-        setPopup({ open: true, type: "warning", message: "Failed to load hot coil data.", code: "" });
+        setPopup({ open: true, type: "warning", message: "Failed to load QC Lab data.", code: "" });
       }
-      console.error("Failed to fetch hot coil data", error);
+      console.error("Failed to fetch QC Lab data", error);
     } finally {
       if (!silent) {
         setLoading(false);
@@ -129,7 +128,7 @@ function HotCoil() {
   const pendingRows = useMemo(() => {
     const processed = new Set(
       historyRows
-        .map((row) => String(row.unique_code || row.sms_short_code || "").trim())
+        .map((row) => String(row.sms_batch_code || "").trim())
         .filter(Boolean)
     );
 
@@ -149,13 +148,22 @@ function HotCoil() {
     [historyRows, searchTerm]
   );
 
+  const openFormForQueueRow = (row) => {
+    setFormData({
+      ...INITIAL_FORM,
+      sms_batch_code: String(row.unique_code || ""),
+      furnace_number: row.furnace_number || "",
+      sequence_code: row.sequence_number || "",
+      laddle_number: row.laddle_number || "",
+      sample_timestamp: row.sample_timestamp || row.created_at || row.createdAt || ""
+    });
+    setQueuePrefillLocked(true);
+    setShowForm(true);
+  };
+
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-      quality_supervisor_other: name === "quality_supervisor" && value !== "Other" ? "" : prev.quality_supervisor_other
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (event) => {
@@ -180,25 +188,23 @@ function HotCoil() {
     setPreviewUrl("");
   };
 
-  const openFormForQueueRow = (row) => {
-    const code = String(row.unique_code || row.sms_short_code || "");
-    setFormData({ ...INITIAL_FORM, sms_short_code: code, submission_type: "Hot Coil" });
-    setShowForm(true);
-  };
-
   const validate = () => {
-    if (!formData.sms_short_code.trim()) {
-      setPopup({ open: true, type: "warning", message: "SMS short code is required.", code: "" });
-      return false;
-    }
+    const required = [
+      "sms_batch_code",
+      "furnace_number",
+      "sequence_code",
+      "laddle_number",
+      "shift_type",
+      "tested_by",
+      "final_c",
+      "final_mn",
+      "final_s",
+      "final_p"
+    ];
 
-    if (!formData.submission_type) {
-      setPopup({ open: true, type: "warning", message: "Submission type is required.", code: "" });
-      return false;
-    }
-
-    if (formData.quality_supervisor === "Other" && !formData.quality_supervisor_other.trim()) {
-      setPopup({ open: true, type: "warning", message: "Specify quality supervisor name.", code: "" });
+    const missing = required.filter((field) => !String(formData[field] || "").trim());
+    if (missing.length) {
+      setPopup({ open: true, type: "warning", message: "Please fill all required fields.", code: "" });
       return false;
     }
 
@@ -216,39 +222,41 @@ function HotCoil() {
 
     try {
       const payload = new FormData();
-      payload.append("sms_short_code", formData.sms_short_code.trim());
-      payload.append("submission_type", formData.submission_type);
-      payload.append("size", formData.size);
-      payload.append("mill_incharge", formData.mill_incharge);
-      payload.append(
-        "quality_supervisor",
-        formData.quality_supervisor === "Other" ? formData.quality_supervisor_other : formData.quality_supervisor
-      );
-      payload.append("electrical_dc_operator", formData.electrical_dc_operator);
-      payload.append("strand1_temperature", formData.strand1_temperature);
-      payload.append("strand2_temperature", formData.strand2_temperature);
-      payload.append("shift_supervisor", formData.shift_supervisor);
+      payload.append("sms_batch_code", formData.sms_batch_code.trim());
+      payload.append("furnace_number", formData.furnace_number);
+      payload.append("sequence_code", formData.sequence_code);
+      payload.append("laddle_number", formData.laddle_number);
+      payload.append("shift_type", formData.shift_type);
+      payload.append("tested_by", formData.tested_by);
+      payload.append("final_c", formData.final_c);
+      payload.append("final_mn", formData.final_mn);
+      payload.append("final_s", formData.final_s);
+      payload.append("final_p", formData.final_p);
       payload.append("remarks", formData.remarks);
-
-      if (selectedFile) {
-        payload.append("picture", selectedFile);
+      if (formData.sample_timestamp) {
+        payload.append("sample_timestamp", formData.sample_timestamp);
       }
 
-      const response = await batchcodeAPI.submitHotCoil(payload);
+      if (selectedFile) {
+        payload.append("report_picture", selectedFile);
+      }
+
+      const response = await batchcodeAPI.submitQCLabTest(payload);
       if (!response?.data?.success) {
-        throw new Error("Failed to submit hot coil entry");
+        throw new Error("Failed to submit QC Lab entry");
       }
 
       const saved = response?.data?.data || {};
-      setPopup({ open: true, type: "success", message: "Hot coil entry submitted.", code: saved.unique_code || "" });
+      setPopup({ open: true, type: "success", message: "QC Lab entry submitted.", code: saved.unique_code || "" });
 
       setFormData(INITIAL_FORM);
+      setQueuePrefillLocked(false);
       setShowForm(false);
       clearImage();
       fetchData(true);
     } catch (error) {
-      console.error("Failed to submit hot coil entry", error);
-      setPopup({ open: true, type: "warning", message: "Failed to submit hot coil entry.", code: "" });
+      console.error("Failed to submit QC Lab entry", error);
+      setPopup({ open: true, type: "warning", message: "Failed to submit QC Lab entry.", code: "" });
     } finally {
       setIsSubmitting(false);
     }
@@ -268,14 +276,14 @@ function HotCoil() {
           </button>
         )
       },
-      { label: "SMS Code", render: (row) => `#${valueOrDash(row.unique_code)}` },
+      { label: "SMS Batch", render: (row) => `#${valueOrDash(row.unique_code)}` },
       {
         label: "Sample",
         render: (row) =>
           `${valueOrDash(row.sequence_number)} / L${valueOrDash(row.laddle_number)} / ${valueOrDash(row.furnace_number)}`
       },
-      { label: "Melter", key: "melter_name" },
       { label: "Temp", render: (row) => (row.temperature ? `${row.temperature} C` : "-") },
+      { label: "Melter", key: "melter_name" },
       { label: "Time", render: (row) => formatDateTime(row.sample_timestamp || row.created_at || row.createdAt) }
     ],
     []
@@ -299,19 +307,19 @@ function HotCoil() {
   const historyColumns = useMemo(
     () => [
       { label: "Time", render: (row) => formatDateTime(row.sample_timestamp || row.created_at || row.createdAt) },
-      { label: "Code", render: (row) => `#${valueOrDash(row.unique_code || row.sms_short_code)}` },
-      { label: "Type", key: "submission_type" },
-      { label: "Size", key: "size" },
+      { label: "QC Code", render: (row) => `#${valueOrDash(row.unique_code)}` },
+      { label: "SMS Batch", key: "sms_batch_code" },
       {
-        label: "Strands",
-        render: (row) => `${valueOrDash(row.strand1_temperature)} / ${valueOrDash(row.strand2_temperature)}`
+        label: "Sample",
+        render: (row) => `${valueOrDash(row.sequence_code)} / L${valueOrDash(row.laddle_number)} / ${valueOrDash(row.furnace_number)}`
       },
       {
-        label: "Team",
-        render: (row) => `${valueOrDash(row.quality_supervisor)} / ${valueOrDash(row.mill_incharge)}`
+        label: "Chemistry",
+        render: (row) =>
+          `C ${valueOrDash(row.final_c)} | Mn ${valueOrDash(row.final_mn)} | S ${valueOrDash(row.final_s)} | P ${valueOrDash(row.final_p)}`
       },
-      { label: "Shift", key: "shift_supervisor" },
-      { label: "Media", render: (row) => mediaCell(row.picture) }
+      { label: "Tester", key: "tested_by" },
+      { label: "Media", render: (row) => mediaCell(row.report_picture) }
     ],
     [mediaCell]
   );
@@ -328,21 +336,21 @@ function HotCoil() {
       <ImagePreviewModal
         open={mediaPreview.open}
         imageUrl={mediaPreview.url}
-        title="Hot Coil Image"
+        title="QC Lab Report Image"
         onClose={closeMediaPreview}
       />
 
       <PageContainer>
         <PageHeader
-          title="Hot Coil"
-          subtitle={viewMode === "queue" ? "Process pending SMS records" : "Submitted hot coil records"}
+          title="QC Lab"
+          subtitle={viewMode === "queue" ? "Process pending SMS samples" : "Submitted QC Lab records"}
           icon={ClipboardPlus}
           actions={
             <>
               <SearchField
                 value={searchTerm}
                 onChange={setSearchTerm}
-                placeholder={viewMode === "queue" ? "Search pending records" : "Search history"}
+                placeholder={viewMode === "queue" ? "Search pending samples" : "Search history"}
               />
 
               <button
@@ -370,6 +378,7 @@ function HotCoil() {
                 type="button"
                 onClick={() => {
                   setFormData(INITIAL_FORM);
+                  setQueuePrefillLocked(false);
                   setShowForm((prev) => !prev);
                 }}
                 className={secondaryButtonClass}
@@ -381,10 +390,10 @@ function HotCoil() {
             <ResponsiveDataTable
               rows={filteredQueueRows}
               columns={queueColumns}
-              getRowKey={(row, index) => row.id || row.unique_code || `hot-pending-${index}`}
+              getRowKey={(row, index) => row.id || row.unique_code || `qc-pending-${index}`}
               loading={loading}
-              loadingMessage="Loading pending SMS records..."
-              emptyMessage="No pending SMS records."
+              loadingMessage="Loading pending SMS samples..."
+              emptyMessage="No pending SMS samples."
             />
           </SectionCard>
         ) : (
@@ -397,10 +406,10 @@ function HotCoil() {
             <ResponsiveDataTable
               rows={filteredHistoryRows}
               columns={historyColumns}
-              getRowKey={(row, index) => row.id || row.unique_code || `hot-history-${index}`}
+              getRowKey={(row, index) => row.id || row.unique_code || `qc-history-${index}`}
               loading={loading}
-              loadingMessage="Loading hot coil history..."
-              emptyMessage="No hot coil records found."
+              loadingMessage="Loading QC Lab history..."
+              emptyMessage="No QC Lab records found."
             />
           </SectionCard>
         )}
@@ -408,127 +417,99 @@ function HotCoil() {
         {showForm ? (
           <form onSubmit={handleSubmit} className="space-y-3">
             <SectionCard>
-              <h2 className="text-sm font-semibold text-slate-900">Hot Coil Form</h2>
+              <h2 className="text-sm font-semibold text-slate-900">QC Lab Form</h2>
               <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
                 <div>
-                  <label className={labelClass}>SMS Short Code *</label>
+                  <label className={labelClass}>SMS Batch Code *</label>
                   <input
-                    name="sms_short_code"
-                    value={formData.sms_short_code}
+                    name="sms_batch_code"
+                    value={formData.sms_batch_code}
                     onChange={handleChange}
-                    className={inputClass}
+                    readOnly={queuePrefillLocked}
+                    className={`${inputClass} ${queuePrefillLocked ? "bg-slate-100 text-slate-700" : ""}`}
                   />
                 </div>
 
                 <div>
-                  <label className={labelClass}>Submission Type *</label>
-                  <select
-                    name="submission_type"
-                    value={formData.submission_type}
+                  <label className={labelClass}>Furnace *</label>
+                  <input
+                    name="furnace_number"
+                    value={formData.furnace_number}
                     onChange={handleChange}
-                    className={selectClass}
-                  >
-                    {submissionTypeOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                    readOnly={queuePrefillLocked}
+                    className={`${inputClass} ${queuePrefillLocked ? "bg-slate-100 text-slate-700" : ""}`}
+                  />
                 </div>
 
                 <div>
-                  <label className={labelClass}>Size</label>
-                  <input name="size" value={formData.size} onChange={handleChange} className={inputClass} />
+                  <label className={labelClass}>Sequence *</label>
+                  <input
+                    name="sequence_code"
+                    value={formData.sequence_code}
+                    onChange={handleChange}
+                    readOnly={queuePrefillLocked}
+                    className={`${inputClass} ${queuePrefillLocked ? "bg-slate-100 text-slate-700" : ""}`}
+                  />
                 </div>
 
                 <div>
-                  <label className={labelClass}>Mill Incharge</label>
-                  <select
-                    name="mill_incharge"
-                    value={formData.mill_incharge}
+                  <label className={labelClass}>Laddle *</label>
+                  <input
+                    name="laddle_number"
+                    value={formData.laddle_number}
                     onChange={handleChange}
-                    className={selectClass}
-                  >
-                    {millInchargeOptions.map((option) => (
+                    readOnly={queuePrefillLocked}
+                    className={`${inputClass} ${queuePrefillLocked ? "bg-slate-100 text-slate-700" : ""}`}
+                  />
+                </div>
+
+                <div>
+                  <label className={labelClass}>Shift *</label>
+                  <select name="shift_type" value={formData.shift_type} onChange={handleChange} className={selectClass}>
+                    {SHIFT_OPTIONS.map((option) => (
                       <option key={option || "blank"} value={option}>
-                        {option || "Select"}
+                        {option || "Select Shift"}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className={labelClass}>Quality Supervisor</label>
-                  <select
-                    name="quality_supervisor"
-                    value={formData.quality_supervisor}
-                    onChange={handleChange}
-                    className={selectClass}
-                  >
-                    {qualitySupervisorOptions.map((option) => (
+                  <label className={labelClass}>Tested By *</label>
+                  <select name="tested_by" value={formData.tested_by} onChange={handleChange} className={selectClass}>
+                    {TESTER_OPTIONS.map((option) => (
                       <option key={option || "blank"} value={option}>
-                        {option || "Select"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {formData.quality_supervisor === "Other" ? (
-                  <div>
-                    <label className={labelClass}>Supervisor Name *</label>
-                    <input
-                      name="quality_supervisor_other"
-                      value={formData.quality_supervisor_other}
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                  </div>
-                ) : null}
-
-                <div>
-                  <label className={labelClass}>Electrical DC Operator</label>
-                  <select
-                    name="electrical_dc_operator"
-                    value={formData.electrical_dc_operator}
-                    onChange={handleChange}
-                    className={selectClass}
-                  >
-                    {electricalOperatorOptions.map((option) => (
-                      <option key={option || "blank"} value={option}>
-                        {option || "Select"}
+                        {option || "Select Tester"}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className={labelClass}>Strand 1 Temperature</label>
+                  <label className={labelClass}>Final C *</label>
+                  <input type="number" step="0.0001" name="final_c" value={formData.final_c} onChange={handleChange} className={inputClass} />
+                </div>
+
+                <div>
+                  <label className={labelClass}>Final Mn *</label>
                   <input
-                    name="strand1_temperature"
-                    value={formData.strand1_temperature}
+                    type="number"
+                    step="0.0001"
+                    name="final_mn"
+                    value={formData.final_mn}
                     onChange={handleChange}
                     className={inputClass}
                   />
                 </div>
 
                 <div>
-                  <label className={labelClass}>Strand 2 Temperature</label>
-                  <input
-                    name="strand2_temperature"
-                    value={formData.strand2_temperature}
-                    onChange={handleChange}
-                    className={inputClass}
-                  />
+                  <label className={labelClass}>Final S *</label>
+                  <input type="number" step="0.0001" name="final_s" value={formData.final_s} onChange={handleChange} className={inputClass} />
                 </div>
 
                 <div>
-                  <label className={labelClass}>Shift Supervisor</label>
-                  <input
-                    name="shift_supervisor"
-                    value={formData.shift_supervisor}
-                    onChange={handleChange}
-                    className={inputClass}
-                  />
+                  <label className={labelClass}>Final P *</label>
+                  <input type="number" step="0.0001" name="final_p" value={formData.final_p} onChange={handleChange} className={inputClass} />
                 </div>
 
                 <div className="md:col-span-2 lg:col-span-3">
@@ -537,10 +518,10 @@ function HotCoil() {
                 </div>
 
                 <div className="md:col-span-2 lg:col-span-3 space-y-2">
-                  <label className={labelClass}>Picture</label>
+                  <label className={labelClass}>Report Picture</label>
                   {previewUrl ? (
                     <div className="space-y-2">
-                      <img src={previewUrl} alt="Hot coil preview" className="w-full rounded-md border border-slate-200 object-cover max-h-52" />
+                      <img src={previewUrl} alt="QC report preview" className="w-full rounded-md border border-slate-200 object-cover max-h-52" />
                       <button type="button" onClick={clearImage} className={secondaryButtonClass}>
                         Remove Image
                       </button>
@@ -568,4 +549,4 @@ function HotCoil() {
   );
 }
 
-export default HotCoil;
+export default QCLab;
