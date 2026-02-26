@@ -13,7 +13,7 @@ import UserProfiles from "./pages/UserProfiles";
 // BatchCode pages
 import HotCoil from "./pages/BatchCode/HotCoil";
 import QCLab from "./pages/BatchCode/QCLab";
-import SMSRegister from "./pages/BatchCode/SmsRegister";
+import SMSRegister from "./pages/BatchCode/SMSRegister";
 import Recoiler from "./pages/BatchCode/Recoiler";
 import PipeMill from "./pages/BatchCode/PipeMill";
 import Laddle from "./pages/BatchCode/Laddle";
