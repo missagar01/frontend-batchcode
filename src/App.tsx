@@ -9,6 +9,7 @@ import Calendar from "./pages/Calendar";
 import Blank from "./pages/Blank";
 import UserProfiles from "./pages/UserProfiles";
 
+
 // BatchCode pages
 import HotCoil from "./pages/BatchCode/HotCoil";
 import QCLab from "./pages/BatchCode/QCLab";
