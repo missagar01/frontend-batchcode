@@ -1,42 +1,40 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { AlertCircle, ArrowRight, Eye, EyeOff, Lock, ShieldCheck, User } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { Card, CardContent, CardDescription, CardHeader } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { User, Lock, LogIn } from "lucide-react";
 import logo from "../assert/Logo.jpeg";
-import { isAdminUser, getDefaultAllowedPath } from "../utils/accessControl";
+import { getDefaultAllowedPath } from "../utils/accessControl";
+
+type ToastState = {
+  show: boolean;
+  message: string;
+  type: "" | "success" | "error";
+};
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login, loading, isAuthenticated, user } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [toast, setToast] = useState({ show: false, message: "", type: "" });
+  const [toast, setToast] = useState<ToastState>({
+    show: false,
+    message: "",
+    type: ""
+  });
 
   useEffect(() => {
-    // Only redirect if authenticated and not already on login page
     if (isAuthenticated && !loading && user) {
       navigate(getDefaultAllowedPath(user), { replace: true });
     }
   }, [isAuthenticated, loading, navigate, user]);
 
-  // Professional Background Pattern
-  const ProfessionalBackground = () => {
-    return (
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
-      </div>
-    );
-  };
-
-  // Toast notification function (from BatchCode)
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ show: true, message, type });
     setTimeout(() => {
@@ -57,8 +55,10 @@ const Login: React.FC = () => {
     const result = await login(username, password);
 
     if (result.success) {
-      showToast(`Login successful! Welcome, ${result.user?.username || username}`, "success");
-      // Navigate after a short delay to show toast
+      showToast(
+        `Login successful! Welcome, ${result.user?.username || username}`,
+        "success"
+      );
       setTimeout(() => {
         navigate(getDefaultAllowedPath(result.user), { replace: true });
       }, 1000);
@@ -70,112 +70,142 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white p-4 sm:p-6 lg:p-8">
-      {/* Toast Notification */}
+    <div className="relative min-h-screen overflow-hidden bg-[#f4f6f9] text-slate-950">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(185,28,28,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(15,23,42,0.15),transparent_28%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(15,23,42,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.05)_1px,transparent_1px)] bg-[size:72px_72px] opacity-40" />
+      <div className="absolute left-[-8rem] top-12 h-64 w-64 rounded-full bg-red-200/40 blur-3xl" />
+      <div className="absolute bottom-[-6rem] right-[-4rem] h-72 w-72 rounded-full bg-slate-300/30 blur-3xl" />
+
       {toast.show && (
         <div
-          className={`fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-xl transition-all duration-300 z-50 min-w-[320px] max-w-md text-center backdrop-blur-sm ${toast.type === "success"
-            ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-            : "bg-red-50 text-red-800 border border-red-200"
-            }`}
+          className={`fixed left-1/2 top-4 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-sm transition-all duration-300 ${
+            toast.type === "success"
+              ? "border-emerald-200 bg-emerald-50/95 text-emerald-900"
+              : "border-red-200 bg-red-50/95 text-red-900"
+          }`}
         >
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-2 text-center">
             {toast.type === "success" ? (
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
+              <ShieldCheck className="h-5 w-5 flex-shrink-0" />
             ) : (
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
+              <AlertCircle className="h-5 w-5 flex-shrink-0" />
             )}
-            <span className="font-medium">{toast.message}</span>
+            <span className="text-sm font-medium sm:text-base">{toast.message}</span>
           </div>
         </div>
       )}
 
-      <div className="w-full max-w-md z-10">
-        <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
-          {/* Logo Banner */}
-          <div className="rounded-t-lg overflow-hidden">
-            <img
-              src={logo}
-              alt="Sagar TMT & Pipes"
-              className="block w-full h-auto"
-            />
-          </div>
+      <div className="relative mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center p-3 sm:p-5">
+        <div className="w-full max-w-[30rem] rounded-[34px] border border-white/80 bg-white/82 px-4 pb-5 pt-3 shadow-[0_28px_80px_-38px_rgba(15,23,42,0.45)] backdrop-blur-sm sm:px-5 sm:pb-6 sm:pt-4">
+          <div className="h-1.5 rounded-full bg-[linear-gradient(90deg,#ef4444_0%,#f97316_62%,#fbbf24_100%)]" />
 
-          {/* Form Content */}
-          <div className="px-8 py-6">
-            {/* Heading */}
-            <h3 className="text-2xl font-bold text-blue-600 mb-6 text-center">
-              BatchCode
-            </h3>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Username Field */}
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-blue-700 font-semibold text-sm flex items-center gap-2">
-                  <User className="h-4 w-4 text-blue-600" />
-                  Username
-                </Label>
-                <Input
-                  id="username"
-                  name="username"
-                  type="text"
-                  placeholder="Enter your username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                  disabled={loading}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-700 placeholder:text-gray-400 transition-all duration-200"
+          <div className="mt-3">
+            <div className="rounded-[26px] border border-red-100/90 bg-[linear-gradient(180deg,#fff8f7_0%,#ffffff_100%)] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] sm:p-3">
+              <div className="overflow-hidden rounded-[22px] border border-red-200/70 bg-white shadow-[0_16px_30px_-24px_rgba(220,38,38,0.55)]">
+                <img
+                  src={logo}
+                  alt="Sagar TMT & Pipes"
+                  className="block h-auto w-full"
                 />
               </div>
+            </div>
 
-              {/* Password Field */}
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-blue-700 font-semibold text-sm flex items-center gap-2">
-                  <Lock className="h-4 w-4 text-blue-600" />
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-700 placeholder:text-gray-400 transition-all duration-200"
-                />
-              </div>
-
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-center gap-2">
-                  <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                  <span>{error}</span>
+            <div className="pt-4 sm:pt-5">
+              <form onSubmit={handleSubmit} className="space-y-4.5">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="username"
+                    className="text-[1rem] font-semibold text-slate-700"
+                  >
+                    Username
+                  </Label>
+                  <div className="flex h-12 items-center rounded-[22px] border border-slate-200 bg-white px-3 shadow-[0_8px_18px_-16px_rgba(15,23,42,0.35)] transition-all duration-200 focus-within:border-orange-300 focus-within:ring-4 focus-within:ring-orange-100">
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#fff3ef] text-[#ef4444]">
+                      <User className="h-4 w-4" />
+                    </div>
+                    <Input
+                      id="username"
+                      name="username"
+                      type="text"
+                      placeholder="Enter your username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      required
+                      disabled={loading}
+                      className="h-full border-0 bg-transparent pl-3 pr-0 text-base text-slate-700 shadow-none placeholder:text-[#94a3b8] focus-visible:ring-0"
+                    />
+                  </div>
                 </div>
-              )}
 
-              {/* Purple-Pink Gradient Login Button */}
-              <Button
-                type="submit"
-                className="w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg font-bold text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg mt-6"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mx-auto"></div>
-                    <span className="ml-2">Signing in...</span>
-                  </>
-                ) : (
-                  "Login"
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="password"
+                    className="text-[1rem] font-semibold text-slate-700"
+                  >
+                    Password
+                  </Label>
+                  <div className="flex h-12 items-center rounded-[22px] border border-slate-200 bg-white px-3 shadow-[0_8px_18px_-16px_rgba(15,23,42,0.35)] transition-all duration-200 focus-within:border-orange-300 focus-within:ring-4 focus-within:ring-orange-100">
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#fff3ef] text-[#ef4444]">
+                      <Lock className="h-4 w-4" />
+                    </div>
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={loading}
+                      className="h-full border-0 bg-transparent pl-3 pr-2 text-base text-slate-700 shadow-none placeholder:text-[#94a3b8] focus-visible:ring-0"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="flex items-start gap-3 rounded-[22px] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                    <span>{error}</span>
+                  </div>
                 )}
-              </Button>
-            </form>
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="mt-1 h-12 w-full rounded-[20px] bg-[linear-gradient(90deg,#ff1f1f_0%,#ff5a18_58%,#ff7a12_100%)] text-lg font-semibold text-white shadow-[0_18px_34px_-18px_rgba(249,115,22,0.75)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_22px_40px_-20px_rgba(249,115,22,0.82)]"
+                >
+                  {loading ? (
+                    <>
+                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/35 border-t-white" />
+                      <span>Signing in...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Sign In</span>
+                      <ArrowRight className="h-5 w-5" />
+                    </>
+                  )}
+                </Button>
+              </form>
+            </div>
+
+            <div className="pt-5 text-center sm:pt-6">
+              <p className="text-sm font-medium text-[#94a3b8]">
+                Copyright 2026 Sagar TMT & Pipes. Secure internal portal.
+              </p>
+            </div>
           </div>
         </div>
       </div>
