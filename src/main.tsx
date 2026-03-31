@@ -12,6 +12,7 @@ if (!rootElement) {
   throw new Error("Root element not found");
 }
 
+
 createRoot(rootElement).render(
   <StrictMode>
     <ThemeProvider>
