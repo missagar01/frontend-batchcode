@@ -95,13 +95,13 @@ const Login: React.FC = () => {
         </div>
       )}
 
-      <div className="relative mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center p-3 sm:p-5">
-        <div className="w-full max-w-[30rem] rounded-[34px] border border-white/80 bg-white/82 px-4 pb-5 pt-3 shadow-[0_28px_80px_-38px_rgba(15,23,42,0.45)] backdrop-blur-sm sm:px-5 sm:pb-6 sm:pt-4">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center p-3 sm:p-4">
+        <div className="w-full max-w-[24.5rem] rounded-[30px] border border-white/80 bg-white/82 px-3.5 pb-4 pt-3 shadow-[0_28px_80px_-38px_rgba(15,23,42,0.45)] backdrop-blur-sm sm:px-4 sm:pb-5 sm:pt-3.5">
           <div className="h-1.5 rounded-full bg-[linear-gradient(90deg,#ef4444_0%,#f97316_62%,#fbbf24_100%)]" />
 
           <div className="mt-3">
-            <div className="rounded-[26px] border border-red-100/90 bg-[linear-gradient(180deg,#fff8f7_0%,#ffffff_100%)] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] sm:p-3">
-              <div className="overflow-hidden rounded-[22px] border border-red-200/70 bg-white shadow-[0_16px_30px_-24px_rgba(220,38,38,0.55)]">
+            <div className="rounded-[22px] border border-red-100/90 bg-[linear-gradient(180deg,#fff8f7_0%,#ffffff_100%)] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] sm:p-2.5">
+              <div className="overflow-hidden rounded-[18px] border border-red-200/70 bg-white shadow-[0_16px_30px_-24px_rgba(220,38,38,0.55)]">
                 <img
                   src={logo}
                   alt="Sagar TMT & Pipes"
@@ -110,17 +110,17 @@ const Login: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-4 sm:pt-5">
-              <form onSubmit={handleSubmit} className="space-y-4.5">
-                <div className="space-y-2">
+            <div className="pt-3.5 sm:pt-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-1.5">
                   <Label
                     htmlFor="username"
-                    className="text-[1rem] font-semibold text-slate-700"
+                    className="text-[0.95rem] font-semibold text-slate-700"
                   >
                     Username
                   </Label>
-                  <div className="flex h-12 items-center rounded-[22px] border border-slate-200 bg-white px-3 shadow-[0_8px_18px_-16px_rgba(15,23,42,0.35)] transition-all duration-200 focus-within:border-orange-300 focus-within:ring-4 focus-within:ring-orange-100">
-                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#fff3ef] text-[#ef4444]">
+                  <div className="flex h-11 items-center rounded-[20px] border border-slate-200 bg-white px-3 shadow-[0_8px_18px_-16px_rgba(15,23,42,0.35)] transition-all duration-200 focus-within:border-orange-300 focus-within:ring-4 focus-within:ring-orange-100">
+                    <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#fff3ef] text-[#ef4444]">
                       <User className="h-4 w-4" />
                     </div>
                     <Input
@@ -132,20 +132,20 @@ const Login: React.FC = () => {
                       onChange={(e) => setUsername(e.target.value)}
                       required
                       disabled={loading}
-                      className="h-full border-0 bg-transparent pl-3 pr-0 text-base text-slate-700 shadow-none placeholder:text-[#94a3b8] focus-visible:ring-0"
+                      className="h-full border-0 bg-transparent pl-2.5 pr-0 text-[15px] text-slate-700 shadow-none placeholder:text-[#94a3b8] focus-visible:ring-0"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label
                     htmlFor="password"
-                    className="text-[1rem] font-semibold text-slate-700"
+                    className="text-[0.95rem] font-semibold text-slate-700"
                   >
                     Password
                   </Label>
-                  <div className="flex h-12 items-center rounded-[22px] border border-slate-200 bg-white px-3 shadow-[0_8px_18px_-16px_rgba(15,23,42,0.35)] transition-all duration-200 focus-within:border-orange-300 focus-within:ring-4 focus-within:ring-orange-100">
-                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#fff3ef] text-[#ef4444]">
+                  <div className="flex h-11 items-center rounded-[20px] border border-slate-200 bg-white px-3 shadow-[0_8px_18px_-16px_rgba(15,23,42,0.35)] transition-all duration-200 focus-within:border-orange-300 focus-within:ring-4 focus-within:ring-orange-100">
+                    <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#fff3ef] text-[#ef4444]">
                       <Lock className="h-4 w-4" />
                     </div>
                     <Input
@@ -157,12 +157,12 @@ const Login: React.FC = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       disabled={loading}
-                      className="h-full border-0 bg-transparent pl-3 pr-2 text-base text-slate-700 shadow-none placeholder:text-[#94a3b8] focus-visible:ring-0"
+                      className="h-full border-0 bg-transparent pl-2.5 pr-2 text-[15px] text-slate-700 shadow-none placeholder:text-[#94a3b8] focus-visible:ring-0"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword((prev) => !prev)}
-                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                      className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
                       aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? (
@@ -184,7 +184,7 @@ const Login: React.FC = () => {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="mt-1 h-12 w-full rounded-[20px] bg-[linear-gradient(90deg,#ff1f1f_0%,#ff5a18_58%,#ff7a12_100%)] text-lg font-semibold text-white shadow-[0_18px_34px_-18px_rgba(249,115,22,0.75)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_22px_40px_-20px_rgba(249,115,22,0.82)]"
+                  className="mt-1 h-11 w-full rounded-[18px] bg-[linear-gradient(90deg,#ff1f1f_0%,#ff5a18_58%,#ff7a12_100%)] text-base font-semibold text-white shadow-[0_18px_34px_-18px_rgba(249,115,22,0.75)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_22px_40px_-20px_rgba(249,115,22,0.82)]"
                 >
                   {loading ? (
                     <>
@@ -201,8 +201,8 @@ const Login: React.FC = () => {
               </form>
             </div>
 
-            <div className="pt-5 text-center sm:pt-6">
-              <p className="text-sm font-medium text-[#94a3b8]">
+            <div className="pt-4 text-center sm:pt-5">
+              <p className="text-[13px] font-medium text-[#94a3b8]">
                 Copyright 2026 Sagar TMT & Pipes. Secure internal portal.
               </p>
             </div>
