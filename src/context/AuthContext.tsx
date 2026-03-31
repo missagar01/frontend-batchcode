@@ -57,6 +57,32 @@ const decodeToken = (token: string) => {
   }
 };
 
+const normalizeErrorMessage = (value: unknown, fallback: string) => {
+  if (typeof value === "string" && value.trim()) {
+    return value;
+  }
+
+  if (value && typeof value === "object") {
+    const maybeMessage = (value as { message?: unknown }).message;
+    if (typeof maybeMessage === "string" && maybeMessage.trim()) {
+      return maybeMessage;
+    }
+
+    const maybeCode = (value as { code?: unknown }).code;
+    if (typeof maybeCode === "string" && maybeCode.trim()) {
+      return `${fallback} (${maybeCode})`;
+    }
+
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return fallback;
+    }
+  }
+
+  return fallback;
+};
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -76,7 +102,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
               setLoading(false);
               return;
-            } catch (e) { }
+            } catch {
+              sessionStorage.removeItem("user");
+              localStorage.removeItem("user");
+            }
           }
           const decoded = decodeToken(storedToken);
           if (decoded) {
@@ -213,12 +242,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } else if (axiosError.response?.status === 500) {
           errorMessage = 'Server error. Please try again later.';
         } else {
-          errorMessage = axiosError.response?.data?.message || axiosError.response?.data?.error || axiosError.response?.statusText || 'Login failed';
+          errorMessage = normalizeErrorMessage(
+            axiosError.response?.data?.message,
+            normalizeErrorMessage(
+              axiosError.response?.data?.error,
+              axiosError.response?.statusText || 'Login failed'
+            )
+          );
         }
       } else if (error && typeof error === 'object' && 'request' in error) {
         errorMessage = 'No response from server. Please check your connection.';
       } else if (error instanceof Error) {
-        errorMessage = error.message || 'Login failed';
+        errorMessage = normalizeErrorMessage(error.message, 'Login failed');
+      } else {
+        errorMessage = normalizeErrorMessage(error, 'Login failed');
       }
 
       return {

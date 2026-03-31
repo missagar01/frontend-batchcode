@@ -16,6 +16,26 @@ type ToastState = {
   type: "" | "success" | "error";
 };
 
+const normalizeMessage = (value: unknown, fallback: string) => {
+  if (typeof value === "string" && value.trim()) {
+    return value;
+  }
+
+  if (value && typeof value === "object") {
+    const maybeMessage = (value as { message?: unknown }).message;
+    if (typeof maybeMessage === "string" && maybeMessage.trim()) {
+      return maybeMessage;
+    }
+
+    const maybeCode = (value as { code?: unknown }).code;
+    if (typeof maybeCode === "string" && maybeCode.trim()) {
+      return `${fallback} (${maybeCode})`;
+    }
+  }
+
+  return fallback;
+};
+
 
 
 const Login: React.FC = () => {
@@ -37,8 +57,13 @@ const Login: React.FC = () => {
     }
   }, [isAuthenticated, loading, navigate, user]);
 
-  const showToast = (message: string, type: "success" | "error") => {
-    setToast({ show: true, message, type });
+  const showToast = (message: unknown, type: "success" | "error") => {
+    const safeMessage = normalizeMessage(
+      message,
+      type === "success" ? "Action completed successfully" : "Something went wrong"
+    );
+
+    setToast({ show: true, message: safeMessage, type });
     setTimeout(() => {
       setToast({ show: false, message: "", type: "" });
     }, 5000);
@@ -65,7 +90,7 @@ const Login: React.FC = () => {
         navigate(getDefaultAllowedPath(result.user), { replace: true });
       }, 1000);
     } else {
-      const errorMsg = result.error || "Invalid username or password";
+      const errorMsg = normalizeMessage(result.error, "Invalid username or password");
       setError(errorMsg);
       showToast(errorMsg, "error");
     }

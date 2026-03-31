@@ -1,17 +1,22 @@
+const currentHostname = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
+
 const isDevelopment = import.meta.env.DEV ||
     import.meta.env.MODE === 'development' ||
-    (typeof window !== 'undefined' && (
-        window.location.hostname === 'localhost' ||
-        window.location.hostname === '127.0.0.1'
-    ));
+    currentHostname === 'localhost' ||
+    currentHostname === '127.0.0.1';
 
 const envBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').trim();
 
-const isS3Deployment = typeof window !== 'undefined' &&
-    (window.location.hostname.includes('s3-website') ||
-        window.location.hostname.includes('s3.amazonaws.com'));
+const isS3LikeDeployment =
+    currentHostname.includes('s3-website') ||
+    currentHostname.includes('s3.amazonaws.com') ||
+    currentHostname.endsWith('.cloudfront.net');
 
-export const API_BASE_URL = isS3Deployment ? envBaseUrl : (import.meta.env.PROD ? '' : (envBaseUrl || ''));
+const isVercelDeployment = currentHostname.endsWith('.vercel.app');
+
+export const API_BASE_URL = isDevelopment
+    ? (envBaseUrl || '')
+    : (isVercelDeployment && !isS3LikeDeployment ? '' : envBaseUrl);
 
 const buildHeaders = (token, headers, isFormData) => {
     const baseHeaders = {

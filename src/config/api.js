@@ -7,22 +7,29 @@ import axios from 'axios';
 
 // Force empty string in development to use Vite proxy unless a base URL is explicitly configured
 // This prevents CORS issues by proxying through localhost when no override is provided
+const currentHostname = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
+
 const isDevelopment = import.meta.env.DEV ||
   import.meta.env.MODE === 'development' ||
-  window.location.hostname === 'localhost' ||
-  window.location.hostname === '127.0.0.1';
+  currentHostname === 'localhost' ||
+  currentHostname === '127.0.0.1';
 
 const envBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').trim();
 
-// For S3 deployments, we MUST use the full backend URL since S3 cannot proxy API calls
-// For Vercel/platforms with rewrites, use empty string to trigger proxy
-// Check if we're on S3 by looking for s3-website in hostname
-const isS3Deployment = typeof window !== 'undefined' &&
-  (window.location.hostname.includes('s3-website') ||
-    window.location.hostname.includes('s3.amazonaws.com'));
+const isS3LikeDeployment =
+  currentHostname.includes('s3-website') ||
+  currentHostname.includes('s3.amazonaws.com') ||
+  currentHostname.endsWith('.cloudfront.net');
 
-// Use backend URL for S3 deployments, otherwise use configured value
-const API_BASE_URL = isS3Deployment ? envBaseUrl : (import.meta.env.PROD ? '' : (envBaseUrl || ''));
+const isVercelDeployment = currentHostname.endsWith('.vercel.app');
+
+// Production resolution rules:
+// - Local dev: use Vite proxy unless an explicit override is set
+// - Vercel default domains: prefer same-origin /api rewrites
+// - S3/CloudFront/custom static domains: use the explicit backend URL
+const API_BASE_URL = isDevelopment
+  ? (envBaseUrl || '')
+  : (isVercelDeployment && !isS3LikeDeployment ? '' : envBaseUrl);
 
 
 // Create axios instance
