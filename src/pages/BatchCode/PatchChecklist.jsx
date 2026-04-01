@@ -305,7 +305,7 @@ function PatchChecklist() {
 
   const columns = useMemo(
     () => [
-      { label: "Code", render: (row) => `#${valueOrDash(row.unique_code)}` },
+      { label: "Code", render: (row) => `${valueOrDash(row.unique_code)}` },
       { label: "Date", render: (row) => formatDateTime(row.check_date || row.created_at) },
       {
         label: "Furnace",

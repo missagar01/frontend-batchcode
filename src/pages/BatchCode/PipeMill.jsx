@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ClipboardPlus, History, RefreshCw, Save } from "lucide-react";
+import { ClipboardPlus, History, RefreshCw, Save, X } from "lucide-react";
 import * as batchcodeAPI from "../../api/batchcodeApi";
 import {
   PageContainer,
@@ -118,6 +118,39 @@ function PipeMill() {
     setMediaPreview({ open: false, url: "" });
   }, []);
 
+  const clearImage = useCallback(() => {
+    setPreviewUrl((currentUrl) => {
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl);
+      }
+      return "";
+    });
+    setSelectedFile(null);
+  }, []);
+
+  const closeFormModal = useCallback(() => {
+    setShowForm(false);
+  }, []);
+
+  const openManualEntryForm = useCallback(() => {
+    setFormData(INITIAL_FORM);
+    setQueuePrefillLocked(false);
+    clearImage();
+    setShowForm(true);
+  }, [clearImage]);
+
+  const openFormForQueueRow = useCallback((row) => {
+    clearImage();
+    setFormData({
+      ...INITIAL_FORM,
+      recoiler_short_code: String(row.unique_code || row.recoiler_short_code || ""),
+      machine_number: String(row.machine_number || ""),
+      size: row.size || ""
+    });
+    setQueuePrefillLocked(true);
+    setShowForm(true);
+  }, [clearImage]);
+
   useEffect(() => {
     if (popup.open && popup.type === "warning") {
       const timer = setTimeout(() => closePopup(), 2000);
@@ -133,6 +166,27 @@ function PipeMill() {
     },
     [previewUrl]
   );
+
+  useEffect(() => {
+    if (!showForm) {
+      return undefined;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        closeFormModal();
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showForm, closeFormModal]);
 
   const fetchData = useCallback(async (silent = false) => {
     if (!silent) {
@@ -204,31 +258,13 @@ function PipeMill() {
       return;
     }
 
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-
     setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-  };
-
-  const clearImage = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-    setSelectedFile(null);
-    setPreviewUrl("");
-  };
-
-  const openFormForQueueRow = (row) => {
-    setFormData((prev) => ({
-      ...INITIAL_FORM,
-      recoiler_short_code: String(row.unique_code || row.recoiler_short_code || ""),
-      machine_number: String(row.machine_number || ""),
-      size: row.size || prev.size
-    }));
-    setQueuePrefillLocked(true);
-    setShowForm(true);
+    setPreviewUrl((currentUrl) => {
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl);
+      }
+      return URL.createObjectURL(file);
+    });
   };
 
   const validate = () => {
@@ -313,6 +349,18 @@ function PipeMill() {
     () => [
       {
         label: "Action",
+        mobileRender: (row) => (
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-medium text-slate-600">Action:</span>
+            <button
+              type="button"
+              onClick={() => openFormForQueueRow(row)}
+              className="h-8 min-w-20 rounded-md bg-red-600 px-3 text-xs font-medium text-white"
+            >
+              Start
+            </button>
+          </div>
+        ),
         render: (row) => (
           <button
             type="button"
@@ -323,7 +371,7 @@ function PipeMill() {
           </button>
         )
       },
-      { label: "Recoiler", render: (row) => `#${valueOrDash(row.unique_code || row.recoiler_short_code)}` },
+      { label: "Recoiler", render: (row) => `${valueOrDash(row.unique_code || row.recoiler_short_code)}` },
       { label: "Size", key: "size" },
       {
         label: "Team",
@@ -332,7 +380,7 @@ function PipeMill() {
       { label: "Machine", key: "machine_number" },
       { label: "Time", render: (row) => formatDateTime(row.sample_timestamp || row.created_at || row.createdAt) }
     ],
-    []
+    [openFormForQueueRow]
   );
 
   const mediaCell = useCallback((url) => {
@@ -386,6 +434,250 @@ function PipeMill() {
         title="Pipe Mill Image"
         onClose={closeMediaPreview}
       />
+      {showForm ? (
+        <div
+          className="fixed inset-0 z-[1050] bg-slate-900/60 p-3 pt-16 sm:p-4"
+          onClick={closeFormModal}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pipe-mill-form-title"
+        >
+          <div className="flex h-full w-full items-start justify-center sm:items-center">
+            <div
+              className="flex max-h-[calc(100dvh-4.5rem)] w-full flex-col overflow-hidden rounded-2xl bg-white shadow-xl sm:h-auto sm:max-h-[92dvh] sm:max-w-5xl sm:rounded-xl"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+                <div className="flex items-start justify-between gap-3 border-b border-slate-200 px-3 py-3 sm:px-4">
+                  <div className="min-w-0">
+                    <h2 id="pipe-mill-form-title" className="text-sm font-semibold text-slate-900 sm:text-base">
+                      {queuePrefillLocked ? "Pipe Mill Entry" : "Manual Pipe Mill Entry"}
+                    </h2>
+                    <p className="mt-1 text-xs text-slate-600">
+                      {queuePrefillLocked
+                        ? `Recoiler #${valueOrDash(formData.recoiler_short_code)} ke liye details fill karein.`
+                        : "Pipe mill entry submit karne ke liye details fill karein."}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeFormModal}
+                    className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                    aria-label="Close pipe mill form"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    <div>
+                      <label className={labelClass}>Recoiler Code *</label>
+                      {queuePrefillLocked ? (
+                        <input
+                          name="recoiler_short_code"
+                          value={formData.recoiler_short_code}
+                          readOnly
+                          className={`${inputClass} bg-slate-100 text-slate-700`}
+                        />
+                      ) : (
+                        <input
+                          name="recoiler_short_code"
+                          value={formData.recoiler_short_code}
+                          onChange={handleChange}
+                          className={inputClass}
+                        />
+                      )}
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>Machine Number *</label>
+                      {queuePrefillLocked ? (
+                        <input
+                          name="machine_number"
+                          value={formData.machine_number}
+                          readOnly
+                          className={`${inputClass} bg-slate-100 text-slate-700`}
+                        />
+                      ) : (
+                        <select
+                          name="machine_number"
+                          value={formData.machine_number}
+                          onChange={handleChange}
+                          className={selectClass}
+                        >
+                          {MACHINE_OPTIONS.map((option) => (
+                            <option key={option || "blank"} value={option}>
+                              {option || "Select Machine Number"}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>Mill Number *</label>
+                      <select name="mill_number" value={formData.mill_number} onChange={handleChange} className={selectClass}>
+                        {MILL_OPTIONS.map((option) => (
+                          <option key={option || "blank"} value={option}>
+                            {option || "Select Mill"}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>Section</label>
+                      <input name="section" value={formData.section} onChange={handleChange} className={inputClass} />
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>Item Type *</label>
+                      <select name="item_type" value={formData.item_type} onChange={handleChange} className={selectClass}>
+                        {ITEM_OPTIONS.map((option) => (
+                          <option key={option || "blank"} value={option}>
+                            {option || "Select Item Type"}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>Size *</label>
+                      <select name="size" value={formData.size} onChange={handleChange} className={selectClass}>
+                        {SIZE_OPTIONS.map((option) => (
+                          <option key={option || "blank"} value={option}>
+                            {option || "Select Size"}
+                          </option>
+                        ))}
+                        {formData.size && !SIZE_OPTIONS.includes(formData.size) ? (
+                          <option value={formData.size}>{formData.size}</option>
+                        ) : null}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>Thickness</label>
+                      <input name="thickness" value={formData.thickness} onChange={handleChange} className={inputClass} />
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>Shift *</label>
+                      <select name="shift" value={formData.shift} onChange={handleChange} className={selectClass}>
+                        {SHIFT_OPTIONS.map((option) => (
+                          <option key={option || "blank"} value={option}>
+                            {option || "Select Shift"}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>Fitter Name *</label>
+                      <select name="fitter_name" value={formData.fitter_name} onChange={handleChange} className={selectClass}>
+                        {FITTER_OPTIONS.map((option) => (
+                          <option key={option || "blank"} value={option}>
+                            {option || "Select Fitter"}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {formData.fitter_name === "Other" ? (
+                      <div>
+                        <label className={labelClass}>Specify Fitter *</label>
+                        <input
+                          name="fitter_name_other"
+                          value={formData.fitter_name_other}
+                          onChange={handleChange}
+                          className={inputClass}
+                        />
+                      </div>
+                    ) : null}
+
+                    <div>
+                      <label className={labelClass}>Quality Supervisor *</label>
+                      <select
+                        name="quality_supervisor"
+                        value={formData.quality_supervisor}
+                        onChange={handleChange}
+                        className={selectClass}
+                      >
+                        {QUALITY_SUPERVISOR_OPTIONS.map((option) => (
+                          <option key={option || "blank"} value={option}>
+                            {option || "Select"}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>Mill Incharge *</label>
+                      <select name="mill_incharge" value={formData.mill_incharge} onChange={handleChange} className={selectClass}>
+                        {MILL_INCHARGE_OPTIONS.map((option) => (
+                          <option key={option || "blank"} value={option}>
+                            {option || "Select"}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>Forman *</label>
+                      <select name="forman_name" value={formData.forman_name} onChange={handleChange} className={selectClass}>
+                        {FORMAN_OPTIONS.map((option) => (
+                          <option key={option || "blank"} value={option}>
+                            {option || "Select"}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="sm:col-span-2 xl:col-span-3">
+                      <label className={labelClass}>Remarks</label>
+                      <textarea name="remarks" value={formData.remarks} onChange={handleChange} className={textareaClass} />
+                    </div>
+
+                    <div className="space-y-2 sm:col-span-2 xl:col-span-3">
+                      <label className={labelClass}>Picture</label>
+                      {previewUrl ? (
+                        <div className="space-y-2">
+                          <img
+                            src={previewUrl}
+                            alt="Pipe mill preview"
+                            className="max-h-52 w-full rounded-md border border-slate-200 object-cover sm:max-h-64"
+                          />
+                          <button type="button" onClick={clearImage} className={`${secondaryButtonClass} w-full sm:w-auto`}>
+                            Remove Image
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 p-4 text-center text-xs text-slate-600">
+                          Upload image
+                          <span className="mt-1 text-[11px] text-slate-500">Tap to choose a photo from mobile or desktop.</span>
+                          <input type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-200 px-3 py-3 sm:px-4">
+                  <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <button type="button" onClick={closeFormModal} className={`${secondaryButtonClass} w-full sm:w-auto`}>
+                      Close
+                    </button>
+                    <button type="submit" disabled={isSubmitting} className={primaryButtonClass}>
+                      <Save size={14} />
+                      {isSubmitting ? "Submitting..." : "Submit Entry"}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <PageContainer>
         <PageHeader
@@ -393,7 +685,7 @@ function PipeMill() {
           subtitle={viewMode === "queue" ? "Process pending recoiler records" : "Submitted pipe mill records"}
           icon={ClipboardPlus}
           actions={
-            <>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
               <SearchField
                 value={searchTerm}
                 onChange={setSearchTerm}
@@ -403,34 +695,30 @@ function PipeMill() {
               <button
                 type="button"
                 onClick={() => setViewMode((prev) => (prev === "queue" ? "history" : "queue"))}
-                className={secondaryButtonClass}
+                className={`${secondaryButtonClass} w-full sm:w-auto`}
               >
                 <History size={14} />
                 {viewMode === "queue" ? "History" : "Pending"}
               </button>
 
-              <button type="button" onClick={() => fetchData()} className={secondaryButtonClass}>
+              <button type="button" onClick={() => fetchData()} className={`${secondaryButtonClass} w-full sm:w-auto`}>
                 <RefreshCw size={14} />
                 Refresh
               </button>
-            </>
+            </div>
           }
         />
 
         {viewMode === "queue" ? (
           <SectionCard>
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-sm font-semibold text-slate-900">Pending Queue</h2>
               <button
                 type="button"
-                onClick={() => {
-                  setFormData(INITIAL_FORM);
-                  setQueuePrefillLocked(false);
-                  setShowForm((prev) => !prev);
-                }}
-                className={secondaryButtonClass}
+                onClick={openManualEntryForm}
+                className={`${secondaryButtonClass} w-full sm:w-auto`}
               >
-                {showForm ? "Hide Form" : "Manual Entry"}
+                Manual Entry
               </button>
             </div>
 
@@ -445,7 +733,7 @@ function PipeMill() {
           </SectionCard>
         ) : (
           <SectionCard>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-sm font-semibold text-slate-900">History</h2>
               <span className="text-xs text-slate-600">Total: {filteredHistoryRows.length}</span>
             </div>
@@ -461,200 +749,6 @@ function PipeMill() {
           </SectionCard>
         )}
 
-        {showForm ? (
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <SectionCard>
-              <h2 className="text-sm font-semibold text-slate-900">Pipe Mill Form</h2>
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
-                <div>
-                  <label className={labelClass}>Recoiler Code *</label>
-                  {queuePrefillLocked ? (
-                    <input
-                      name="recoiler_short_code"
-                      value={formData.recoiler_short_code}
-                      readOnly
-                      className={`${inputClass} bg-slate-100 text-slate-700`}
-                    />
-                  ) : (
-                    <input
-                      name="recoiler_short_code"
-                      value={formData.recoiler_short_code}
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                  )}
-                </div>
-
-                <div>
-                  <label className={labelClass}>Machine Number *</label>
-                  {queuePrefillLocked ? (
-                    <input
-                      name="machine_number"
-                      value={formData.machine_number}
-                      readOnly
-                      className={`${inputClass} bg-slate-100 text-slate-700`}
-                    />
-                  ) : (
-                    <select name="machine_number" value={formData.machine_number} onChange={handleChange} className={selectClass}>
-                      {MACHINE_OPTIONS.map((option) => (
-                        <option key={option || "blank"} value={option}>
-                          {option || "Select Machine Number"}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-
-                <div>
-                  <label className={labelClass}>Mill Number *</label>
-                  <select name="mill_number" value={formData.mill_number} onChange={handleChange} className={selectClass}>
-                    {MILL_OPTIONS.map((option) => (
-                      <option key={option || "blank"} value={option}>
-                        {option || "Select Mill"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Section</label>
-                  <input name="section" value={formData.section} onChange={handleChange} className={inputClass} />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Item Type *</label>
-                  <select name="item_type" value={formData.item_type} onChange={handleChange} className={selectClass}>
-                    {ITEM_OPTIONS.map((option) => (
-                      <option key={option || "blank"} value={option}>
-                        {option || "Select Item Type"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Size *</label>
-                  <select name="size" value={formData.size} onChange={handleChange} className={selectClass}>
-                    {SIZE_OPTIONS.map((option) => (
-                      <option key={option || "blank"} value={option}>
-                        {option || "Select Size"}
-                      </option>
-                    ))}
-                    {formData.size && !SIZE_OPTIONS.includes(formData.size) ? (
-                      <option value={formData.size}>{formData.size}</option>
-                    ) : null}
-                  </select>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Thickness</label>
-                  <input name="thickness" value={formData.thickness} onChange={handleChange} className={inputClass} />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Shift *</label>
-                  <select name="shift" value={formData.shift} onChange={handleChange} className={selectClass}>
-                    {SHIFT_OPTIONS.map((option) => (
-                      <option key={option || "blank"} value={option}>
-                        {option || "Select Shift"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Fitter Name *</label>
-                  <select name="fitter_name" value={formData.fitter_name} onChange={handleChange} className={selectClass}>
-                    {FITTER_OPTIONS.map((option) => (
-                      <option key={option || "blank"} value={option}>
-                        {option || "Select Fitter"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {formData.fitter_name === "Other" ? (
-                  <div>
-                    <label className={labelClass}>Specify Fitter *</label>
-                    <input
-                      name="fitter_name_other"
-                      value={formData.fitter_name_other}
-                      onChange={handleChange}
-                      className={inputClass}
-                    />
-                  </div>
-                ) : null}
-
-                <div>
-                  <label className={labelClass}>Quality Supervisor *</label>
-                  <select
-                    name="quality_supervisor"
-                    value={formData.quality_supervisor}
-                    onChange={handleChange}
-                    className={selectClass}
-                  >
-                    {QUALITY_SUPERVISOR_OPTIONS.map((option) => (
-                      <option key={option || "blank"} value={option}>
-                        {option || "Select"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Mill Incharge *</label>
-                  <select name="mill_incharge" value={formData.mill_incharge} onChange={handleChange} className={selectClass}>
-                    {MILL_INCHARGE_OPTIONS.map((option) => (
-                      <option key={option || "blank"} value={option}>
-                        {option || "Select"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Forman *</label>
-                  <select name="forman_name" value={formData.forman_name} onChange={handleChange} className={selectClass}>
-                    {FORMAN_OPTIONS.map((option) => (
-                      <option key={option || "blank"} value={option}>
-                        {option || "Select"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="md:col-span-2 lg:col-span-3">
-                  <label className={labelClass}>Remarks</label>
-                  <textarea name="remarks" value={formData.remarks} onChange={handleChange} className={textareaClass} />
-                </div>
-
-                <div className="md:col-span-2 lg:col-span-3 space-y-2">
-                  <label className={labelClass}>Picture</label>
-                  {previewUrl ? (
-                    <div className="space-y-2">
-                      <img src={previewUrl} alt="Pipe mill preview" className="w-full rounded-md border border-slate-200 object-cover max-h-52" />
-                      <button type="button" onClick={clearImage} className={secondaryButtonClass}>
-                        Remove Image
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="flex min-h-24 cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-600">
-                      Upload image
-                      <input type="file" accept="image/*" className="sr-only" onChange={handleFileChange} />
-                    </label>
-                  )}
-                </div>
-              </div>
-            </SectionCard>
-
-            <div className="flex justify-end">
-              <button type="submit" disabled={isSubmitting} className={primaryButtonClass}>
-                <Save size={14} />
-                {isSubmitting ? "Submitting..." : "Submit Entry"}
-              </button>
-            </div>
-          </form>
-        ) : null}
       </PageContainer>
     </>
   );

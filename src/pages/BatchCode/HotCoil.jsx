@@ -268,7 +268,7 @@ function HotCoil() {
           </button>
         )
       },
-      { label: "SMS Code", render: (row) => `#${valueOrDash(row.unique_code)}` },
+      { label: "SMS Code", render: (row) => `${valueOrDash(row.unique_code)}` },
       {
         label: "Sample",
         render: (row) =>

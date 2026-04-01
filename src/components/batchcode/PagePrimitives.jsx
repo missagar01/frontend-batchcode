@@ -165,12 +165,21 @@ export function ResponsiveDataTable({
       <div className="space-y-2 md:hidden">
         {rows.map((row, index) => (
           <article key={getRowKey(row, index)} className="bg-white shadow rounded-lg p-3 text-xs space-y-1">
-            {columns.map((column) => (
-              <p key={`${column.label}-${index}`} className="text-slate-700 break-words">
-                <span className="font-medium text-slate-600">{column.label}:</span>{" "}
-                {getRenderedValue(column, row, index)}
-              </p>
-            ))}
+            {columns.map((column) =>
+              typeof column.mobileRender === "function" ? (
+                <div
+                  key={`${column.label}-${index}`}
+                  className={joinClass("text-slate-700 break-words", column.mobileClassName)}
+                >
+                  {column.mobileRender(row, index)}
+                </div>
+              ) : (
+                <p key={`${column.label}-${index}`} className={joinClass("text-slate-700 break-words", column.mobileClassName)}>
+                  <span className="font-medium text-slate-600">{column.label}:</span>{" "}
+                  {getRenderedValue(column, row, index)}
+                </p>
+              )
+            )}
           </article>
         ))}
       </div>

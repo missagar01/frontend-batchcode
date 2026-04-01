@@ -378,7 +378,7 @@ function Recoiler() {
           </button>
         )
       },
-      { label: "Hot Coil", render: (row) => `#${valueOrDash(row.unique_code || row.sms_short_code)}` },
+      { label: "Hot Coil", render: (row) => `${valueOrDash(row.unique_code || row.sms_short_code)}` },
       { label: "Size", key: "size" },
       {
         label: "Team",

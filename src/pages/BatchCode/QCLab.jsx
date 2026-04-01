@@ -276,7 +276,7 @@ function QCLab() {
           </button>
         )
       },
-      { label: "SMS Batch", render: (row) => `#${valueOrDash(row.unique_code)}` },
+      { label: "SMS Batch", render: (row) => `${valueOrDash(row.unique_code)}` },
       {
         label: "Sample",
         render: (row) =>

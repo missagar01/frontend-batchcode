@@ -241,7 +241,7 @@ function SMSRegister() {
 
   const columns = useMemo(
     () => [
-      { label: "Code", render: (row) => `#${valueOrDash(row.unique_code)}` },
+      { label: "Code", render: (row) => `${valueOrDash(row.unique_code)}` },
       { label: "Time", render: (row) => formatDateTime(row.sample_timestamp || row.created_at || row.createdAt) },
       { label: "Sequence", key: "sequence_number" },
       { label: "Furnace", key: "furnace_number" },

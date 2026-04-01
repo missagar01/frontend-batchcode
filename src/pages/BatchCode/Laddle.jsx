@@ -210,7 +210,7 @@ function Laddle() {
 
   const columns = useMemo(
     () => [
-      { label: "Code", render: (row) => `#${valueOrDash(row.unique_code)}` },
+      { label: "Code", render: (row) => `${valueOrDash(row.unique_code)}` },
       {
         label: "Date",
         render: (row) => formatDateTime(row.sample_date || row.sample_timestamp || row.created_at)

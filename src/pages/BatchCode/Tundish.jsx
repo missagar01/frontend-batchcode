@@ -240,7 +240,7 @@ function Tundish() {
 
   const columns = useMemo(
     () => [
-      { label: "Code", render: (row) => `#${valueOrDash(row.unique_code)}` },
+      { label: "Code", render: (row) => `${valueOrDash(row.unique_code)}` },
       {
         label: "Sample",
         render: (row) => formatDateTime(row.sample_timestamp || row.created_at || row.sample_date)
